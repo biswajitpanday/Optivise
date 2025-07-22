@@ -214,6 +214,15 @@ export interface SearchConfig {
   };
 }
 
+export interface SemanticSearchConfig {
+  provider: 'openai' | 'local';
+  model: string;
+  dimensions: number;
+  apiKey?: string;
+  similarityThreshold: number;
+  maxTokens?: number;
+}
+
 // Documentation Source Types
 export interface DocumentationSource {
   id: string;

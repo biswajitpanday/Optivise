@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "dev:http": "tsx src/http-server.ts",
     "build": "tsc && npm run build:copy-assets",
     "build:copy-assets": "copyfiles -u 1 src/**/*.json dist/",
     "start": "node dist/index.js",
+    "start:http": "node dist/http-server.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
