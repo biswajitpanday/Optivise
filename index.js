@@ -1,19 +1,36 @@
 #!/usr/bin/env node
 
 /**
- * OptiDevDoc MCP Server - Standalone Production Version
- * This file contains everything needed to run the server
+ * OptiDevDoc MCP Server - Production Entry Point
+ * This file loads the compiled TypeScript deploy server
  */
 
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server - Standalone Version');
+console.log('🚀 OptiDevDoc MCP Server - Production Version');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
-// If this is running as the main file, start the server directly
-if (require.main === module) {
+// Try to load the compiled deploy server first
+const deployServerPath = path.join(__dirname, 'dist', 'deploy-server-simple.js');
+
+if (fs.existsSync(deployServerPath)) {
+  console.log('📦 Loading compiled TypeScript deploy server...');
+  try {
+    require(deployServerPath);
+  } catch (error) {
+    console.error('❌ Failed to load compiled server:', error);
+    console.log('🔄 Falling back to standalone server...');
+    startStandaloneServer();
+  }
+} else {
+  console.log('⚠️  Compiled server not found, using standalone server...');
+  startStandaloneServer();
+}
+
+// If this is running as the main file and no compiled version exists, start the standalone server
+function startStandaloneServer() {
   startServer();
 }
 

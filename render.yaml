@@ -3,11 +3,11 @@ services:
     name: optidevdoc-mcp
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: npm install
+    buildCommand: yarn install && yarn build
     startCommand: node index.js
     plan: free
     region: oregon
-    branch: main
+    branch: master
     rootDir: .
     
     envVars:

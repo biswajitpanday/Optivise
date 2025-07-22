@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "lib": ["ES2022"],
     "outDir": "./dist",
@@ -23,7 +23,6 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"],
@@ -45,12 +44,7 @@
     "dist",
     "coverage",
     "**/*.test.ts",
-    "**/*.spec.ts",
-    "src/database/database-manager.ts",
-    "src/search/semantic-search.ts",
-    "src/server/http-transport.ts",
-    "src/http-server.ts",
-    "src/deploy-server.ts"
+    "**/*.spec.ts"
   ],
   "ts-node": {
     "esm": true,
