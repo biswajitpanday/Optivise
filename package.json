@@ -2,13 +2,12 @@
   "name": "optidevdoc-mcp",
   "version": "1.0.0",
   "description": "MCP tool for Optimizely documentation integration with AI coding assistants",
-  "main": "main.js",
+  "main": "index.js",
 
   "scripts": {
     "dev": "tsx src/index.ts",
     "dev:http": "tsx src/http-server.ts",
-    "build": "node build-script.js",
-    "start": "node main.js",
+    "start": "node index.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",

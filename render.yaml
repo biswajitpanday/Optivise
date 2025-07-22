@@ -3,8 +3,8 @@ services:
     name: optidevdoc-mcp
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: npm ci && npm run build && echo "=== BUILD COMPLETE ===" && ls -la && echo "=== DIST FOLDER ===" && ls -la dist/
-    startCommand: npm start
+    buildCommand: npm install
+    startCommand: node index.js
     plan: free
     region: oregon
     branch: main
