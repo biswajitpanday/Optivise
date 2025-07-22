@@ -7,9 +7,10 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "dev:http": "tsx src/http-server.ts",
-    "build": "tsc src/deploy-server-simple.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --skipLibCheck && npm run build:copy-assets",
+    "build": "tsc src/deploy-server-simple.ts src/index-deploy.ts --outDir dist --target es2020 --module commonjs --esModuleInterop --skipLibCheck && npm run build:copy-assets && npm run build:finalize",
     "build:copy-assets": "copyfiles -u 1 src/**/*.json dist/",
-    "start": "node dist/deploy-server-simple.js",
+    "build:finalize": "node -e \"require('fs').copyFileSync('dist/index-deploy.js', 'dist/index.js')\"",
+    "start": "node dist/index.js",
     "start:http": "node dist/http-server.js",
     "start:deploy": "node dist/deploy-server.js",
     "test": "vitest",
