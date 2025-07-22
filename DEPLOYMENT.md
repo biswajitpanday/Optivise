@@ -1,291 +1,197 @@
 # OptiDevDoc Deployment Guide
 
-## 🚀 Phase 3: Team Deployment & Collaboration
+## 🎉 Successfully Deployed!
 
-This guide covers deploying OptiDevDoc for team use with remote access, real-time documentation updates, and production monitoring.
+**OptiDevDoc is now live at: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)**
 
-## 📋 Prerequisites
+## 🚀 How to Use the Deployed Server
 
-- GitHub account with repository access
-- Render.com account (free tier available)
-- Optional: OpenAI API key for semantic search
-- Team members with IDE MCP support (Cursor, VS Code, etc.)
+### Quick Test
 
-## 🌐 Render.com Deployment
-
-### 1. Repository Setup
-
-1. **Fork or clone** the OptiDevDoc repository to your GitHub account
-2. **Update `render.yaml`** with your repository URL:
-   ```yaml
-   repo: https://github.com/YOUR-ORG/optidevdoc-mcp.git
-   ```
-
-### 2. Deploy to Render
-
-1. **Connect GitHub**: Link your GitHub account to Render.com
-2. **Create New Service**: Choose "Web Service" from your repository
-3. **Auto-Deploy**: Render will automatically detect the `render.yaml` configuration
-
-### 3. Environment Configuration
-
-In the Render dashboard, add these environment variables:
-
-#### Required Variables
+Verify the server is working:
 ```bash
-NODE_ENV=production
-PORT=10000
-HOST=0.0.0.0
-LOG_LEVEL=info
-DATABASE_TYPE=sqlite
-DATABASE_PATH=./data/optidevdoc.db
+curl https://optidevdoc.onrender.com/health
 ```
 
-#### Optional Enhancement Variables
-```bash
-# OpenAI Semantic Search (Recommended)
-OPENAI_API_KEY=sk-your-openai-key-here
-
-# Crawler Configuration
-CRAWLER_ENABLED=true
-CRAWLER_INTERVAL_HOURS=24
-CRAWLER_MAX_CONCURRENCY=3
-
-# Security & Performance
-RATE_LIMIT_MAX_REQUESTS=100
-RATE_LIMIT_WINDOW_MS=60000
-CORS_ENABLED=true
-CORS_ORIGINS=*
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-XX...",
+  "version": "1.0.0",
+  "uptime": "...",
+  "server": "OptiDevDoc Standalone Server",
+  "documentation_count": 2
+}
 ```
 
-### 4. Health Monitoring
+### Test Search Functionality
 
-Render automatically monitors your service health at `/health`. The deployment includes:
+```bash
+curl -X POST https://optidevdoc.onrender.com/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "pricing", "maxResults": 2}'
+```
 
-- **Health Checks**: Automatic service restart on failures
-- **Metrics Endpoint**: `/metrics` for monitoring tools
-- **Persistent Storage**: 1GB disk for SQLite database
-- **Auto-scaling**: Handles traffic spikes automatically
-
-## 🔧 Team IDE Configuration
+## 🔧 IDE Configuration
 
 ### Cursor IDE Setup
 
-Each team member adds this to their Cursor MCP configuration:
+Add this to your Cursor MCP configuration:
 
 ```json
 {
   "mcpServers": {
-    "optidevdoc-remote": {
-      "command": "npx",
-      "args": ["@modelcontextprotocol/client-sse", "https://your-app.onrender.com/mcp/sse"],
+    "optidevdoc": {
+      "command": "node",
+      "args": [
+        "-e", 
+        "const https = require('https'); process.stdin.on('data', (data) => { const req = JSON.parse(data.toString()); if (req.method === 'tools/list') { console.log(JSON.stringify({jsonrpc: '2.0', id: req.id, result: {tools: [{name: 'search-optimizely-docs', description: 'Search Optimizely documentation', inputSchema: {type: 'object', properties: {query: {type: 'string'}, product: {type: 'string'}}}}]}})); } else if (req.method === 'tools/call') { const options = {hostname: 'optidevdoc.onrender.com', port: 443, path: '/api/search', method: 'POST', headers: {'Content-Type': 'application/json'}}; const apiReq = https.request(options, (res) => { let data = ''; res.on('data', (chunk) => data += chunk); res.on('end', () => { console.log(JSON.stringify({jsonrpc: '2.0', id: req.id, result: {content: [{type: 'text', text: data}]}})); }); }); apiReq.write(JSON.stringify(req.params.arguments)); apiReq.end(); } });"
+      ],
       "env": {
-        "MCP_SERVER_URL": "https://your-app.onrender.com"
+        "OPTIDEVDOC_URL": "https://optidevdoc.onrender.com"
       }
     }
   }
 }
 ```
 
-### VS Code with MCP Extension
+### VS Code Setup
 
-Install the MCP extension and add:
+For VS Code, you can use the REST Client extension:
 
-```json
+```http
+### Search Optimizely Documentation
+POST https://optidevdoc.onrender.com/api/search
+Content-Type: application/json
+
 {
-  "mcp.servers": [
-    {
-      "name": "optidevdoc-remote",
-      "url": "https://your-app.onrender.com/mcp/sse",
-      "type": "sse"
-    }
-  ]
+  "query": "custom price calculator",
+  "product": "configured-commerce",
+  "maxResults": 5
 }
 ```
 
-### Alternative: Direct API Access
+## 📊 Server Status & Monitoring
 
-For IDEs without MCP support, use the REST API:
+### Live Endpoints
 
+- **Health Check**: [https://optidevdoc.onrender.com/health](https://optidevdoc.onrender.com/health)
+- **API Documentation**: [https://optidevdoc.onrender.com/api/docs](https://optidevdoc.onrender.com/api/docs)
+- **Main Endpoint**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
+
+### Performance Expectations
+
+- **First Request**: May take 30-60 seconds (free tier cold start)
+- **Subsequent Requests**: <500ms response time
+- **Availability**: 99%+ uptime
+
+## 🎯 Usage Examples
+
+### Example 1: Basic Search
 ```bash
-# Search documentation
-curl -X POST https://your-app.onrender.com/api/search \
+curl -X POST https://optidevdoc.onrender.com/api/search \
   -H "Content-Type: application/json" \
-  -d '{"query": "custom price calculator", "product": "configured-commerce"}'
-
-# Resolve product context
-curl -X POST https://your-app.onrender.com/api/resolve \
-  -H "Content-Type: application/json" \
-  -d '{"query": "B2B commerce pricing"}'
+  -d '{"query": "pricing engine"}'
 ```
 
-## 📊 Production Features
-
-### Real-Time Documentation Updates
-
-- **Automated Crawling**: Daily documentation refresh
-- **Change Detection**: Smart content diffing and updates
-- **Background Processing**: Non-blocking crawls during team usage
-- **Analytics Tracking**: Search patterns and popular queries
-
-### Performance Optimization
-
-- **SQLite FTS5**: Sub-second search across all documentation
-- **Intelligent Caching**: Reduces API calls and improves response times  
-- **Rate Limiting**: Prevents abuse and ensures fair usage
-- **Compression**: Optimized data transfer for remote connections
-
-### Security & Reliability
-
-- **CORS Protection**: Configurable access control
-- **Rate Limiting**: 100 requests/minute per IP
-- **Health Monitoring**: Automatic restart on failures
-- **Error Handling**: Circuit breakers and graceful degradation
-- **Persistent Storage**: SQLite database survives deployments
-
-## 🔍 Advanced Configuration
-
-### PostgreSQL Upgrade (Optional)
-
-For larger teams, upgrade to PostgreSQL:
-
-1. **Uncomment PostgreSQL** service in `render.yaml`
-2. **Update environment**:
-   ```bash
-   DATABASE_TYPE=postgresql
-   DATABASE_HOST=your-postgres-host
-   DATABASE_NAME=optidevdoc
-   DATABASE_USERNAME=optidevdoc
-   DATABASE_PASSWORD=your-secure-password
-   ```
-
-### Redis Caching (Optional)
-
-For enhanced performance:
-
-1. **Enable Redis** service in `render.yaml`
-2. **Configure caching**:
-   ```bash
-   CACHE_TYPE=redis
-   REDIS_URL=redis://your-redis-instance
-   ```
-
-### Semantic Search Enhancement
-
-Add OpenAI API key for intelligent search:
-
+### Example 2: Product-Specific Search
 ```bash
-OPENAI_API_KEY=sk-your-key-here
-SEMANTIC_SEARCH_ENABLED=true
-SEMANTIC_SEARCH_MODEL=text-embedding-3-small
+curl -X POST https://optidevdoc.onrender.com/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "price calculator", "product": "configured-commerce"}'
 ```
 
-## 📈 Monitoring & Analytics
-
-### Built-in Endpoints
-
-- **Health Check**: `GET /health` - Service status
-- **Metrics**: `GET /metrics` - Performance data  
-- **API Docs**: `GET /api/docs` - Endpoint documentation
-
-### Render Dashboard
-
-Monitor through Render dashboard:
-- **Deployment Logs**: Real-time server logs
-- **Performance Metrics**: CPU, memory, response times
-- **Error Tracking**: Automatic error notifications
-- **Database Usage**: Storage and query performance
-
-### Custom Analytics
-
-OptiDevDoc tracks:
-- **Search Queries**: Popular documentation topics
-- **Response Times**: Performance optimization insights
-- **Error Rates**: Service reliability metrics
-- **Team Usage**: Individual and team patterns
+### Example 3: Limited Results
+```bash
+curl -X POST https://optidevdoc.onrender.com/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "api", "maxResults": 3}'
+```
 
 ## 🚨 Troubleshooting
 
 ### Common Issues
 
-1. **Service Won't Start**
-   - Check environment variables are set correctly
-   - Verify `render.yaml` repository URL
-   - Review deployment logs in Render dashboard
+1. **Server Takes Long to Respond**
+   - First request after inactivity takes 30-60 seconds (free tier limitation)
+   - Keep the service warm with periodic health checks
 
-2. **Database Errors**
-   - Ensure persistent disk is configured (1GB minimum)
-   - Check SQLite file permissions in `/data/` directory
+2. **Empty Results**
+   - Current deployment uses mock data with limited content
+   - Try these sample queries: "pricing", "api", "calculator", "commerce"
 
-3. **Search Not Working**
-   - Verify crawler is enabled and running
-   - Check database has been populated (wait 10-15 minutes after first deploy)
-   - Review crawler logs for documentation access issues
+3. **MCP Configuration Not Working**
+   - Verify JSON syntax is correct
+   - Restart your IDE after configuration changes
+   - Check IDE console for error messages
 
-4. **Team Access Issues**
-   - Verify CORS is enabled and origins configured
-   - Check rate limiting hasn't been exceeded
-   - Ensure MCP client configuration URLs are correct
+### Debug Steps
 
-### Debug Commands
+1. **Test Direct API**:
+   ```bash
+   curl https://optidevdoc.onrender.com/health
+   ```
 
-```bash
-# Check service health
-curl https://your-app.onrender.com/health
+2. **Test Search**:
+   ```bash
+   curl -X POST https://optidevdoc.onrender.com/api/search \
+     -H "Content-Type: application/json" \
+     -d '{"query": "test"}'
+   ```
 
-# View API documentation  
-curl https://your-app.onrender.com/api/docs
+3. **Check Server Logs**: View logs in Render.com dashboard
 
-# Test search functionality
-curl -X POST https://your-app.onrender.com/api/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "test search"}'
-```
+## 📈 Current Deployment Details
 
-## 🎯 Team Onboarding
+### Technology Stack
+- **Platform**: Render.com (Free Tier)
+- **Runtime**: Node.js 24.4.1
+- **Framework**: Express.js with CORS
+- **Data**: Mock documentation (2 sample entries)
 
-### Quick Start for New Team Members
+### Server Configuration
+- **Port**: 10000 (internal), 443 (HTTPS)
+- **Host**: 0.0.0.0
+- **Health Check**: `/health` endpoint
+- **API Base**: `/api/`
 
-1. **Get Service URL** from team lead
-2. **Configure IDE** with provided MCP settings
-3. **Test Connection** with simple search query
-4. **Join Team Channel** for support and updates
+### Repository Information
+- **GitHub**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
+- **Branch**: master
+- **Auto-Deploy**: Enabled on push to master
 
-### Best Practices
+## 🔄 Making Changes
 
-- **Share Queries**: Use popular searches to improve team knowledge
-- **Report Issues**: Help improve documentation coverage
-- **Update Regularly**: Ensure latest IDE MCP configuration
-- **Monitor Usage**: Respect rate limits for team access
+### To Update the Server
+1. Push changes to the master branch
+2. Render.com will automatically rebuild and redeploy
+3. Check deployment status in Render dashboard
+4. Verify with health check: `curl https://optidevdoc.onrender.com/health`
 
-## 🚀 Success Metrics
+### To Upgrade Features
+- Add real documentation crawling
+- Implement semantic search with OpenAI
+- Upgrade to paid tier for better performance
+- Add authentication for team usage
+
+## ✅ Success Checklist
 
 Your deployment is successful when:
 
-- ✅ **Health endpoint** returns `200 OK`
-- ✅ **Search requests** return relevant Optimizely documentation
-- ✅ **Team members** can access through their IDEs
-- ✅ **Documentation updates** automatically via daily crawls
-- ✅ **Performance** maintains sub-second response times
+- ✅ Health endpoint returns `200 OK`
+- ✅ Search endpoint returns JSON with mock results
+- ✅ Server responds within reasonable time (<30s first request, <500ms subsequent)
+- ✅ CORS headers allow browser access
+- ✅ MCP configuration works in your IDE
 
-## 🔄 Updates & Maintenance
+## 🎉 Next Steps
 
-### Automatic Updates
-
-- **Auto-Deploy**: Pushes to main branch trigger deployments
-- **Zero Downtime**: Rolling updates with health checks
-- **Database Migration**: Automatic schema updates
-- **Dependency Updates**: Security patches applied automatically
-
-### Manual Maintenance
-
-- **Environment Variables**: Update through Render dashboard
-- **Database Backup**: Export SQLite via service shell access
-- **Log Analysis**: Monitor search patterns and performance
-- **Team Coordination**: Coordinate any breaking changes
+1. **Configure your IDE** with the provided MCP settings
+2. **Test search functionality** with sample queries
+3. **Share with your team** using the live URL
+4. **Consider upgrades** for production usage (real data, better performance)
 
 ---
 
-**🎉 Congratulations!** Your team now has production-ready access to real-time Optimizely documentation through AI coding assistants, enabling faster development and fewer deprecated API issues.
-
-**Next Steps**: Consider semantic search with OpenAI integration and PostgreSQL upgrade for larger teams. 
+**🚀 Deployment Complete!** Your OptiDevDoc server is live and ready to enhance your Optimizely development workflow. 
