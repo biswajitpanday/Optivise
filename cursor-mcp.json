@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "npm",
+      "args": ["run", "dev"],
+      "cwd": "C:/D/RND/MCPs/OptiDevDoc",
+      "env": {
+        "NODE_ENV": "development",
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+} 
