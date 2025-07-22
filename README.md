@@ -136,22 +136,23 @@ Create a `config.json` file in the project root for custom settings:
 
 ## 📊 Features
 
-### ✅ MVP Features (Current)
-- [x] Basic MCP server with stdio transport
-- [x] Two core tools: `resolve-optimizely-id` and `get-optimizely-docs`
-- [x] Product keyword matching and query resolution
-- [x] Mock documentation responses for testing
-- [x] Comprehensive error handling with circuit breakers
-- [x] Configurable logging and caching
-- [x] TypeScript with strict type checking
+### ✅ Phase 2 Features (Current) 
+- [x] **Real Documentation Crawling**: Intelligent web scraping of Optimizely documentation
+- [x] **SQLite Database**: Full-text search with FTS5, content storage, and analytics
+- [x] **Advanced Search**: Keyword search with TF-IDF scoring and query optimization
+- [x] **Content Parsing**: Automatic extraction of code examples, tags, and breadcrumbs
+- [x] **Caching System**: Smart content deduplication and change detection
+- [x] **Production Database**: Schema with indexes, analytics, and crawler management
+- [x] **Error Resilience**: Circuit breakers, retry logic, and graceful degradation
+- [x] **TypeScript with strict type checking**
 
-### 🚧 Planned Features (Phase 2)
-- [ ] Real documentation crawling from Optimizely docs
-- [ ] SQLite database for content storage
-- [ ] Keyword search with TF-IDF scoring
-- [ ] Semantic search with vector embeddings
+### 🚧 Phase 3 Features (Planned)
+- [ ] Semantic search with vector embeddings (OpenAI/local models)
 - [ ] HTTP/SSE transport for remote deployment
 - [ ] Render.com deployment configuration
+- [ ] Real-time documentation updates and webhooks
+- [ ] Advanced analytics and usage insights
+- [ ] Team collaboration features
 
 ## 🔧 Development
 
@@ -256,5 +257,5 @@ MIT License - see LICENSE file for details
 
 ---
 
-**Status**: ✅ **MVP Complete** - Basic functionality ready for testing
-**Next Phase**: Documentation crawling and search implementation 
+**Status**: ✅ **Phase 2 Complete** - Production-ready with real documentation crawling and database search
+**Next Phase**: Semantic search and team deployment features 

@@ -6,12 +6,14 @@ import {
   ErrorCode,
   McpError,
 } from '@modelcontextprotocol/sdk/types.js';
-import { ResolveOptimizelyIdTool } from '@/tools/resolve-optimizely-id.js';
-import { GetOptimizelyDocsTool } from '@/tools/get-optimizely-docs.js';
-import { Logger } from '@/utils/logger.js';
-import { ErrorHandler } from '@/utils/error-handler.js';
-import { ConfigManager } from '@/config/config-manager.js';
-import type { ServerConfig } from '@/types/index.js';
+import { ResolveOptimizelyIdTool } from '../tools/resolve-optimizely-id.js';
+import { GetOptimizelyDocsTool } from '../tools/get-optimizely-docs.js';
+import { Logger } from '../utils/logger.js';
+import { ErrorHandler } from '../utils/error-handler.js';
+import { ConfigManager } from '../config/config-manager.js';
+import { DatabaseManager } from '../database/database-manager.js';
+import { DocumentationCrawler } from '../engine/documentation-crawler.js';
+import type { ServerConfig } from '../types/index.js';
 
 export class OptimizelyMCPServer {
   private server: Server;
@@ -20,6 +22,8 @@ export class OptimizelyMCPServer {
   private config: ServerConfig;
   private resolveOptimizelyIdTool: ResolveOptimizelyIdTool;
   private getOptimizelyDocsTool: GetOptimizelyDocsTool;
+  private database: DatabaseManager;
+  private crawler: DocumentationCrawler;
   private isInitialized = false;
 
   constructor(config?: Partial<ServerConfig>) {
@@ -34,6 +38,10 @@ export class OptimizelyMCPServer {
         version: '1.0.0',
       }
     );
+
+    // Initialize database and crawler
+    this.database = new DatabaseManager(this.config.database!, this.logger);
+    this.crawler = new DocumentationCrawler(this.config.crawler!, this.database, this.logger);
 
     // Initialize tools
     this.resolveOptimizelyIdTool = new ResolveOptimizelyIdTool(this.config, this.logger);
@@ -196,9 +204,21 @@ export class OptimizelyMCPServer {
     try {
       this.logger.info('Initializing OptiDevDoc MCP Server...');
 
+      // Initialize database first
+      await this.database.initialize();
+
       // Initialize tools
       await this.resolveOptimizelyIdTool.initialize();
       await this.getOptimizelyDocsTool.initialize();
+
+      // Start initial documentation crawl if enabled
+      if (this.config.crawler?.enabled) {
+        this.logger.info('Starting initial documentation crawl...');
+        // Run crawler in background, don't wait for completion
+        this.crawler.crawlAllSources().catch(error => {
+          this.logger.error('Initial crawl failed', { error });
+        });
+      }
 
       this.isInitialized = true;
       this.logger.info('OptiDevDoc MCP Server initialized successfully');
@@ -237,6 +257,9 @@ export class OptimizelyMCPServer {
       // Cleanup tools
       await this.resolveOptimizelyIdTool?.cleanup?.();
       await this.getOptimizelyDocsTool?.cleanup?.();
+
+      // Close database
+      await this.database?.close();
 
       // Close server
       await this.server.close();

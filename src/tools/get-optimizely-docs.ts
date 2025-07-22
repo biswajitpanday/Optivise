@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { OptimizelyProduct, DocumentationCategory } from '@/types/index.js';
 import type { Logger } from '@/utils/logger.js';
-import type { ServerConfig, OptimizelyDocumentationResult } from '@/types/index.js';
+import type { ServerConfig, OptimizelyDocumentationResult, SearchQuery } from '@/types/index.js';
+import { DatabaseManager } from '@/database/database-manager.js';
 
 const GetOptimizelyDocsArgsSchema = z.object({
   documentId: z.string().optional(),
@@ -16,17 +17,22 @@ type GetOptimizelyDocsArgs = z.infer<typeof GetOptimizelyDocsArgsSchema>;
 export class GetOptimizelyDocsTool {
   private logger: Logger;
   private config: ServerConfig;
+  private database: DatabaseManager;
 
   constructor(config: ServerConfig, logger: Logger) {
     this.config = config;
     this.logger = logger;
+    this.database = new DatabaseManager(this.config.database!, logger);
   }
 
   async initialize(): Promise<void> {
     this.logger.info('Initializing GetOptimizelyDocsTool...', { 
       searchEnabled: this.config.search?.keyword.enabled 
     });
-    // Initialize search engine, database connections, etc.
+    
+    // Initialize database
+    await this.database.initialize();
+    
     this.logger.info('GetOptimizelyDocsTool initialized successfully');
   }
 
@@ -52,9 +58,29 @@ export class GetOptimizelyDocsTool {
   private async searchDocumentation(
     args: GetOptimizelyDocsArgs
   ): Promise<OptimizelyDocumentationResult[]> {
-    // For MVP, return mock data that demonstrates the expected structure
-    // In full implementation, this would query the search engine and database
-    
+    // Use real database search if query is provided
+    if (args.query && args.query.trim()) {
+      const searchQuery: SearchQuery = {
+        text: args.query,
+        ...(args.product && { product: args.product }),
+        options: {
+          maxResults: args.maxResults,
+          includeContent: true,
+          highlightMatches: true,
+        },
+      };
+
+      const searchResults = await this.database.searchDocuments(searchQuery);
+      return searchResults.map(result => result.document);
+    }
+
+    // If specific document ID is provided, get by ID
+    if (args.documentId) {
+      const doc = await this.database.getDocumentById(args.documentId);
+      return doc ? [doc] : [];
+    }
+
+    // Fallback to mock data for demonstration
     const mockResults: OptimizelyDocumentationResult[] = [];
 
     if (args.query) {
@@ -305,6 +331,6 @@ const searchResults = await fetch('/api/episerver/v3.0/search', {
 
   async cleanup(): Promise<void> {
     this.logger.info('Cleaning up GetOptimizelyDocsTool...');
-    // Cleanup any resources
+    await this.database.close();
   }
 } 
