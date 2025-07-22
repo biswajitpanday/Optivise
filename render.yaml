@@ -4,7 +4,7 @@ services:
     env: node
     repo: https://github.com/your-org/optidevdoc-mcp.git
     buildCommand: npm ci && npm run build
-    startCommand: npm run start:http
+    startCommand: npm run start:deploy
     plan: free
     region: oregon
     branch: main
