@@ -45,7 +45,12 @@
     "dist",
     "coverage",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/database/database-manager.ts",
+    "src/search/semantic-search.ts",
+    "src/server/http-transport.ts",
+    "src/http-server.ts",
+    "src/deploy-server.ts"
   ],
   "ts-node": {
     "esm": true,
