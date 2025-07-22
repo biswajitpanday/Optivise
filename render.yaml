@@ -3,18 +3,12 @@ services:
     name: optidevdoc-mcp
     env: node
     repo: https://github.com/your-org/optidevdoc-mcp.git
-    buildCommand: npm ci && npm run build && ls -la && ls -la dist/
-    startCommand: node main.js
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
     plan: free
     region: oregon
     branch: main
     rootDir: .
-    buildFilter:
-      paths:
-        - src/**
-        - package.json
-        - tsconfig.json
-        - render.yaml
     
     envVars:
       - key: NODE_ENV
