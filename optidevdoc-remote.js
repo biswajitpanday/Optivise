@@ -25,7 +25,28 @@ rl.on('line', (line) => {
   try {
     const request = JSON.parse(line);
     
-    if (request.method === 'tools/list') {
+    if (request.method === 'initialize') {
+      // MCP initialization
+      const response = {
+        jsonrpc: '2.0',
+        id: request.id,
+        result: {
+          protocolVersion: '2024-11-05',
+          capabilities: {
+            tools: {}
+          },
+          serverInfo: {
+            name: 'optidevdoc-remote',
+            version: '1.0.0'
+          }
+        }
+      };
+      console.log(JSON.stringify(response));
+      
+    } else if (request.method === 'initialized') {
+      // MCP initialized notification - no response needed
+      
+    } else if (request.method === 'tools/list') {
       // List available tools
       const response = {
         jsonrpc: '2.0',
@@ -142,7 +163,8 @@ rl.on('line', (line) => {
     }
     
   } catch (error) {
-    // Invalid JSON - ignore
+    // Invalid JSON - ignore silently
+    console.error('JSON parse error:', error.message);
   }
 });
 
