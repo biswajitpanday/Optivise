@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "curl",
+      "args": [
+        "-X", "POST",
+        "https://optidevdoc.onrender.com/api/search",
+        "-H", "Content-Type: application/json",
+        "-d", "{\"query\": \"test\"}"
+      ],
+      "env": {}
+    }
+  }
+} 

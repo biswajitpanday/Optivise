@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "node",
+      "args": ["mcp-client.js"],
+      "cwd": "C:/D/RND/MCPs/OptiDevDoc",
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+} 

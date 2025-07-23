@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "context7": {
+      "url": "https://mcp.context7.com/mcp"
+    },
+    "documenter": {
+      "url": "https://documenter-mcp.onrender.com/mcp/request"
+    },
+    "optidevdoc": {
+      "command": "node",
+      "args": ["C:/D/RND/MCPs/OptiDevDoc/optidevdoc-remote.js"]
+    }
+  }
+} 
