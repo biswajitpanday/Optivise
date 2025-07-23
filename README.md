@@ -3,10 +3,14 @@
 An MCP (Model Context Protocol) server that provides real-time Optimizely documentation access to AI coding assistants. **Successfully deployed and ready for team use!**
 
 ## 🎉 **Live Deployment**
-
 - **Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
 - **Repository**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
 - **Status**: ✅ **PRODUCTION READY**
+
+
+## 🏗️ Architecture Diagram
+
+![High-Level Architecture](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/OptiDevDoc_Arch_1.svg)
 
 ## 🚀 **Quick Setup for New Users**
 
@@ -51,7 +55,9 @@ Ask in your IDE: *"How do I implement custom pricing in Optimizely Commerce?"*
 
 ## 🛠️ **How It Works**
 
-![How It Works](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/How_it_works.svg)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/How_it_works.svg" alt="How it works" height="500"/>
+</div>
 
 1. **IDE Integration**: MCP protocol connects your IDE to the remote server
 2. **Remote API**: HTTPS requests to our deployed documentation server
