@@ -8,7 +8,7 @@ OptiDevDoc is a **successfully deployed** MCP (Model Context Protocol) server th
 
 ## 🏗️ **Current Architecture (Implemented)**
 
-![High-Level Architecture](https://github.com/biswajitpanday/OptiDevDoc/assets/OptiDevDoc_Arch_1.svg)
+![High-Level Architecture](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/OptiDevDoc_Arch_1.svg)
 
 
 ## 🎯 **Implemented Components**

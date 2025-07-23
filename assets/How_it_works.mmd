@@ -1,0 +1,10 @@
+---
+config:
+  theme: neo-dark
+---
+flowchart TB
+    A["Your IDE"] --> B["optidevdoc-remote.js"]
+    B --> C["HTTPS API"] & A
+    C --> D["Render.com Server"] & B
+    D --> E["Optimizely Docs"] & C
+    E --> D

@@ -1,8 +1,7 @@
 ---
 config:
-  layout: fixed
-  look: neo
   theme: neo-dark
+  layout: dagre
 ---
 flowchart TB
  subgraph subGraph0["IDE Clients"]
@@ -41,63 +40,17 @@ flowchart TB
         U["API Documentation"]
         V["Integration Guides"]
   end
-    A L_A_E_0@-.-> E
-    B L_B_E_0@-.-> E
-    C L_C_E_0@-.-> E
-    D L_D_E_0@-.-> E
+    A -.-> E
+    B -.-> E
+    C -.-> E
+    D -.-> E
     E --> F
-    F L_F_G_0@--> G & H
+    F --> G & H
     H --> I
-    I L_I_J_0@--> J & K
-    K L_K_L_0@--> L
-    L L_L_M_0@--> M & P
-    M L_M_J_0@--> J
-    J L_J_G_0@--> G
-    P L_P_N_0@--> N & Q & R & S
-    N L_N_O_0@--> O & T & U & V
-     A:::node_style
-     B:::node_style
-     C:::node_style
-     D:::node_style
-     E:::node_style
-     F:::Sky
-     F:::node_style
-     G:::node_style
-     H:::node_style
-     I:::node_style
-     J:::node_style
-     K:::node_style
-     L:::node_style
-     M:::node_style
-     N:::node_style
-     O:::node_style
-     P:::node_style
-     Q:::node_style
-     R:::node_style
-     S:::node_style
-     T:::node_style
-     U:::node_style
-     V:::node_style
-    classDef Sky stroke-width:1px, stroke-dasharray:none, stroke:#374D7C, fill:#E2EBFF, color:#374D7C
-    classDef node_style fill:#616161, color:#FFFFFF, stroke:#FFFFFF
-    L_A_E_0@{ animation: slow } 
-    L_B_E_0@{ animation: slow } 
-    L_C_E_0@{ animation: slow } 
-    L_D_E_0@{ animation: slow } 
-    L_F_G_0@{ animation: slow } 
-    L_F_H_0@{ animation: slow } 
-    L_I_J_0@{ animation: slow } 
-    L_I_K_0@{ animation: slow } 
-    L_K_L_0@{ animation: slow } 
-    L_L_M_0@{ animation: slow } 
-    L_L_P_0@{ animation: slow } 
-    L_M_J_0@{ animation: slow } 
-    L_J_G_0@{ animation: slow } 
-    L_P_N_0@{ animation: slow } 
-    L_P_Q_0@{ animation: slow } 
-    L_P_R_0@{ animation: slow } 
-    L_P_S_0@{ animation: slow } 
-    L_N_O_0@{ animation: slow } 
-    L_N_T_0@{ animation: slow } 
-    L_N_U_0@{ animation: slow } 
-    L_N_V_0@{ animation: slow }
+    I --> J & K
+    K --> L
+    L --> M & P
+    M --> J
+    J --> G
+    P --> N & Q & R & S
+    N --> O & T & U & V

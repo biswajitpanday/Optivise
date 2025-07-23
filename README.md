@@ -51,14 +51,7 @@ Ask in your IDE: *"How do I implement custom pricing in Optimizely Commerce?"*
 
 ## 🛠️ **How It Works**
 
-```mermaid
-graph LR
-    A[Your IDE] --> B[optidevdoc-remote.js]
-    B --> C[HTTPS API]
-    C --> D[Render.com Server]
-    D --> E[Optimizely Docs]
-    E --> D --> C --> B --> A
-```
+![How It Works](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/How_it_works.svg)
 
 1. **IDE Integration**: MCP protocol connects your IDE to the remote server
 2. **Remote API**: HTTPS requests to our deployed documentation server
