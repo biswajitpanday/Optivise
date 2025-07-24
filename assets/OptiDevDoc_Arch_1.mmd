@@ -1,56 +1,18 @@
 ---
 config:
   theme: neo-dark
-  layout: elk
 ---
 flowchart TB
- subgraph subGraph0["IDE Clients"]
-        A["Cursor IDE"]
-        B["VS Code"]
-        C["Windsurf"]
-        D["Claude Desktop"]
-  end
- subgraph subGraph1["MCP Protocol Layer"]
-        E["Transport Manager"]
-        F["Request Router"]
-        G["Response Formatter"]
-  end
- subgraph subGraph2["OptiDevDoc Core"]
-        H["Tool Handlers"]
-        I["Query Processor"]
-        J["Context Assembler"]
-  end
- subgraph subGraph3["Intelligence Layer"]
-        K["Intent Detection"]
-        L["Hybrid Search Engine"]
-        M["Relevance Ranking"]
-  end
- subgraph subGraph4["Documentation Engine"]
-        N["Multi-Source Crawler"]
-        O["Content Parser"]
-        P["Index Manager"]
-  end
- subgraph subGraph5["Data Layer"]
-        Q["SQLite Database"]
-        R["Vector Store"]
-        S["Cache Layer"]
-  end
- subgraph subGraph6["External Sources"]
-        T["Optimizely Dev Portal"]
-        U["API Documentation"]
-        V["Integration Guides"]
-  end
-    A -.-> E
-    B -.-> E
-    C -.-> E
-    D -.-> E
-    E --> F
-    F --> G & H
-    H --> I
-    I --> J & K
-    K --> L
-    L --> M & P
-    M --> J
-    J --> G
-    P --> N & Q & R & S
-    N --> O & T & U & V
+    A["Your IDE"] L_A_B_0@--> B["optidevdoc-remote.js"]
+    B L_B_C_0@--> C["HTTPS API"] & A
+    C L_C_D_0@--> D["Render.com Server"] & B
+    D L_D_E_0@--> E["Optimizely Docs"] & C
+    E L_E_D_0@--> D
+    L_A_B_0@{ animation: slow } 
+    L_B_C_0@{ animation: slow } 
+    L_B_A_0@{ animation: slow } 
+    L_C_D_0@{ animation: slow } 
+    L_C_B_0@{ animation: slow } 
+    L_D_E_0@{ animation: slow } 
+    L_D_C_0@{ animation: slow } 
+    L_E_D_0@{ animation: slow }
