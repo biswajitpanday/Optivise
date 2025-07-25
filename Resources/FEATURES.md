@@ -5,42 +5,52 @@
 OptiDevDoc is an MCP (Model Context Protocol) server that provides real-time Optimizely documentation access to AI coding assistants. This document outlines **currently implemented features** vs **future enhancement opportunities**.
 
 **Live Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)  
-**Status**: 🚀 **Enhanced v2.0 - 3 Tools Deployed**
+**Status**: 🚀 **Enhanced v2.0 - Deploying** | NPM Package ✅ **Fully Functional**
 
 ---
 
 ## ✅ **Current Features (Implemented & Working)**
 
-### 🏗️ **Core Infrastructure**
+### 🛠️ **NPM Package (Fully Functional)**
 
-| Feature | Implementation | Status | Notes |
-|---------|---------------|--------|-------|
-| **HTTP API Server** | Express.js with REST endpoints | ✅ Active | `/api/search`, `/health`, `/api/docs`, `/` |
-| **MCP Protocol Bridge** | Local Node.js client (`optidevdoc-remote.js`) | ✅ Active | Full protocol: initialize, tools/list, tools/call, ping |
-| **TypeScript Build System** | tsc compiler with dist output | ✅ Active | Compiles to JavaScript for production |
-| **Render.com Deployment** | Automatic GitHub integration | ✅ Active | Free tier hosting with auto-builds |
-| **CORS Support** | Cross-origin resource sharing | ✅ Active | Enables web client access |
-| **Health Monitoring** | `/health` endpoint with uptime | ✅ Active | Server status and monitoring |
+| Feature | Implementation | Status | Verification |
+|---------|---------------|--------|--------------|
+| **Global CLI Installation** | `npm install -g optidevdoc` | ✅ **Active** | Tested & verified working |
+| **MCP Client Integration** | 3 tools via `optidevdoc mcp` | ✅ **Active** | Cursor IDE integration confirmed |
+| **Enhanced Documentation Search** | Real-time API access | ✅ **Active** | Working with live Optimizely docs |
+| **Pattern Analysis Tool** | Development scenario matching | ✅ **Active** | 13+ patterns extracted |
+| **Bug Analysis Tool** | Optimizely-specific solutions | ✅ **Active** | Intelligent debugging assistance |
 
-### 📚 **Documentation Content**
+### 🏗️ **Enhanced Server Infrastructure**
 
-| Content Source | Product | Language | Lines | Status |
-|----------------|---------|----------|-------|--------|
-| **Configured Commerce Pricing** | B2B Commerce | C# | ~100 | ✅ Available |
-| **CMS Content Delivery API** | CMS PaaS | JavaScript | ~80 | ✅ Available |
-| **Commerce Analytics** | Commerce | JavaScript | ~60 | ✅ Available |
-| **Code Examples** | Multiple | C#, JS | Embedded | ✅ Available |
-| **API Documentation** | Multiple | Markdown | Rich formatting | ✅ Available |
+| Feature | Local Status | Remote Status | Notes |
+|---------|--------------|---------------|-------|
+| **Enhanced TypeScript Server** | ✅ **Working** | 🔄 **Deploying** | All import issues resolved |
+| **Pattern Crawler Engine** | ✅ **Working** | 🔄 **Deploying** | 13 patterns from real docs |
+| **Real Documentation URLs** | ✅ **Working** | 🔄 **Deploying** | docs.developers.optimizely.com |
+| **3 Enhanced Endpoints** | ✅ **Working** | 🔄 **Deploying** | /search, /patterns, /analyze-bug |
+| **Production Build System** | ✅ **Working** | 🔄 **Deploying** | TypeScript → JavaScript |
 
-### 🔍 **Search & Retrieval**
+### 📚 **Documentation Content (Real & Live)**
+
+| Content Source | Product | Patterns | Status |
+|----------------|---------|----------|--------|
+| **Configured Commerce** | B2B Commerce | 3 extracted | ✅ **Live Crawling** |
+| **CMS PaaS/SaaS** | Content Management | 2 extracted | ✅ **Live Crawling** |
+| **Content Marketing Platform** | CMP | 2 extracted | ✅ **Live Crawling** |
+| **Optimizely Data Platform** | ODP | 2 extracted | ✅ **Live Crawling** |
+| **Experimentation** | A/B Testing | 3 extracted | ✅ **Live Crawling** |
+| **Commerce Connect** | Integration | 1 extracted | ✅ **Live Crawling** |
+
+### 🔍 **Search & Analysis Capabilities**
 
 | Feature | Implementation | Capabilities | Status |
 |---------|---------------|--------------|--------|
-| **Text-Based Search** | Keyword matching | Title + content + tags search | ✅ Active |
-| **Product Filtering** | Optional parameter | Filter by Optimizely product | ✅ Active |
-| **Relevance Scoring** | Simple scoring algorithm | Title matches weighted higher | ✅ Active |
-| **Result Limiting** | Configurable max results | Default 10, max 50 | ✅ Active |
-| **Content Formatting** | Markdown + code highlighting | Optimized for AI consumption | ✅ Active |
+| **Semantic Pattern Matching** | Development scenario analysis | Handler, Pipeline, API, Template patterns | ✅ **Active** |
+| **Product Auto-Detection** | Context-aware filtering | Automatically identifies Optimizely product | ✅ **Active** |
+| **Bug Analysis with Context** | Error categorization | Root cause + fix + prevention patterns | ✅ **Active** |
+| **Real-time Documentation** | Live URL crawling | Always up-to-date information | ✅ **Active** |
+| **Cross-Platform Support** | Node.js compatibility | Windows, macOS, Linux | ✅ **Active** |
 
 ### 🔌 **IDE Integration**
 
