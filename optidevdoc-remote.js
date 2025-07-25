@@ -1,62 +1,179 @@
 #!/usr/bin/env node
 
 /**
- * OptiDevDoc Remote MCP Client
- * Download this single file and use with any MCP-compatible IDE
+ * OptiDevDoc Enhanced Remote MCP Client v2.0
  * 
- * Usage: Just download this file and reference it in your MCP config
+ * This enhanced version includes:
+ * - Original documentation search
+ * - Pattern analysis for Optimizely development scenarios
+ * - Bug analysis with Optimizely-specific solutions
+ * - Rule and guideline extraction
  */
 
 const https = require('https');
 const readline = require('readline');
 
-const OPTIDEVDOC_API = 'https://optidevdoc.onrender.com/api/search';
+// Configuration
+const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
+const CLIENT_VERSION = '2.0.0';
+const PROTOCOL_VERSION = '2024-11-05';
+
+// Debug mode control
+const DEBUG_MODE = process.env.DEBUG_MCP === 'true';
+
+// State management
+let isInitialized = false;
 
 // Suppress startup messages in production mode
-if (!process.env.DEBUG_MCP) {
-  console.error = () => {}; // Suppress stderr messages
+if (!DEBUG_MODE) {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    // Only show critical errors, suppress routine messages
+    if (args[0] && typeof args[0] === 'string' && 
+        (args[0].includes('🚀') || args[0].includes('📡') || args[0].includes('✅'))) {
+      originalConsoleError(...args);
+    }
+  };
 }
 
-console.error('🚀 OptiDevDoc Remote Client v1.1');
-console.error('📡 Connecting to: https://optidevdoc.onrender.com');
+console.error(`🚀 OptiDevDoc Enhanced Remote Client v${CLIENT_VERSION}`);
+console.error(`📡 Connecting to: ${REMOTE_SERVER}`);
+console.error(`✨ Features: Documentation Search, Pattern Analysis, Bug Analysis`);
 
+// Setup readline interface for JSON-RPC communication
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
   terminal: false
 });
 
-// Track if we're initialized
-let isInitialized = false;
-
+/**
+ * Send JSON-RPC response
+ */
 function sendResponse(response) {
   console.log(JSON.stringify(response));
+  if (DEBUG_MODE) {
+    console.error('📤 Response sent:', JSON.stringify(response, null, 2));
+  }
 }
 
-function sendError(id, code, message) {
-  sendResponse({
+/**
+ * Send JSON-RPC error
+ */
+function sendError(id, code, message, data = undefined) {
+  const error = {
     jsonrpc: '2.0',
-    id: id,
-    error: {
-      code: code,
-      message: message
+    id,
+    error: { code, message, ...(data && { data }) }
+  };
+  console.log(JSON.stringify(error));
+  if (DEBUG_MODE) {
+    console.error('❌ Error sent:', JSON.stringify(error, null, 2));
+  }
+}
+
+/**
+ * Make HTTP request to remote server
+ */
+function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(path, REMOTE_SERVER);
+    const postData = data ? JSON.stringify(data) : null;
+    
+    const options = {
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: url.pathname,
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': `OptiDevDoc-Enhanced-MCP-Client/${CLIENT_VERSION}`,
+        ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
+      },
+      timeout
+    };
+
+    if (DEBUG_MODE) {
+      console.error(`📡 Making ${method} request to: ${url.href}`);
+      if (postData) {
+        console.error('📤 Request data:', postData);
+      }
     }
+
+    const req = https.request(options, (res) => {
+      let responseData = '';
+      
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+      
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(responseData);
+          if (DEBUG_MODE) {
+            console.error('📥 Response received:', JSON.stringify(result, null, 2).substring(0, 500) + '...');
+          }
+          resolve(result);
+        } catch (parseError) {
+          console.error('JSON Parse Error:', parseError);
+          reject(new Error(`Failed to parse response: ${parseError.message}`));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      console.error('Request Error:', error);
+      reject(error);
+    });
+
+    req.on('timeout', () => {
+      console.error('Request Timeout');
+      req.destroy();
+      reject(new Error('Request timed out'));
+    });
+
+    if (postData) {
+      req.write(postData);
+    }
+    
+    req.end();
   });
 }
 
-rl.on('line', (line) => {
+/**
+ * Format content for better readability
+ */
+function formatContent(content, type = 'search') {
+  switch (type) {
+    case 'pattern':
+      return content; // Pattern tool already provides good formatting
+    case 'bug':
+      return content; // Bug analyzer already provides good formatting
+    default:
+      // Enhanced formatting for search results
+      if (content.includes('🔍 Found')) {
+        return content; // Already well formatted
+      }
+      return `📚 **Optimizely Documentation Results**\n\n${content}`;
+  }
+}
+
+// Handle incoming JSON-RPC requests
+rl.on('line', async (line) => {
   try {
     const request = JSON.parse(line.trim());
     
-    // Handle MCP protocol methods
+    if (DEBUG_MODE) {
+      console.error('📥 Request received:', JSON.stringify(request, null, 2));
+    }
+
     switch (request.method) {
       case 'initialize':
-        // MCP initialization
         sendResponse({
           jsonrpc: '2.0',
           id: request.id,
           result: {
-            protocolVersion: '2024-11-05',
+            protocolVersion: PROTOCOL_VERSION,
             capabilities: {
               tools: {},
               logging: {},
@@ -64,145 +181,205 @@ rl.on('line', (line) => {
               resources: {}
             },
             serverInfo: {
-              name: 'optidevdoc-remote',
-              version: '1.1.0'
+              name: 'optidevdoc-enhanced-remote',
+              version: CLIENT_VERSION
             }
           }
         });
         break;
 
       case 'initialized':
-        // MCP initialized notification - just acknowledge
         isInitialized = true;
-        console.error('✅ MCP Client initialized successfully');
+        if (DEBUG_MODE) {
+          console.error('✅ Enhanced MCP Client initialized successfully');
+        }
         break;
 
       case 'ping':
-        // Handle ping requests
-        sendResponse({
-          jsonrpc: '2.0',
-          id: request.id,
-          result: {}
+        sendResponse({ 
+          jsonrpc: '2.0', 
+          id: request.id, 
+          result: { 
+            status: 'healthy',
+            version: CLIENT_VERSION,
+            features: ['search', 'patterns', 'bug_analysis']
+          } 
         });
         break;
 
       case 'tools/list':
-        // List available tools
         sendResponse({
           jsonrpc: '2.0',
           id: request.id,
           result: {
-            tools: [{
-              name: 'search_optimizely_docs',
-              description: 'Search Optimizely documentation remotely',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  query: {
-                    type: 'string',
-                    description: 'Search terms (e.g., "pricing calculator", "CMS API")'
-                  }
-                },
-                required: ['query']
+            tools: [
+              {
+                name: 'search_optimizely_docs',
+                description: 'Search Optimizely documentation with enhanced pattern matching',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    query: { 
+                      type: 'string', 
+                      description: 'Search terms (e.g., "pricing handler", "content block")' 
+                    },
+                    product: {
+                      type: 'string',
+                      description: 'Filter by Optimizely product',
+                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'all']
+                    }
+                  },
+                  required: ['query']
+                }
+              },
+              {
+                name: 'find_optimizely_pattern',
+                description: 'Find Optimizely coding patterns and best practices for specific scenarios',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    scenario: { 
+                      type: 'string', 
+                      description: 'Development scenario (e.g., "custom pricing logic", "checkout pipeline")' 
+                    },
+                    product: {
+                      type: 'string',
+                      description: 'Optimizely product',
+                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'any'],
+                      default: 'any'
+                    },
+                    category: {
+                      type: 'string',
+                      description: 'Pattern category',
+                      enum: ['handler', 'pipeline', 'service', 'integration', 'best-practice', 'api', 'content-type', 'block', 'template', 'any'],
+                      default: 'any'
+                    },
+                    includeCode: {
+                      type: 'boolean',
+                      description: 'Include code examples',
+                      default: true
+                    }
+                  },
+                  required: ['scenario']
+                }
+              },
+              {
+                name: 'analyze_optimizely_bug',
+                description: 'Analyze bugs and get Optimizely-specific solutions and guidance',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    bugDescription: { 
+                      type: 'string', 
+                      description: 'Description of the bug or issue' 
+                    },
+                    errorMessage: {
+                      type: 'string',
+                      description: 'Error message or stack trace (optional)'
+                    },
+                    product: {
+                      type: 'string',
+                      description: 'Optimizely product (auto-detect if not specified)',
+                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'auto-detect'],
+                      default: 'auto-detect'
+                    },
+                    context: {
+                      type: 'string',
+                      description: 'Additional context about the issue'
+                    }
+                  },
+                  required: ['bugDescription']
+                }
               }
-            }]
+            ]
           }
         });
         break;
 
       case 'tools/call':
-        if (request.params.name === 'search_optimizely_docs') {
-          // Call remote API
-          const postData = JSON.stringify(request.params.arguments);
+        const toolName = request.params.name;
+        const toolArgs = request.params.arguments;
 
-          const options = {
-            hostname: 'optidevdoc.onrender.com',
-            port: 443,
-            path: '/api/search',
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': Buffer.byteLength(postData),
-              'User-Agent': 'OptiDevDoc-MCP-Client/1.1'
-            },
-            timeout: 10000 // 10 second timeout
-          };
+        try {
+          let result;
+          let contentType = 'search';
 
-          const req = https.request(options, (res) => {
-            let data = '';
-            res.on('data', (chunk) => data += chunk);
-            res.on('end', () => {
-              try {
-                const apiResponse = JSON.parse(data);
+          switch (toolName) {
+            case 'search_optimizely_docs':
+              result = await makeRequest('/api/search', 'POST', toolArgs);
+              contentType = 'search';
+              break;
 
-                let content = `🔍 Found ${apiResponse.total_count || 0} Optimizely documentation results:\n\n`;
+            case 'find_optimizely_pattern':
+              result = await makeRequest('/api/patterns', 'POST', toolArgs);
+              contentType = 'pattern';
+              break;
 
-                if (apiResponse.results && Object.keys(apiResponse.results).length > 0) {
-                  content += Object.values(apiResponse.results).map(doc =>
-                    `📄 **${doc.title}**\n` +
-                    `🏷️ Product: ${doc.product}\n` +
-                    `🔗 URL: ${doc.url}\n\n` +
-                    `${doc.content.substring(0, 600)}${doc.content.length > 600 ? '...' : ''}\n\n` +
-                    `${'='.repeat(50)}\n`
-                  ).join('\n');
-                } else {
-                  content += '❌ No results found. Try terms like:\n';
-                  content += '• "pricing calculator"\n';
-                  content += '• "CMS API"\n';
-                  content += '• "commerce checkout"\n';
-                  content += '• "content delivery"';
-                }
+            case 'analyze_optimizely_bug':
+              result = await makeRequest('/api/analyze-bug', 'POST', toolArgs);
+              contentType = 'bug';
+              break;
 
-                sendResponse({
-                  jsonrpc: '2.0',
-                  id: request.id,
-                  result: {
-                    content: [{ 
-                      type: 'text', 
-                      text: content 
-                    }]
-                  }
-                });
+            default:
+              throw new Error(`Unknown tool: ${toolName}`);
+          }
 
-              } catch (error) {
-                console.error('API Response Parse Error:', error);
-                sendError(request.id, -32603, `Failed to parse response: ${error.message}`);
-              }
-            });
+          // Format response based on tool type
+          let content;
+          if (contentType === 'search') {
+            // Handle search results
+            if (result.results && result.results.length > 0) {
+              content = `🔍 Found ${result.total_count} Optimizely documentation result(s):\n\n`;
+              content += result.results.map(doc => 
+                `📄 **${doc.title}**\n` +
+                `🏷️ Product: ${doc.product}\n` +
+                `📂 Category: ${doc.category || 'Documentation'}\n` +
+                `🔗 URL: ${doc.url}\n\n` +
+                `${doc.content.substring(0, 600)}${doc.content.length > 600 ? '...' : ''}\n\n` +
+                (doc.rules && doc.rules.length > 0 ? 
+                  `**Key Rules:**\n${doc.rules.slice(0, 3).map(rule => `• ${rule}`).join('\n')}\n\n` : '') +
+                `${'='.repeat(60)}\n`
+              ).join('\n');
+            } else {
+              content = `❌ No results found for "${toolArgs.query}". Try terms like:\n`;
+              content += '• "pricing handler"\n• "content block"\n• "pipeline pattern"\n• "checkout workflow"';
+            }
+          } else if (contentType === 'pattern' || contentType === 'bug') {
+            // Use the formatted content from the enhanced tools
+            content = result.content?.text || result.content || 'No content available';
+          }
+
+          sendResponse({
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              content: [{
+                type: 'text',
+                text: formatContent(content, contentType)
+              }]
+            }
           });
 
-          req.on('error', (error) => {
-            console.error('API Request Error:', error);
-            sendError(request.id, -32603, `Remote API error: ${error.message}`);
-          });
-
-          req.on('timeout', () => {
-            console.error('API Request Timeout');
-            req.destroy();
-            sendError(request.id, -32603, 'Remote API request timed out');
-          });
-
-          req.write(postData);
-          req.end();
-
-        } else {
-          sendError(request.id, -32601, `Unknown tool: ${request.params.name}`);
+        } catch (error) {
+          console.error(`Tool execution error for ${toolName}:`, error);
+          sendError(
+            request.id, 
+            -32603, 
+            `Tool execution failed: ${error.message}`,
+            { tool: toolName, args: toolArgs }
+          );
         }
         break;
 
       case 'notifications/initialized':
-        // Some MCP clients send this
         isInitialized = true;
         break;
 
       default:
-        // Unknown method
         sendError(request.id, -32601, `Method not found: ${request.method}`);
         break;
     }
-
   } catch (error) {
-    // Invalid JSON or other errors
     console.error('JSON parse error:', error.message);
     if (line.trim()) {
       sendError(null, -32700, 'Parse error');
@@ -210,17 +387,22 @@ rl.on('line', (line) => {
   }
 });
 
-// Handle process signals gracefully
-process.on('SIGINT', () => {
-  console.error('🔄 OptiDevDoc client shutting down...');
+// Handle process termination
+function handleExit(signal) {
+  if (DEBUG_MODE) {
+    console.error(`\n🔄 Received ${signal}, cleaning up...`);
+  }
+  process.exit(0);
+}
+
+process.on('SIGINT', () => handleExit('SIGINT'));
+process.on('SIGTERM', () => handleExit('SIGTERM'));
+process.on('SIGPIPE', () => {
+  // Handle broken pipe gracefully
   process.exit(0);
 });
 
-process.on('SIGTERM', () => {
-  console.error('🔄 OptiDevDoc client shutting down...');
-  process.exit(0);
-});
-
+// Handle uncaught errors
 process.on('uncaughtException', (error) => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
@@ -231,5 +413,7 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-// Send a ready signal
-console.error('🎯 MCP Client ready for connections'); 
+if (DEBUG_MODE) {
+  console.error('🎯 Enhanced MCP Client ready for requests');
+  console.error('📋 Available tools: search_optimizely_docs, find_optimizely_pattern, analyze_optimizely_bug');
+} 

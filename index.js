@@ -12,15 +12,29 @@ console.log('🚀 OptiDevDoc MCP Server - Production Version');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
-// Try to load the compiled deploy server first
-const deployServerPath = path.join(__dirname, 'dist', 'deploy-server-simple.js');
+// Try to load the compiled enhanced deploy server first
+const enhancedServerPath = path.join(__dirname, 'dist', 'deploy-server-enhanced.js');
+const simpleServerPath = path.join(__dirname, 'dist', 'deploy-server-simple.js');
 
-if (fs.existsSync(deployServerPath)) {
-  console.log('📦 Loading compiled TypeScript deploy server...');
+if (fs.existsSync(enhancedServerPath)) {
+  console.log('🚀 Loading enhanced TypeScript deploy server...');
   try {
-    require(deployServerPath);
+    require(enhancedServerPath);
   } catch (error) {
-    console.error('❌ Failed to load compiled server:', error);
+    console.error('❌ Failed to load enhanced server:', error);
+    console.log('🔄 Falling back to simple server...');
+    if (fs.existsSync(simpleServerPath)) {
+      require(simpleServerPath);
+    } else {
+      startStandaloneServer();
+    }
+  }
+} else if (fs.existsSync(simpleServerPath)) {
+  console.log('📦 Loading simple TypeScript deploy server...');
+  try {
+    require(simpleServerPath);
+  } catch (error) {
+    console.error('❌ Failed to load simple server:', error);
     console.log('🔄 Falling back to standalone server...');
     startStandaloneServer();
   }
