@@ -1,8 +1,8 @@
+import type { ServerConfig, DeepPartial } from '../types/index.js';
 import { defaultConfig } from './default.js';
-import type { ServerConfig, DeepPartial } from '@/types/index.js';
 import * as fs from 'fs';
 
-import { Logger } from '@/utils/logger.js';
+import { Logger } from '../utils/logger.js';
 
 export class ConfigManager {
   private static instance: ConfigManager;

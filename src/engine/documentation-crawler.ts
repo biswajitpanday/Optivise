@@ -2,7 +2,7 @@ import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
 import PQueue from 'p-queue';
 import pRetry from 'p-retry';
-import type { Logger } from '@/utils/logger.js';
+import type { Logger } from '../utils/logger.js';
 import type { 
   DocumentationSource, 
   OptimizelyDocumentationResult, 
@@ -10,8 +10,8 @@ import type {
   DocumentationCategory,
   CodeExample,
   CrawlerConfig 
-} from '@/types/index.js';
-import { DatabaseManager } from '@/database/database-manager.js';
+} from '../types/index.js';
+import { DatabaseManager } from '../database/database-manager.js';
 
 export class DocumentationCrawler {
   private logger: Logger;

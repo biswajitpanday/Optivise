@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { OptimizelyProduct, DocumentationCategory } from '@/types/index.js';
-import type { Logger } from '@/utils/logger.js';
-import type { ServerConfig, OptimizelyDocumentationResult, SearchQuery } from '@/types/index.js';
-import { DatabaseManager } from '@/database/database-manager.js';
+import { OptimizelyProduct, DocumentationCategory } from '../types/index.js';
+import type { Logger } from '../utils/logger.js';
+import type { ServerConfig, OptimizelyDocumentationResult, SearchQuery } from '../types/index.js';
+import { DatabaseManager } from '../database/database-manager.js';
 
 const GetOptimizelyDocsArgsSchema = z.object({
   documentId: z.string().optional(),

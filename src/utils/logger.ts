@@ -1,6 +1,6 @@
 import winston from 'winston';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import type { LoggingConfig } from '@/types/index.js';
+import type { LoggingConfig } from '../types/index.js';
 
 export class Logger {
   private logger: winston.Logger;

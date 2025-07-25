@@ -1,7 +1,7 @@
 
-import { OptimizelyProduct, OptimizelyToolContextSchema } from '@/types/index.js';
-import type { Logger } from '@/utils/logger.js';
-import type { ServerConfig, OptimizelyToolContext } from '@/types/index.js';
+import { OptimizelyProduct, OptimizelyToolContextSchema } from '../types/index.js';
+import type { Logger } from '../utils/logger.js';
+import type { ServerConfig, OptimizelyToolContext } from '../types/index.js';
 
 export class ResolveOptimizelyIdTool {
   private logger: Logger;
