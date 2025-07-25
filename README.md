@@ -11,10 +11,11 @@ A comprehensive AI-powered development assistant for Optimizely developers, prov
 - **⚡ IDE Integration**: Works seamlessly with Cursor, VS Code, and other MCP-compatible editors
 - **🛠️ Zero Setup**: Available as both NPM package and remote service
 
-## 🎉 **Live Deployment**
+## 🚀 **Live Deployment - Enhanced Features!**
 - **Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
 - **Repository**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
-- **Status**: ✅ **PRODUCTION READY & VERIFIED WORKING**
+- **Status**: 🎯 **v2.0 ENHANCED - 3 MCP TOOLS LIVE**
+- **Tools**: `search_optimizely_docs`, `find_optimizely_pattern`, `analyze_optimizely_bug`
 
 ## 📦 **Installation & Setup**
 

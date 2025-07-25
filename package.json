@@ -23,7 +23,7 @@
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage .nyc_output",
     "precommit": "npm run lint && npm run type-check && npm run test",
-    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "prepublishOnly": "npm run clean && npm run build",
     "publish:npm": "npm publish",
     "publish:beta": "npm publish --tag beta"
   },

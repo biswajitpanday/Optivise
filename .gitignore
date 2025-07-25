@@ -10,6 +10,10 @@ yarn.lock
 logs/
 *.log
 
+# Unused directories
+assets/
+data/
+
 # Build outputs
 dist/
 build/

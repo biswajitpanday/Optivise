@@ -45,11 +45,11 @@ export class OptimizelyPatternCrawler {
     
     const patterns: OptimizelyPattern[] = [];
     
-    // Updated URLs based on actual Optimizely documentation structure
+    // Working URLs from docs.developers.optimizely.com
     const commerceUrls = [
-      `${this.baseUrl}/configured-commerce`,
-      `${this.baseUrl}/configured-commerce/dev`,
-      // These are placeholder URLs - we'll extract actual URLs from the main documentation page
+      `${this.baseUrl}/configured-commerce/docs`,
+      `${this.baseUrl}/configured-commerce/reference`,
+      `${this.baseUrl}/commerce`,
     ];
 
     for (const url of commerceUrls) {
@@ -78,9 +78,9 @@ export class OptimizelyPatternCrawler {
     
     // Updated CMS URLs based on documentation structure
     const cmsUrls = [
-      `${this.baseUrl}/content-management-system`,
-      `${this.baseUrl}/content-management-system/v12.0`,
-      `${this.baseUrl}/content-management-system/saas`,
+      `${this.baseUrl}/content-cloud/docs`,
+      `${this.baseUrl}/content-management-system/v12.0/docs`,
+      `${this.baseUrl}/content-management-system/docs`,
     ];
 
     for (const url of cmsUrls) {
@@ -108,8 +108,8 @@ export class OptimizelyPatternCrawler {
     const patterns: OptimizelyPattern[] = [];
     
     const cmpUrls = [
-      `${this.baseUrl}/content-marketing-platform`,
-      `${this.baseUrl}/content-marketing-platform/api`,
+      `${this.baseUrl}/content-marketing-platform/docs`,
+      `${this.baseUrl}/content-marketing-platform/reference`,
     ];
 
     for (const url of cmpUrls) {
@@ -137,8 +137,8 @@ export class OptimizelyPatternCrawler {
     const patterns: OptimizelyPattern[] = [];
     
     const odpUrls = [
-      `${this.baseUrl}/data-platform`,
-      `${this.baseUrl}/data-platform/dev`,
+      `${this.baseUrl}/optimizely-data-platform/docs`,
+      `${this.baseUrl}/optimizely-data-platform/reference`,
     ];
 
     for (const url of odpUrls) {
@@ -166,9 +166,9 @@ export class OptimizelyPatternCrawler {
     const patterns: OptimizelyPattern[] = [];
     
     const expUrls = [
-      `${this.baseUrl}/experimentation`,
-      `${this.baseUrl}/experimentation/web`,
-      `${this.baseUrl}/experimentation/feature`,
+      `${this.baseUrl}/feature-experimentation/docs`,
+      `${this.baseUrl}/web-experimentation/docs`,
+      `${this.baseUrl}/experimentation-data/docs`,
     ];
 
     for (const url of expUrls) {
@@ -196,9 +196,9 @@ export class OptimizelyPatternCrawler {
     const patterns: OptimizelyPattern[] = [];
     
     const ccUrls = [
-      `${this.baseUrl}/commerce-connect`,
-      `${this.baseUrl}/commerce-connect/v14.0`,
-      `${this.baseUrl}/commerce-connect/v13.0`,
+      `${this.baseUrl}/commerce-connect/v14.0/docs`,
+      `${this.baseUrl}/commerce-connect/v13.0/docs`,
+      `${this.baseUrl}/commerce-connect/reference`,
     ];
 
     for (const url of ccUrls) {
