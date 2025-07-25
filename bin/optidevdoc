@@ -12,7 +12,7 @@ const fs = require('fs');
 const PACKAGE_ROOT = path.join(__dirname, '..');
 
 // Check if we have the required files
-const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote-enhanced.js');
+const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
 const simpleClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
 
 function printUsage() {
@@ -101,6 +101,9 @@ function startMCPClient(isEnhanced = true, options = {}) {
   
   if (!fs.existsSync(clientPath)) {
     console.error(`❌ Client not found: ${clientPath}`);
+    console.error(`❌ Expected path: ${clientPath}`);
+    console.error(`❌ Package root: ${PACKAGE_ROOT}`);
+    console.error(`❌ Available files:`, fs.readdirSync(PACKAGE_ROOT).filter(f => f.includes('remote')));
     process.exit(1);
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "optidevdoc",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Intelligent Optimizely development assistant with pattern analysis, bug resolution, and comprehensive documentation search",
   "main": "index.js",
   "bin": {
