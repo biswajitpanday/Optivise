@@ -2,14 +2,48 @@
 
 ## System Overview
 
-OptiDevDoc is a **successfully deployed** MCP (Model Context Protocol) server that provides real-time Optimizely documentation access to AI coding assistants. The current implementation prioritizes simplicity, reliability, and zero-setup team deployment.
+OptiDevDoc is a **successfully deployed** MCP (Model Context Protocol) server that provides real-time Optimizely documentation access to AI coding assistants. The current implementation prioritizes **simplicity, reliability, and zero-setup team deployment**.
 
 **Live Implementation**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
 
 ## 🏗️ **Current Architecture (Implemented)**
 
-![High-Level Architecture](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/OptiDevDoc_Arch_1.svg)
-
+```mermaid
+graph TB
+    subgraph "Developer IDEs"
+        A[Cursor IDE]
+        B[VS Code]
+        C[Other MCP IDEs]
+    end
+    
+    subgraph "Local MCP Bridge"
+        D[optidevdoc-remote.js]
+    end
+    
+    subgraph "Remote Server (Render.com)"
+        E[Express.js HTTP Server]
+        F[API Router]
+        G[Search Engine]
+        H[Mock Documentation]
+    end
+    
+    subgraph "External Access"
+        I[Direct HTTP API]
+        J[REST Clients]
+    end
+    
+    A --> D
+    B --> D
+    C --> D
+    
+    D -->|HTTPS API| E
+    I -->|Direct HTTP| E
+    J -->|REST| E
+    
+    E --> F
+    F --> G
+    G --> H
+```
 
 ## 🎯 **Implemented Components**
 
@@ -17,355 +51,182 @@ OptiDevDoc is a **successfully deployed** MCP (Model Context Protocol) server th
 
 **Purpose**: Local MCP protocol bridge that connects IDEs to the remote server
 
-```typescript
-// Simplified implementation structure
-interface MCPBridge {
-  handleInitialize(): MCPResponse;
-  handleToolsList(): MCPResponse;  
-  handleToolCall(params: ToolCallParams): Promise<MCPResponse>;
-  
-  // Remote API communication
-  callRemoteAPI(query: string): Promise<APIResponse>;
-}
+```javascript
+// Core MCP methods implemented
+const mcpMethods = {
+  'initialize': () => ({ protocolVersion: '2024-11-05', capabilities: {...} }),
+  'tools/list': () => ({ tools: [{ name: 'search_optimizely_docs', ... }] }),
+  'tools/call': (params) => callRemoteAPI(params.arguments.query),
+  'ping': () => ({})
+};
 ```
 
 **Key Features**:
-- ✅ **MCP Protocol Compliance**: Implements initialize, tools/list, tools/call
+- ✅ **MCP Protocol Compliance**: Full initialize, tools/list, tools/call support
 - ✅ **Remote Communication**: HTTPS requests to deployed server
-- ✅ **Error Handling**: Graceful degradation and clear error messages
-- ✅ **Response Formatting**: Optimized output for AI consumption
+- ✅ **Error Handling**: Timeout, retry, and clear error messages
+- ✅ **Response Formatting**: Optimized for AI consumption
 - ✅ **Zero Dependencies**: Uses only Node.js built-in modules
+- ✅ **Debug Mode**: Optional verbose logging with `DEBUG_MCP=true`
 
-### 2. **HTTP API Server** (`deploy-server-simple.ts`)
+### 2. **HTTP API Server** (`src/deploy-server-simple.ts`)
 
 **Purpose**: Remote Express.js server providing documentation search capabilities
 
 ```typescript
-// Actual server implementation
-interface APIServer {
-  // Core endpoints
-  'GET /health': HealthResponse;
-  'GET /api/docs': APIDocumentation;
-  'POST /api/search': SearchResponse;
-  'GET /': ServerInfo;
-}
-
-interface SearchRequest {
-  query: string;           // Required search terms
-  product?: string;        // Optional product filter
-  maxResults?: number;     // Optional result limit (default: 10)
-}
-
-interface SearchResponse {
-  success: boolean;
-  query: string;
-  results: DocumentationResult[];
-  total_count: number;
-  timestamp: string;
-  server_info: ServerMetadata;
-}
+// Actual server endpoints
+const endpoints = {
+  'GET /health': () => ({ status: 'healthy', uptime: process.uptime() }),
+  'GET /api/docs': () => ({ /* API documentation */ }),
+  'POST /api/search': (query) => searchMockDocumentation(query),
+  'GET /': () => ({ /* server info */ })
+};
 ```
 
-**Current Implementation**:
-- ✅ **Express.js Framework**: RESTful API with CORS support
-- ✅ **Mock Documentation**: 2 sample Optimizely documents for testing
-- ✅ **Text Search**: TF-IDF-style relevance scoring
-- ✅ **Error Handling**: Comprehensive error responses
-- ✅ **Health Monitoring**: `/health` endpoint for service monitoring
+**Technical Stack**:
+- ✅ **Express.js**: Lightweight HTTP framework
+- ✅ **CORS**: Cross-origin resource sharing
+- ✅ **Mock Data**: 3 sample Optimizely documentation entries
+- ✅ **Text Search**: Simple keyword-based search
+- ✅ **Error Handling**: Graceful error responses
+- ✅ **Health Monitoring**: Status and uptime tracking
 
-### 3. **Documentation Data Layer** (In-Memory)
-
-**Purpose**: Stores and serves Optimizely documentation content
-
-```typescript
-// Current mock data structure
-interface DocumentationEntry {
-  id: string;
-  title: string;
-  content: string;              // Full documentation content
-  url: string;                  // Source URL
-  product: string;              // 'configured-commerce', 'cms-paas', etc.
-  category: string;             // 'developer-guide', 'api-reference'
-  version: string;              // Documentation version
-  lastUpdated: string;          // ISO timestamp
-  relevanceScore: number;       // Search relevance
-  tags: string[];               // Keywords for search
-  breadcrumb: string[];         // Navigation path
-}
-```
+### 3. **Mock Documentation Database**
 
 **Current Content**:
-- ✅ **Configured Commerce**: Pricing Engine documentation with C# examples
-- ✅ **CMS**: Content Delivery API documentation with JavaScript examples
-- ✅ **Expandable Structure**: Ready for additional products and content
+1. **Configured Commerce Pricing** - B2B pricing engine with C# examples
+2. **CMS Content Delivery API** - Content API with JavaScript examples  
+3. **Commerce Analytics** - Analytics implementation with code samples
 
-### 4. **Search Engine** (Text-Based)
-
-**Purpose**: Provides intelligent search across documentation content
-
-```typescript
-// Search algorithm implementation
-class SimpleSearchEngine {
-  search(query: string, options: SearchOptions): SearchResult[] {
-    const searchTerms = query.toLowerCase().split(/\s+/);
-    
-    return documents
-      .map(doc => ({
-        ...doc,
-        relevanceScore: this.calculateRelevance(doc, searchTerms)
-      }))
-      .filter(doc => doc.relevanceScore > 0)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, options.maxResults || 10);
-  }
-  
-  private calculateRelevance(doc: Document, terms: string[]): number {
-    let score = 0;
-    const content = `${doc.title} ${doc.content} ${doc.tags.join(' ')}`.toLowerCase();
-    
-    terms.forEach(term => {
-      if (doc.title.toLowerCase().includes(term)) score += 10; // Title bonus
-      if (content.includes(term)) score += 1;                   // Content match
-    });
-    
-    return score;
-  }
-}
+**Structure**:
+```javascript
+const mockDoc = {
+  id: 'unique-identifier',
+  title: 'Documentation Title',
+  content: '# Markdown content with code examples',
+  url: 'https://docs.developers.optimizely.com/...',
+  product: 'configured-commerce',
+  category: 'developer-guide',
+  codeExamples: [{ language: 'csharp', code: '...', description: '...' }],
+  tags: ['pricing', 'commerce'],
+  breadcrumb: ['Home', 'Commerce', 'Pricing']
+};
 ```
-
-**Features**:
-- ✅ **Keyword Matching**: Case-insensitive search across title and content
-- ✅ **Relevance Scoring**: Title matches weighted higher than content
-- ✅ **Product Filtering**: Optional filtering by Optimizely product
-- ✅ **Result Limiting**: Configurable maximum results
 
 ## 🚀 **Deployment Architecture**
 
-### **Render.com Production Environment**
-
-```yaml
-# Actual deployment configuration
-Production Stack:
-  Platform: Render.com (Free Tier)
-  Runtime: Node.js 24.4.1
-  Framework: Express.js 4.18.2
-  Build: TypeScript → JavaScript
-  Storage: In-memory (expandable to database)
-  
-Environment:
-  NODE_ENV: production
-  PORT: 10000
-  HOST: 0.0.0.0
-  
-Build Process:
-  1. yarn install          # Install dependencies
-  2. yarn build           # TypeScript compilation
-  3. node index.js        # Start server
-  4. Load compiled app    # dist/deploy-server-simple.js
-```
-
-### **Auto-Deployment Pipeline**
-
+### **Build Process**
 ```mermaid
 graph LR
-    A[GitHub Push] --> B[Render Build]
-    B --> C[TypeScript Compile]
-    C --> D[Deploy Service]
-    D --> E[Health Check]
-    E --> F[Service Live]
+    A[TypeScript Source] --> B[tsc Compiler]
+    B --> C[dist/deploy-server-simple.js]
+    C --> D[index.js Loader]
+    D --> E[Render.com Runtime]
 ```
 
-**Features**:
-- ✅ **Zero-Downtime**: Rolling updates with health checks
-- ✅ **Automatic Builds**: Triggered on GitHub push to master
-- ✅ **Health Monitoring**: Automatic restart on failures
-- ✅ **HTTPS**: SSL/TLS encryption by default
+### **Request Flow**
+```mermaid
+sequenceDiagram
+    participant IDE as Cursor IDE
+    participant Bridge as MCP Bridge
+    participant Server as Remote Server
+    participant Data as Mock Data
 
-## 📊 **Data Flow & Communication**
-
-### **1. MCP Tool Call Flow**
-```
-IDE Query → MCP Bridge → HTTPS Request → Express Server → 
-Search Engine → Mock Data → Response Formatting → MCP Response → IDE
-```
-
-### **2. Direct API Access Flow**
-```
-HTTP Client → HTTPS Request → Express Server → 
-Search Engine → Mock Data → JSON Response → Client
+    IDE->>Bridge: MCP tools/call
+    Bridge->>Server: HTTPS POST /api/search
+    Server->>Data: Search query
+    Data-->>Server: Matching docs
+    Server-->>Bridge: JSON response
+    Bridge-->>IDE: Formatted MCP response
 ```
 
-### **3. Health Monitoring Flow**
-```
-External Monitor → /health Endpoint → Server Status → 
-Health Response → Monitoring Dashboard
-```
+## 📊 **Current Capabilities & Limitations**
 
-## 🔧 **API Specifications**
+### **✅ Working Features**
+- **MCP Integration**: Full protocol support for Cursor IDE
+- **Remote Deployment**: Zero-config team setup
+- **Documentation Search**: Text-based search across mock data
+- **Code Examples**: Syntax-highlighted code snippets
+- **Health Monitoring**: Server status and uptime tracking
+- **Error Handling**: Graceful degradation and clear messages
+- **Cross-Platform**: Windows, macOS, Linux support
 
-### **Search API (POST /api/search)**
+### **📋 Current Limitations (Future Opportunities)**
+- **Data Source**: Uses mock data instead of live documentation
+- **Search Method**: Simple text matching (no semantic search)
+- **Content Volume**: Only 3 sample documents
+- **Real-time Updates**: Manual data updates required
+- **Advanced Features**: No database, crawler, or AI embeddings
 
-**Request Format**:
-```json
-{
-  "query": "custom price calculator",
-  "product": "configured-commerce",  // Optional
-  "maxResults": 5                    // Optional
-}
-```
+## 🔧 **Technical Decisions**
 
-**Response Format**:
-```json
-{
-  "success": true,
-  "query": "custom price calculator",
-  "product": "configured-commerce",
-  "results": [
-    {
-      "id": "configured-commerce-pricing-overview",
-      "title": "Pricing Engine Overview - Optimizely Configured Commerce",
-      "content": "# Pricing Engine Overview\n\nThe Optimizely Configured Commerce pricing engine...",
-      "url": "https://docs.developers.optimizely.com/configured-commerce/pricing/overview",
-      "product": "configured-commerce",
-      "category": "developer-guide",
-      "version": "12.x",
-      "lastUpdated": "2024-01-15T10:30:00Z",
-      "relevanceScore": 1.0,
-      "tags": ["pricing", "commerce", "calculation", "discounts"],
-      "breadcrumb": ["Home", "Configured Commerce", "Developer Guide", "Pricing"]
-    }
-  ],
-  "total_count": 1,
-  "timestamp": "2024-01-15T10:30:00Z",
-  "server_info": {
-    "type": "standalone_server",
-    "search_method": "text_search",
-    "documentation_source": "mock_data"
-  }
-}
+### **Why Simple Architecture?**
+1. **Rapid Deployment**: Focus on working solution over feature completeness
+2. **Reliability**: Fewer moving parts = fewer failure points  
+3. **Team Adoption**: Zero-setup barrier for new developers
+4. **Maintainability**: Easy to understand and modify
+5. **Cost Efficiency**: Free tier deployment on Render.com
+
+### **Future Evolution Path**
+The current architecture provides a solid foundation for incremental enhancement:
+1. **Phase 1** ✅: Simple HTTP server with mock data (COMPLETED)
+2. **Phase 2** 📋: Add live documentation crawler
+3. **Phase 3** 📋: Implement semantic search with AI embeddings  
+4. **Phase 4** 📋: Add database persistence and caching
+5. **Phase 5** 📋: Multiple documentation sources and products
+
+## 🛠️ **Development Workflow**
+
+### **Local Development**
+```bash
+# Start local development server
+npm run dev
+# Server runs on http://localhost:3000
+
+# Test API directly
+curl -X POST http://localhost:3000/api/search -H "Content-Type: application/json" -d '{"query":"pricing"}'
 ```
 
-### **Health Check API (GET /health)**
+### **Production Deployment**
+```bash
+# Automatic deployment via git push
+git push origin master
+# Render.com builds: yarn install && yarn build
+# Runs: node index.js (loads dist/deploy-server-simple.js)
+```
 
-**Response Format**:
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "version": "1.0.0",
-  "uptime": 12345,
-  "server": "OptiDevDoc Standalone Server",
-  "documentation_count": 2
-}
+### **MCP Testing**
+```bash
+# Test MCP protocol locally
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node optidevdoc-remote.js
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_optimizely_docs","arguments":{"query":"pricing"}}}' | node optidevdoc-remote.js
 ```
 
 ## 📈 **Performance Characteristics**
 
-### **Current Performance**
-- **Response Time**: <500ms average for search queries
-- **Cold Start**: 30-60 seconds (first request after inactivity)
-- **Throughput**: Sufficient for team usage on free tier
-- **Memory Usage**: <200MB typical, <512MB limit
-- **CPU Usage**: Low impact with current mock data
+### **Response Times**
+- **Local Development**: ~10-50ms
+- **Production (Warm)**: ~100-300ms  
+- **Production (Cold Start)**: ~10-30 seconds (free tier limitation)
 
-### **Scalability Considerations**
-- **Current Capacity**: Suitable for small to medium teams (5-20 developers)
-- **Horizontal Scaling**: Stateless design supports multiple instances
-- **Vertical Scaling**: Can handle more content with database backend
-- **Caching**: Ready for Redis or in-memory caching layer
+### **Scalability**
+- **Concurrent Users**: Limited by Render.com free tier
+- **Search Performance**: O(n) linear scan through mock data
+- **Memory Usage**: ~50MB baseline
+- **CPU Usage**: Minimal (I/O bound operations)
 
 ## 🔒 **Security & Reliability**
 
-### **Current Security Measures**
-- ✅ **HTTPS Encryption**: All communication encrypted in transit
-- ✅ **CORS Configuration**: Controlled cross-origin access
+### **Security Measures**
+- ✅ **CORS Configuration**: Controlled origin access
 - ✅ **Input Validation**: Query parameter sanitization
-- ✅ **Error Handling**: No sensitive information in error responses
-- ✅ **Rate Limiting**: Basic protection against abuse
+- ✅ **Error Handling**: No sensitive information leakage
+- ✅ **HTTPS**: Encrypted communication via Render.com
 
 ### **Reliability Features**
-- ✅ **Health Checks**: Automated service monitoring
-- ✅ **Error Recovery**: Graceful degradation on failures
-- ✅ **Logging**: Request/response logging for debugging
-- ✅ **Circuit Breakers**: Prevent cascade failures
-- ✅ **Timeout Handling**: Request timeout protection
+- ✅ **Health Checks**: `/health` endpoint for monitoring
+- ✅ **Graceful Shutdown**: SIGINT/SIGTERM handling
+- ✅ **Error Recovery**: Automatic restart on failures
+- ✅ **Timeout Handling**: Client-side request timeouts
 
-## 🚀 **Future Architecture Evolution**
-
-### **Phase 2: Enhanced Data Layer**
-```typescript
-// Planned database integration
-interface DatabaseLayer {
-  documents: SQLiteDatabase;     // Persistent document storage
-  searchIndex: FTS5Index;        // Full-text search index
-  vectorStore: EmbeddingStore;   // Semantic search capability
-  cache: RedisCache;             // Query result caching
-}
-```
-
-### **Phase 3: Advanced Search**
-```typescript
-// Planned hybrid search engine
-interface HybridSearchEngine {
-  keywordSearch(): SearchResult[];   // Current implementation
-  semanticSearch(): SearchResult[];  // Vector similarity search
-  hybridRanking(): SearchResult[];   // Combined scoring
-}
-```
-
-### **Phase 4: Real-Time Updates**
-```typescript
-// Planned documentation crawler
-interface DocumentationCrawler {
-  sources: OptimizelyDocSources[];
-  scheduler: CrawlScheduler;
-  changeDetector: ContentChangeDetector;
-  indexUpdater: IncrementalIndexer;
-}
-```
-
-## 📊 **Monitoring & Observability**
-
-### **Current Monitoring**
-- ✅ **Health Endpoint**: Real-time service status
-- ✅ **Request Logging**: Basic request/response logging
-- ✅ **Error Tracking**: Exception logging and reporting
-- ✅ **Uptime Monitoring**: Render.com platform monitoring
-
-### **Metrics Collection**
-```typescript
-// Current metrics
-interface ServiceMetrics {
-  requestCount: number;
-  responseTime: number;
-  errorRate: number;
-  searchQueries: number;
-  activeUsers: number;
-}
-```
-
-## 🎯 **Architecture Benefits**
-
-### **For Developers**
-- ✅ **Zero Setup**: No local installation required
-- ✅ **Always Updated**: Server updates automatically benefit all users
-- ✅ **Cross-Platform**: Works on Windows, Mac, Linux
-- ✅ **IDE Agnostic**: Compatible with any MCP-supported editor
-
-### **For Teams**
-- ✅ **Centralized**: Single server for entire team
-- ✅ **Consistent**: Everyone gets same documentation access
-- ✅ **Maintainable**: Updates in one place benefit everyone
-- ✅ **Scalable**: Can handle team growth
-
-### **For Operations**
-- ✅ **Simple Deployment**: Single Render.com service
-- ✅ **Auto-Scaling**: Platform handles traffic spikes
-- ✅ **Health Monitoring**: Built-in monitoring and alerting
-- ✅ **Cost Effective**: Free tier suitable for most teams
-
----
-
-**🏆 ARCHITECTURE STATUS: SUCCESSFULLY IMPLEMENTED**  
-**Current State**: Production-ready, serving real traffic, ready for team adoption  
-**Evolution Path**: Clear upgrade path for enhanced features as needed 
+This simplified architecture successfully achieves the core goal: **providing Optimizely documentation context to AI coding assistants with zero developer setup complexity**. 

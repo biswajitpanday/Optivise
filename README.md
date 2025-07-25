@@ -7,152 +7,167 @@ An MCP (Model Context Protocol) server that provides real-time Optimizely docume
 - **Repository**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
 - **Status**: ✅ **PRODUCTION READY & VERIFIED WORKING**
 
+## 🚀 **Quick Setup for Teams**
 
-## 🏗️ Architecture Diagram
+### **1-Minute Setup (Recommended)**
+1. **Download the MCP bridge**: Save [`optidevdoc-remote.js`](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js) to your computer
+2. **Configure Cursor IDE**: Add to your MCP settings
+3. **Start using**: Search Optimizely docs directly in your AI assistant
 
-![High-Level Architecture](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/OptiDevDoc_Arch_1.svg)
+### **Cursor IDE Configuration**
+Add this to your Cursor MCP settings (`Cursor Settings > Features > Model Context Protocol`):
 
+```json
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "node",
+      "args": ["C:\\path\\to\\optidevdoc-remote.js"],
+      "env": {
+        "DEBUG_MCP": "false"
+      }
+    }
+  }
+}
+```
 
-## 🛠️ **How It Works**
+**Windows Example**: `"args": ["C:\\D\\RND\\MCPs\\OptiDevDoc\\optidevdoc-remote.js"]`  
+**Mac/Linux Example**: `"args": ["/Users/username/tools/optidevdoc-remote.js"]`
 
-<div align="center">
-  <img src="https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/How_it_works.svg" alt="How it works" height="500"/>
-</div>
+## 💡 **What You Get**
 
+### **✅ Currently Available**
+- **📖 Documentation Search**: 3 sample Optimizely documentation entries
+  - **Configured Commerce Pricing** - B2B pricing engine with C# examples
+  - **CMS Content Delivery API** - Content API with JavaScript examples  
+  - **Commerce Analytics** - Analytics implementation with code samples
+- **🔍 Text-Based Search**: Keyword matching across documentation
+- **💻 Code Examples**: Syntax-highlighted code snippets
+- **🌐 Cross-Platform**: Works on Windows, macOS, Linux
+- **⚡ Zero Setup**: No database or complex installation required
+- **🔄 Remote Updates**: Server improvements benefit all users
 
-## 🚀 **Quick Setup for New Users**
+### **🎯 Example Prompts to Try**
+```
+"How do I implement custom pricing in Optimizely Configured Commerce?"
+"Show me how to use the Content Delivery API"
+"What's the best way to handle analytics in Optimizely?"
+"Help me build a custom price calculator"
+```
 
-### **Step 1: Download the Remote Client**
+## 🏗️ **Current Architecture**
+
+```mermaid
+graph TB
+    subgraph "Your IDE"
+        A[Cursor/VS Code]
+    end
+    
+    subgraph "Local Bridge"
+        B[optidevdoc-remote.js]
+    end
+    
+    subgraph "Remote Server"
+        C[Express.js API]
+        D[Documentation Search]
+        E[Mock Data]
+    end
+    
+    A --> B
+    B -->|HTTPS| C
+    C --> D
+    D --> E
+```
+
+### **How It Works**
+1. **Your IDE** sends MCP requests to the local bridge
+2. **Local bridge** (`optidevdoc-remote.js`) translates MCP to HTTP
+3. **Remote server** searches documentation and returns results
+4. **Bridge** formats results for your AI assistant
+
+## 🛠️ **Development**
+
+### **Local Development**
 ```bash
-# Download the MCP bridge client
-curl -O https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js
+# Clone the repository
+git clone https://github.com/biswajitpanday/OptiDevDoc.git
+cd OptiDevDoc
+
+# Install dependencies  
+npm install
+
+# Start development server
+npm run dev
+# Server runs at: http://localhost:3000
 ```
 
-### **Step 2: Configure Your IDE**
+### **Test the API**
+```bash
+# Test search endpoint
+curl -X POST http://localhost:3000/api/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "pricing"}'
 
-#### **For Cursor IDE (Verified Working)**
-Add this to your MCP settings (`~/.cursor/mcp.json` or Cursor Settings):
-
-**Option A: Using Absolute Path (Recommended)**
-```json
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "node",
-      "args": ["/absolute/path/to/optidevdoc-remote.js"],
-      "env": {
-        "DEBUG_MCP": "false"
-      }
-    }
-  }
-}
+# Test health endpoint
+curl http://localhost:3000/health
 ```
 
-**Option B: Using Working Directory**
-```json
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "node",
-      "args": ["optidevdoc-remote.js"],
-      "cwd": "/path/to/downloaded/file/directory",
-      "env": {
-        "DEBUG_MCP": "false"
-      }
-    }
-  }
-}
+### **Test MCP Protocol**
+```bash
+# Test tools list
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node optidevdoc-remote.js
+
+# Test search tool
+echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_optimizely_docs","arguments":{"query":"pricing"}}}' | node optidevdoc-remote.js
 ```
 
-**Windows Example (Tested & Working)**:
-```json
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "node",
-      "args": ["C:\\D:\\RND\\MCPs\\OptiDevDoc\\optidevdoc-remote.js"],
-      "env": {
-        "DEBUG_MCP": "false"
-      }
-    }
-  }
-}
-```
+## 📚 **API Documentation**
 
-#### **For VS Code**
-Use the REST Client extension:
+### **Search Endpoint**
 ```http
-### Search Optimizely Documentation
 POST https://optidevdoc.onrender.com/api/search
 Content-Type: application/json
 
 {
-  "query": "custom price calculator",
-  "product": "configured-commerce",
-  "maxResults": 5
+  "query": "pricing calculator",
+  "product": "configured-commerce"  // Optional: filter by product
 }
 ```
 
-### **Step 3: Restart Your IDE**
-- **Cursor**: Completely close and reopen Cursor IDE
-- **Wait**: Allow 30-60 seconds for the remote server to wake up from idle state
-- **Verify**: You should see "optidevdoc" showing **green** with "1 tool enabled"
-
-## 🎯 **Usage Examples**
-
-Once configured, you can use these prompts in your AI coding assistant:
-
-### **Optimizely B2B Commerce Questions**
+**Response**:
+```json
+{
+  "success": true,
+  "query": "pricing calculator", 
+  "results": [
+    {
+      "id": "configured-commerce-pricing-overview",
+      "title": "Pricing Engine Overview - Optimizely Configured Commerce",
+      "content": "# Pricing Engine Overview\n\n...",
+      "url": "https://docs.developers.optimizely.com/...",
+      "product": "configured-commerce",
+      "codeExamples": [...],
+      "tags": ["pricing", "commerce"]
+    }
+  ],
+  "total_count": 1
+}
 ```
-"How do I implement a custom price calculator in Optimizely B2B Commerce?"
-
-"Show me the API structure for Optimizely CMS content delivery"
-
-"What are the checkout flow options in Optimizely Commerce?"
-```
-
-### **Direct Tool Usage**
-The MCP tool `search_optimizely_docs` will be available with parameter:
-- `query`: Your search terms (e.g., "pricing calculator", "CMS API")
-
-## 📊 **Server Status & Monitoring**
 
 ### **Health Check**
-```bash
-curl https://optidevdoc.onrender.com/health
-```
-
-### **API Documentation**
-```bash
-curl https://optidevdoc.onrender.com/api/docs
-```
-
-### **Direct API Usage**
-```bash
-curl -X POST https://optidevdoc.onrender.com/api/search \
-  -H "Content-Type: application/json" \
-  -d '{"query": "pricing calculator"}'
+```http
+GET https://optidevdoc.onrender.com/health
 ```
 
 ## 🔧 **Troubleshooting**
 
-### **Common Issues & Solutions**
+### **Cursor IDE Shows "Red" Status**
+- ✅ **Check file path**: Use absolute path in `args` (most reliable)
+- ✅ **Restart Cursor**: Sometimes needed after configuration changes
+- ✅ **Test the bridge manually**: `echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node optidevdoc-remote.js`
+- ✅ **Check network**: Ensure `https://optidevdoc.onrender.com/health` is accessible
 
-#### **Red Status in Cursor IDE**
-- ✅ **Use absolute file paths** in `args` (most reliable)
-- ✅ **Restart Cursor completely** (close and reopen)
-- ✅ **Wait for server wake-up** (30-60 seconds)
-- ✅ **Check file permissions** (ensure Node.js can execute the file)
-
-#### **"0 tools enabled" or Connection Issues**
-- ✅ **Verify Node.js** is installed and accessible via `node` command
-- ✅ **Test the client manually**:
-  ```bash
-  echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | node optidevdoc-remote.js
-  ```
-- ✅ **Check network connectivity** to https://optidevdoc.onrender.com/
-
-#### **Server Timeout Issues**
+### **Server Timeout Issues**
 - ✅ **Render.com free tier** spins down after inactivity
 - ✅ **First request** may take 10-30 seconds to wake up
 - ✅ **Subsequent requests** are fast once awake
@@ -173,70 +188,50 @@ Enable detailed logging:
 }
 ```
 
-## 🏗️ **Technical Architecture**
+## 🚀 **Future Roadmap**
 
-### **Component Overview**
-1. **Remote HTTP Server** - Deployed on Render.com
-2. **MCP Bridge Client** - Local Node.js script (`optidevdoc-remote.js`)
-3. **IDE Integration** - MCP protocol communication
-4. **Documentation API** - RESTful search endpoint
+The current implementation provides a solid foundation. Future enhancements could include:
 
-### **Data Flow**
-```
-IDE → MCP Protocol → Bridge Client → HTTPS → Remote Server → Documentation Search → Response
-```
+### **📋 Planned Enhancements** 
+- **Live Documentation Crawler**: Automatically fetch latest Optimizely docs
+- **Semantic Search**: AI-powered search with embeddings
+- **Multiple Products**: Expand beyond current 3 sample documents
+- **Database Storage**: Persistent documentation storage
+- **Real-time Updates**: Automatic content synchronization
 
-### **Key Features**
-- ✅ **Zero Local Setup** - No database or complex installation
-- ✅ **Team Ready** - Share one file for instant access
-- ✅ **Real-time Updates** - Server can be updated without client changes
-- ✅ **Cross-Platform** - Works on Windows, macOS, Linux
-- ✅ **Multiple IDEs** - MCP protocol support across tools
+### **🎯 Current Focus**
+The project prioritizes **reliability and ease of use** over feature complexity:
+- ✅ **Simple Architecture**: Fewer moving parts = more reliable
+- ✅ **Zero Setup**: Teams can start using immediately  
+- ✅ **Proven Technology**: Express.js + Node.js stack
+- ✅ **Free Deployment**: No hosting costs for teams
 
-## 🚀 **For Developers**
+## 📊 **Performance**
 
-### **Local Development**
-```bash
-# Clone repository
-git clone https://github.com/biswajitpanday/OptiDevDoc.git
-cd OptiDevDoc
+- **Response Times**: ~100-300ms (warm), ~10-30s (cold start)
+- **Availability**: 99%+ (limited by Render.com free tier)
+- **Scalability**: Suitable for small-medium teams
+- **Memory Usage**: ~50MB baseline
 
-# Install dependencies
-npm install
+## 🤝 **Contributing**
 
-# Run local development server
-npm run dev
-
-# Build for production
-npm run build
-```
-
-### **Extending Documentation**
-The server uses a modular approach for adding new documentation sources:
-- Add new data files to `src/data/`
-- Update search algorithms in `src/search/`
-- Extend API endpoints in `src/server/`
-
-### **Contributing**
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`  
+5. Open a Pull Request
 
-## 📄 **Project Resources**
+### **Development Notes**
+- Main server code: `src/deploy-server-simple.ts`
+- MCP bridge client: `optidevdoc-remote.js`
+- Build process: `npm run build` (TypeScript → JavaScript)
+- Deployment: Automatic via Render.com on git push
 
-- **[Architecture Documentation](Resources/ARCHITECTURE.md)** - Technical details
-- **[Deployment Guide](Resources/DEPLOYMENT_PLAN.md)** - Server setup and deployment
-- **[Task List](Resources/TASK_LIST.md)** - Project completion status
+## 📄 **License**
 
-## 📞 **Support**
-
-For issues or questions:
-1. **Check the troubleshooting section** above
-2. **Test the remote server** at https://optidevdoc.onrender.com/
-3. **Verify your MCP configuration** matches the examples
-4. **Open an issue** on GitHub if problems persist
+MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**OptiDevDoc** - Bringing Optimizely documentation directly to your AI coding assistant! 🚀 
+**🎉 Ready to enhance your Optimizely development with AI assistance!**  
+**Questions?** Open an issue or check the [troubleshooting guide](#-troubleshooting) 
