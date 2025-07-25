@@ -1,0 +1,40 @@
+# Source files (compiled versions are in dist/)
+src/
+tsconfig.json
+.eslintrc.json
+.prettierrc
+
+# Development files
+logs/
+data/
+assets/
+node_modules/
+coverage/
+.nyc_output/
+
+# Environment and config files
+.env*
+cursor-mcp.json
+
+# Git and development files
+.git/
+.gitignore
+*.log
+
+# Documentation that's not needed for package users
+Resources/
+PromptHistories/
+
+# Development dependencies and build configs
+package-lock.json
+yarn.lock
+
+# Render deployment files
+render.yaml
+main.js
+
+# Test files
+**/*.test.js
+**/*.spec.js
+**/*.test.ts
+**/*.spec.ts 

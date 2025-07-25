@@ -37,14 +37,24 @@
     }
   },
   "include": [
-    "src/**/*"
+    "src/deploy-server-simple.ts",
+    "src/deploy-server-enhanced.ts",
+    "src/engine/optimizely-pattern-crawler.ts",
+    "src/tools/optimizely-pattern-tool.ts",
+    "src/tools/optimizely-bug-analyzer.ts",
+    "src/config/**/*",
+    "src/types/**/*",
+    "src/utils/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "coverage",
     "**/*.test.ts",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "src/database/**/*",
+    "src/search/**/*",
+    "src/server/**/*"
   ],
   "ts-node": {
     "esm": true,

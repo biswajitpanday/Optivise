@@ -1,0 +1,206 @@
+#!/usr/bin/env node
+
+/**
+ * OptiDevDoc CLI - NPM Package Entry Point
+ * Global CLI tool for Optimizely development assistance
+ */
+
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+const PACKAGE_ROOT = path.join(__dirname, '..');
+
+// Check if we have the required files
+const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote-enhanced.js');
+const simpleClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
+
+function printUsage() {
+  console.log(`
+OptiDevDoc - Optimizely Development Assistant
+
+USAGE:
+  optidevdoc [COMMAND] [OPTIONS]
+
+COMMANDS:
+  mcp           Start MCP client (enhanced version with pattern analysis)
+  mcp-simple    Start simple MCP client (basic documentation search)
+  serve         Start local HTTP server
+  serve-enhanced Start enhanced HTTP server with all features
+  setup         Interactive setup for IDE configuration
+  version       Show version information
+
+OPTIONS:
+  --debug       Enable debug mode with verbose logging
+  --port PORT   Specify port for server mode (default: 3000)
+  --help        Show this help message
+
+EXAMPLES:
+  optidevdoc mcp                    # Start enhanced MCP client
+  optidevdoc serve --port 3001      # Start server on port 3001
+  optidevdoc setup                  # Interactive IDE setup
+  optidevdoc --debug mcp            # Start MCP client with debug logs
+
+For more information, visit: https://github.com/your-org/optidevdoc-mcp
+  `);
+}
+
+function printVersion() {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    console.log(`OptiDevDoc v${packageData.version}`);
+    console.log(`🚀 Optimizely Development Assistant`);
+    console.log(`📚 Multi-product support: Commerce, CMS, CMP, ODP, Experimentation`);
+    console.log(`🔧 Tools: Pattern Search, Bug Analysis, Documentation Search`);
+  } catch (error) {
+    console.log('OptiDevDoc (version unknown)');
+  }
+}
+
+function setupIDEConfiguration() {
+  console.log(`
+🛠️  OptiDevDoc IDE Setup
+
+To configure OptiDevDoc with your IDE, add the following to your MCP configuration:
+
+For Cursor IDE (.cursor/mcp.json):
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "optidevdoc",
+      "args": ["mcp"],
+      "env": {
+        "DEBUG_MCP": "false"
+      }
+    }
+  }
+}
+
+For VS Code (settings.json):
+{
+  "mcp.servers": {
+    "optidevdoc": {
+      "command": "optidevdoc",
+      "args": ["mcp"]
+    }
+  }
+}
+
+Available Tools:
+✅ search_optimizely_docs     - Enhanced documentation search
+✅ find_optimizely_pattern    - Pattern search by development scenario
+✅ analyze_optimizely_bug     - Bug analysis with Optimizely solutions
+
+After configuration, restart your IDE to enable OptiDevDoc.
+  `);
+}
+
+function startMCPClient(isEnhanced = true, options = {}) {
+  const clientPath = isEnhanced ? remoteClientPath : simpleClientPath;
+  
+  if (!fs.existsSync(clientPath)) {
+    console.error(`❌ Client not found: ${clientPath}`);
+    process.exit(1);
+  }
+
+  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced' : 'Simple'} OptiDevDoc MCP Client...`);
+  
+  const env = { ...process.env };
+  if (options.debug) {
+    env.DEBUG_MCP = 'true';
+  }
+
+  const child = spawn('node', [clientPath], {
+    stdio: 'inherit',
+    env
+  });
+
+  child.on('error', (error) => {
+    console.error('❌ Failed to start MCP client:', error);
+    process.exit(1);
+  });
+
+  child.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+}
+
+function startServer(isEnhanced = false, options = {}) {
+  const serverScript = isEnhanced ? 'dev:enhanced' : 'dev';
+  const port = options.port || 3000;
+  
+  console.log(`🚀 Starting ${isEnhanced ? 'Enhanced' : 'Simple'} OptiDevDoc Server on port ${port}...`);
+  
+  const env = { ...process.env, PORT: port.toString() };
+  
+  const child = spawn('npm', ['run', serverScript], {
+    stdio: 'inherit',
+    cwd: PACKAGE_ROOT,
+    env
+  });
+
+  child.on('error', (error) => {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  });
+
+  child.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+}
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const options = {};
+
+// Extract options
+for (let i = args.length - 1; i >= 0; i--) {
+  if (args[i] === '--debug') {
+    options.debug = true;
+    args.splice(i, 1);
+  } else if (args[i] === '--help') {
+    printUsage();
+    process.exit(0);
+  } else if (args[i] === '--port' && args[i + 1]) {
+    options.port = parseInt(args[i + 1], 10);
+    args.splice(i, 2);
+  }
+}
+
+const command = args[0];
+
+switch (command) {
+  case 'mcp':
+    startMCPClient(true, options);
+    break;
+    
+  case 'mcp-simple':
+    startMCPClient(false, options);
+    break;
+    
+  case 'serve':
+    startServer(false, options);
+    break;
+    
+  case 'serve-enhanced':
+    startServer(true, options);
+    break;
+    
+  case 'setup':
+    setupIDEConfiguration();
+    break;
+    
+  case 'version':
+    printVersion();
+    break;
+    
+  default:
+    if (!command) {
+      printUsage();
+    } else {
+      console.error(`❌ Unknown command: ${command}`);
+      console.error('Run "optidevdoc --help" for usage information.');
+      process.exit(1);
+    }
+} 

@@ -1,10 +1,14 @@
 {
-  "name": "optidevdoc-mcp",
-  "version": "1.0.0",
-  "description": "MCP tool for Optimizely documentation integration with AI coding assistants",
+  "name": "optidevdoc",
+  "version": "2.0.0",
+  "description": "Intelligent Optimizely development assistant with pattern analysis, bug resolution, and comprehensive documentation search",
   "main": "index.js",
+  "bin": {
+    "optidevdoc": "./bin/optidevdoc"
+  },
   "scripts": {
     "dev": "tsx src/deploy-server-simple.ts",
+    "dev:enhanced": "tsx src/deploy-server-enhanced.ts",
     "dev:http": "tsx src/deploy-server-simple.ts",
     "build": "tsc && copyfiles -u 1 'src/**/*.json' dist/",
     "start": "node index.js",
@@ -18,16 +22,25 @@
     "performance-test": "tsx src/tests/performance.ts",
     "type-check": "tsc --noEmit",
     "clean": "rimraf dist coverage .nyc_output",
-    "precommit": "npm run lint && npm run type-check && npm run test"
+    "precommit": "npm run lint && npm run type-check && npm run test",
+    "prepublishOnly": "npm run clean && npm run build && npm run test",
+    "publish:npm": "npm publish",
+    "publish:beta": "npm publish --tag beta"
   },
   "keywords": [
-    "mcp",
-    "model-context-protocol",
     "optimizely",
-    "documentation",
+    "mcp",
+    "model-context-protocol", 
     "ai-assistant",
+    "documentation",
+    "pattern-analysis",
+    "bug-resolution",
+    "commerce",
+    "cms",
+    "experimentation",
     "cursor",
-    "vscode"
+    "vscode",
+    "cli"
   ],
   "author": "OptiDevDoc Team",
   "license": "MIT",
@@ -79,10 +92,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-org/optidevdoc-mcp.git"
+    "url": "https://github.com/biswajitpanday/OptiDevDoc.git"
   },
   "bugs": {
-    "url": "https://github.com/your-org/optidevdoc-mcp/issues"
+    "url": "https://github.com/biswajitpanday/OptiDevDoc/issues"
   },
-  "homepage": "https://github.com/your-org/optidevdoc-mcp#readme"
+  "homepage": "https://github.com/biswajitpanday/OptiDevDoc#readme"
 }

@@ -1,28 +1,50 @@
-# OptiDevDoc MCP Server
+# OptiDevDoc - Intelligent Optimizely Development Assistant
 
-An MCP (Model Context Protocol) server that provides real-time Optimizely documentation access to AI coding assistants. **Successfully deployed and ready for team use!**
+A comprehensive AI-powered development assistant for Optimizely developers, providing pattern analysis, bug resolution, and enhanced documentation search. **Available as NPM package and remote service!**
+
+## 🚀 **Key Features**
+
+- **🎯 Pattern Analysis**: Find Handler, Pipeline, API, and Template patterns by development scenario
+- **🐛 Bug Resolution**: Intelligent debugging with Optimizely-specific solutions and best practices  
+- **📚 Multi-Product Support**: Covers all Optimizely products (Commerce, CMS, CMP, ODP, Experimentation)
+- **🔍 Enhanced Documentation Search**: Context-aware search across comprehensive documentation
+- **⚡ IDE Integration**: Works seamlessly with Cursor, VS Code, and other MCP-compatible editors
+- **🛠️ Zero Setup**: Available as both NPM package and remote service
 
 ## 🎉 **Live Deployment**
 - **Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
 - **Repository**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
 - **Status**: ✅ **PRODUCTION READY & VERIFIED WORKING**
 
-## 🚀 **Quick Setup for Teams**
+## 📦 **Installation & Setup**
 
-### **1-Minute Setup (Recommended)**
-1. **Download the MCP bridge**: Save [`optidevdoc-remote.js`](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js) to your computer
-2. **Configure Cursor IDE**: Add to your MCP settings
-3. **Start using**: Search Optimizely docs directly in your AI assistant
+### **Option 1: NPM Package (Recommended)**
 
-### **Cursor IDE Configuration**
-Add this to your Cursor MCP settings (`Cursor Settings > Features > Model Context Protocol`):
+```bash
+# Install globally
+npm install -g optidevdoc
 
+# Interactive setup
+optidevdoc setup
+
+# Start enhanced MCP client  
+optidevdoc mcp
+```
+
+### **Option 2: Remote Service (Zero Installation)**
+1. **Download the MCP bridge**: Save [`optidevdoc-remote-enhanced.js`](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote-enhanced.js)
+2. **Configure your IDE**: Add to MCP settings
+3. **Start using**: Access all tools directly in your AI assistant
+
+### **IDE Configuration**
+
+#### **For NPM Package** (Add to Cursor MCP settings):
 ```json
 {
   "mcpServers": {
     "optidevdoc": {
-      "command": "node",
-      "args": ["C:\\path\\to\\optidevdoc-remote.js"],
+      "command": "optidevdoc",
+      "args": ["mcp"],
       "env": {
         "DEBUG_MCP": "false"
       }
@@ -31,29 +53,56 @@ Add this to your Cursor MCP settings (`Cursor Settings > Features > Model Contex
 }
 ```
 
-**Windows Example**: `"args": ["C:\\D\\RND\\MCPs\\OptiDevDoc\\optidevdoc-remote.js"]`  
-**Mac/Linux Example**: `"args": ["/Users/username/tools/optidevdoc-remote.js"]`
+#### **For Remote Service** (Add to Cursor MCP settings):
+```json
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "node",
+      "args": ["C:\\path\\to\\optidevdoc-remote-enhanced.js"],
+      "env": {
+        "DEBUG_MCP": "false"
+      }
+    }
+  }
+}
+```
 
-## 💡 **What You Get**
+**Windows Example**: `"args": ["C:\\D\\RND\\MCPs\\OptiDevDoc\\optidevdoc-remote-enhanced.js"]`  
+**Mac/Linux Example**: `"args": ["/Users/username/tools/optidevdoc-remote-enhanced.js"]`
 
-### **✅ Currently Available**
-- **📖 Documentation Search**: 3 sample Optimizely documentation entries
-  - **Configured Commerce Pricing** - B2B pricing engine with C# examples
-  - **CMS Content Delivery API** - Content API with JavaScript examples  
-  - **Commerce Analytics** - Analytics implementation with code samples
-- **🔍 Text-Based Search**: Keyword matching across documentation
-- **💻 Code Examples**: Syntax-highlighted code snippets
-- **🌐 Cross-Platform**: Works on Windows, macOS, Linux
-- **⚡ Zero Setup**: No database or complex installation required
-- **🔄 Remote Updates**: Server improvements benefit all users
+## 💡 **Available Tools & Features**
+
+### **🛠️ MCP Tools (3 Available)**
+1. **`search_optimizely_docs`** - Enhanced documentation search with pattern matching
+2. **`find_optimizely_pattern`** - Find coding patterns by development scenario  
+3. **`analyze_optimizely_bug`** - Intelligent bug analysis with Optimizely solutions
+
+### **📚 Product Coverage**
+- **Configured Commerce** - Handlers, Pipelines, Pricing, Checkout
+- **CMS (PaaS/SaaS)** - Content Types, Blocks, Templates, APIs
+- **Content Marketing Platform** - Email Automation, Campaigns
+- **Optimizely Data Platform** - Audience Segmentation, Event Tracking
+- **Experimentation** - Feature Flags, A/B Testing, Rollouts
+- **Commerce Connect** - Service APIs, Integration Patterns
 
 ### **🎯 Example Prompts to Try**
 ```
-"How do I implement custom pricing in Optimizely Configured Commerce?"
-"Show me how to use the Content Delivery API"
-"What's the best way to handle analytics in Optimizely?"
-"Help me build a custom price calculator"
+"Find a pattern for implementing custom pricing logic in Configured Commerce"
+"I'm getting a NullReferenceException in my pricing handler, help me fix it"
+"Show me how to implement email automation workflows in CMP"
+"How do I create real-time audience segments in ODP?"
+"Help me implement feature flags for gradual rollouts"
 ```
+
+### **✨ Enhanced Features**
+- **🧠 Context-Aware Analysis**: Understands your development intent
+- **🏷️ Product Auto-Detection**: Automatically identifies Optimizely product context
+- **📋 Rule Extraction**: Provides specific guidelines and best practices
+- **💻 Code Examples**: Real implementation examples with explanations
+- **🌐 Cross-Platform**: Works on Windows, macOS, Linux
+- **⚡ Zero Setup**: No database or complex installation required
+- **🔄 Remote Updates**: Server improvements benefit all users
 
 ## 🏗️ **Current Architecture**
 
@@ -205,6 +254,31 @@ The project prioritizes **reliability and ease of use** over feature complexity:
 - ✅ **Zero Setup**: Teams can start using immediately  
 - ✅ **Proven Technology**: Express.js + Node.js stack
 - ✅ **Free Deployment**: No hosting costs for teams
+
+## 🖥️ **CLI Commands** (NPM Package)
+
+```bash
+# Start enhanced MCP client (recommended)
+optidevdoc mcp
+
+# Start simple MCP client 
+optidevdoc mcp-simple
+
+# Start local server
+optidevdoc serve --port 3001
+
+# Start enhanced server with all features
+optidevdoc serve-enhanced
+
+# Interactive setup helper
+optidevdoc setup
+
+# Show version and features
+optidevdoc version
+
+# Enable debug mode
+optidevdoc --debug mcp
+```
 
 ## 📊 **Performance**
 
