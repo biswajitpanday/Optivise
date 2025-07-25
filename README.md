@@ -12,6 +12,14 @@ An MCP (Model Context Protocol) server that provides real-time Optimizely docume
 
 ![High-Level Architecture](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/OptiDevDoc_Arch_1.svg)
 
+
+## 🛠️ **How It Works**
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/assets/How_it_works.svg" alt="How it works" height="500"/>
+</div>
+
+
 ## 🚀 **Quick Setup for New Users**
 
 ### **Step 1: Download the Remote Client**
