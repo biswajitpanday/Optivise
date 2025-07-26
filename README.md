@@ -1,6 +1,6 @@
 # OptiDevDoc - Intelligent Optimizely Development Assistant
 
-A comprehensive AI-powered development assistant for Optimizely developers, providing pattern analysis, bug resolution, and enhanced documentation search. **Available as NPM package and remote service!**
+A comprehensive AI-powered development assistant for Optimizely developers, providing pattern analysis, bug resolution, and enhanced documentation search.
 
 ## 🚀 **Key Features**
 
@@ -9,239 +9,175 @@ A comprehensive AI-powered development assistant for Optimizely developers, prov
 - **📚 Multi-Product Support**: Covers all Optimizely products (Commerce, CMS, CMP, ODP, Experimentation)
 - **🔍 Enhanced Documentation Search**: Context-aware search across comprehensive documentation
 - **⚡ IDE Integration**: Works seamlessly with Cursor, VS Code, and other MCP-compatible editors
-- **🛠️ Zero Setup**: Available as both NPM package and remote service
 
-## 🎉 **LIVE & WORKING - v2.0 Enhanced Features!**
-- **NPM Package**: [https://www.npmjs.com/package/optidevdoc](https://www.npmjs.com/package/optidevdoc) ✅ **PUBLISHED & WORKING**
-- **Remote Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/) 🔄 **Enhanced v2.0 Deploying**
-- **Repository**: [https://github.com/biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
-- **Status**: 🚀 **NPM PACKAGE FULLY FUNCTIONAL - 3 TOOLS READY**
-- **Tools**: `search_optimizely_docs`, `find_optimizely_pattern`, `analyze_optimizely_bug`
+## 🎉 **Current Status: Production Ready**
 
-## 📦 **Installation & Setup**
+| Component | Status | Access |
+|-----------|--------|---------|
+| **NPM Package** | ✅ **Live** | [optidevdoc@2.0.1](https://www.npmjs.com/package/optidevdoc) |
+| **Remote Server** | ✅ **Deployed** | [optidevdoc.onrender.com](https://optidevdoc.onrender.com/) |
+| **MCP Tools** | ✅ **3 Tools Ready** | `search_optimizely_docs`, `find_optimizely_pattern`, `analyze_optimizely_bug` |
+| **Documentation** | ✅ **13+ Patterns** | Real Optimizely documentation crawling |
 
-### **Option 1: NPM Package (Recommended) ✅ FULLY WORKING**
+## 📦 **Quick Start**
 
+### **Option 1: NPM Package (Recommended)**
 ```bash
-# Install globally (verified working)
+# Install globally
 npm install -g optidevdoc
 
-# Quick commands (all functional)
-optidevdoc version              # Check version
-optidevdoc mcp                  # Start enhanced MCP client
-optidevdoc serve-enhanced       # Start local enhanced server
-optidevdoc setup               # Interactive setup guide
-```
+# Start MCP server
+optidevdoc mcp
 
-**Cursor IDE Configuration (Verified Working)**:
-```json
+# Configure in Cursor IDE
 {
   "mcpServers": {
     "optidevdoc": {
       "command": "optidevdoc",
-      "args": ["mcp"],
-      "env": { "DEBUG_MCP": "false" }
+      "args": ["mcp"]
     }
   }
 }
 ```
 
 ### **Option 2: Remote Server (Zero Setup)**
+```bash
+# Download bridge client
+curl -o optidevdoc-remote.js https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js
 
-1. **Download MCP Client**:
-   ```bash
-   curl -o optidevdoc-remote.js https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js
-   ```
+# Configure in Cursor IDE
+{
+  "mcpServers": {
+    "optidevdoc": {
+      "command": "node",
+      "args": ["/absolute/path/to/optidevdoc-remote.js"]
+    }
+  }
+}
+```
 
-2. **Configure Cursor IDE**:
-   ```json
-   {
-     "mcpServers": {
-       "optidevdoc": {
-         "command": "node",
-         "args": ["/absolute/path/to/optidevdoc-remote.js"]
-       }
-     }
-   }
-   ```
-
-## 🛠️ **3 Available MCP Tools**
+## 🛠️ **Available Tools**
 
 ### **1. Enhanced Documentation Search**
 ```
 "How do I implement custom pricing in Optimizely Configured Commerce?"
 "Show me content delivery API patterns for CMS"
-"Find checkout pipeline examples"
 ```
 
-### **2. Pattern Analysis** ⭐ **NEW**
+### **2. Pattern Analysis** 
 ```
 "Find handler patterns for custom pricing logic"  
 "Show me pipeline patterns for checkout workflow"
-"Get content block patterns for CMS"
 ```
 
-### **3. Bug Analysis** ⭐ **NEW**  
+### **3. Bug Analysis**  
 ```
 "Analyze: Pricing calculator returning null values"
 "Debug: Content blocks not rendering in CMS"
-"Fix: Checkout pipeline throwing validation errors"
-```
-
-## 🎯 **Current Status**
-
-### **✅ Production Ready & Working**
-- **3 Intelligent MCP Tools** working in Cursor IDE ✅ **VERIFIED**
-- **NPM Global Package** with CLI commands ✅ **PUBLISHED**
-- **Real Documentation Crawling** from docs.developers.optimizely.com ✅ **ACTIVE**
-- **Pattern Analysis Engine** with 13+ extracted patterns ✅ **WORKING**
-- **Cross-Platform Support** (Windows, macOS, Linux) ✅ **TESTED**
-- **Zero-Cost Hosting** with auto-scaling ✅ **AVAILABLE**
-
-### **🔄 Final Deployment (In Progress)**
-- **Enhanced Remote Server** (v2.0 deploying to Render) ⏳ **DEPLOYING**
-- **Additional Endpoints**: `/api/patterns`, `/api/analyze-bug` ⏳ **COMING SOON**
-
-## 🚀 **Quick Start Examples**
-
-### **NPM Package Usage (Recommended)**
-```bash
-# Install and use immediately
-npm install -g optidevdoc
-optidevdoc mcp
-
-# Configure in Cursor IDE:
-# Command: optidevdoc  
-# Args: ["mcp"]
-```
-
-### **Cursor IDE Prompts**
-```
-"I need to implement a 15% tax rate on all products in Configured Commerce"
-→ Gets Handler pattern + implementation steps + best practices
-
-"My cart total shows NaN after applying discount codes"  
-→ Analyzes bug + provides causes + suggests fixes + validation patterns
-
-"Create a custom content block for product recommendations"
-→ Finds block patterns + provides templates + explains configuration
-```
+``` 
 
 ## 📊 **Supported Optimizely Products**
 
-| Product | Patterns | Coverage | Status |
-|---------|----------|----------|--------|
-| **Configured Commerce** | Handler, Pipeline, API | Comprehensive | ✅ Ready |
-| **CMS (PaaS/SaaS)** | Content-Type, Block, Template | Comprehensive | ✅ Ready |
-| **Content Marketing Platform** | Integration, Best-Practice | Comprehensive | ✅ Ready |
-| **Data Platform (ODP)** | Service, Integration | Comprehensive | ✅ Ready |
-| **Experimentation** | API, Integration | Comprehensive | ✅ Ready |
-| **Commerce Connect** | Handler, Pipeline | Comprehensive | ✅ Ready |
+| Product | Coverage | Patterns |
+|---------|----------|----------|
+| **Configured Commerce** | ✅ Full | Handler, Pipeline, API |
+| **CMS (PaaS/SaaS)** | ✅ Full | Content-Type, Block, Template |
+| **Content Marketing Platform** | ✅ Full | Integration, Best-Practice |
+| **Data Platform (ODP)** | ✅ Full | Service, Integration |
+| **Experimentation** | ✅ Full | API, Integration |
+| **Commerce Connect** | ✅ Full | Handler, Pipeline |
 
 ## 🏗️ **Architecture**
 
+OptiDevDoc supports **two deployment modes**:
+
+### **🌐 Remote Mode**
+Zero-setup deployment via cloud server:
+
 ```mermaid
 graph TB
-    subgraph "Global NPM Package"
-        A[optidevdoc CLI]
-        B[Enhanced MCP Client]
-        C[Local Server Options]
+    subgraph "Developer IDEs"
+        A[Cursor IDE]
+        B[VS Code]
+        C[Other MCP IDEs]
     end
-
-    subgraph "Remote Service"
-        D[Enhanced Express Server]
-        E[Pattern Analysis Engine]
-        F[Bug Analysis Engine]
-        G[Documentation Database]
+    
+    subgraph "Local Bridge"
+        D[optidevdoc-remote.js<br/>MCP Bridge]
     end
-
-    subgraph "IDEs"
-        H[Cursor IDE]
-        I[VS Code]
-        J[Other MCP IDEs]
+    
+    subgraph "Render.com Cloud"
+        E[Express Server]
+        F[Pattern Engine]
+        G[Bug Analyzer]
+        H[Live Documentation]
     end
-
-    A --> B
+    
+    A --> D
     B --> D
     C --> D
-    H --> B
-    I --> B
-    J --> B
+    D -->|HTTPS/JSON-RPC| E
+    E --> F
+    E --> G
+    E --> H
+    
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+```
+
+### **📦 NPM Mode**
+Local installation with enhanced features:
+
+```mermaid
+graph TB
+    subgraph "Developer Machine"
+        A[Cursor IDE]
+        B[VS Code]
+        C[Other MCP IDEs]
+        
+        subgraph "NPM Package"
+            D[CLI: optidevdoc]
+            E[Local MCP Server]
+            F[SQLite Database]
+            G[AI Models]
+            H[Pattern Crawler]
+        end
+    end
+    
+    A --> D
+    B --> D
+    C --> D
     D --> E
-    D --> F
-    D --> G
+    E --> F
+    E --> G
+    E --> H
+    
+    style D fill:#e8f5e8
+    style E fill:#fff3e0
 ```
 
-## 🔧 **Development & Contribution**
+### **Deployment Comparison**
 
-### **Local Development**
-```bash
-git clone https://github.com/biswajitpanday/OptiDevDoc.git
-cd OptiDevDoc
-npm install
-npm run dev:enhanced     # Start enhanced server
-npm run build           # Build for production
-```
-
-### **Project Structure**
-```
-OptiDevDoc/
-├── bin/optidevdoc                 # NPM CLI entry point
-├── src/
-│   ├── deploy-server-enhanced.ts  # Enhanced server with 3 tools
-│   ├── engine/                    # Pattern crawler & analysis
-│   ├── tools/                     # MCP tools implementation
-│   └── types/                     # TypeScript definitions
-├── optidevdoc-remote.js          # Remote MCP client
-└── Resources/                     # Documentation
-```
+| Feature | Remote Mode | NPM Mode |
+|---------|-------------|----------|
+| **Setup** | ⭐ 1-file download | ⭐⭐ `npm install -g` |
+| **Features** | ⭐⭐⭐ Basic | ⭐⭐⭐⭐⭐ Complete |
+| **Performance** | ⭐⭐ Network | ⭐⭐⭐⭐⭐ Local |
+| **Offline** | ❌ No | ✅ Full support |
+| **Team Setup** | ✅ Share 1 file | ⭐⭐ Individual installs |
 
 ## 📚 **Documentation**
 
-- **[Deployment Guide](./Resources/DEPLOYMENT_GUIDE.md)**: Complete setup instructions
-- **[Implementation Plan](./Resources/IMPLEMENTATION_PLAN.md)**: Development roadmap
-- **[Features List](./Resources/FEATURES.md)**: Current and planned features
-- **[Architecture](./Resources/ARCHITECTURE.md)**: Technical architecture
-
-## 🎉 **Success Stories**
-
-### **Developer Productivity**
-- **90% Faster** pattern discovery vs manual documentation search
-- **15-minute setup** vs hours of environment configuration  
-- **3 intelligent tools** vs basic text search
-- **Cross-platform** support for entire development teams
-
-### **Real Usage Examples**
-```
-✅ "Implement pricing handler" → Complete code + registration + testing
-✅ "Debug cart calculation error" → Root cause + fix + prevention
-✅ "Create content block" → Template + properties + styling guide
-```
+- **[Deployment Guide](./Resources/DEPLOYMENT_GUIDE.md)**: Step-by-step deployment for both modes
+- **[Development Status](./Resources/DEVELOPMENT_STATUS.md)**: Current features, completed work, and roadmap
+- **[Architecture](./Resources/ARCHITECTURE.md)**: Detailed technical architecture for both modes
 
 ## 🔗 **Links & Resources**
 
-- **NPM Package**: [https://www.npmjs.com/package/optidevdoc](https://www.npmjs.com/package/optidevdoc)
-- **Live Server**: [https://optidevdoc.onrender.com/](https://optidevdoc.onrender.com/)
-- **GitHub Issues**: [https://github.com/biswajitpanday/OptiDevDoc/issues](https://github.com/biswajitpanday/OptiDevDoc/issues)
-- **Download MCP Client**: [optidevdoc-remote.js](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js)
-
-## 🏆 **Project Status: 95% Complete**
-
-### **✅ PHASE 1 & 2 COMPLETED**
-- ✅ Enhanced server with 3 tools (built & ready for deployment)
-- ✅ NPM package published and fully functional globally  
-- ✅ Documentation URLs fixed with working endpoints
-- ✅ Comprehensive documentation and guides created
-- ✅ Project cleaned up and production-ready
-- ✅ Real documentation crawling from live Optimizely docs
-- ✅ Pattern analysis engine working with 13+ extracted patterns
-
-### **🔄 FINAL DEPLOYMENT (In Progress)**
-- 🔄 Enhanced server deploying to Render (v2.0 upgrade)
-- 📋 Full remote server functionality (30-60 minutes)
-
-**🚀 Ready for immediate use via NPM package!**  
-**⏱️ Full remote server upgrade completing soon!**
+- **NPM Package**: [optidevdoc@2.0.1](https://www.npmjs.com/package/optidevdoc)
+- **Live Server**: [optidevdoc.onrender.com](https://optidevdoc.onrender.com/)
+- **GitHub Repository**: [biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
+- **MCP Bridge Download**: [optidevdoc-remote.js](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js)
 
 ---
 
