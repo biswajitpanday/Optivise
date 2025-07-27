@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server v2.1.2');
+console.log('🚀 OptiDevDoc MCP Server v2.1.3');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
@@ -59,14 +59,26 @@ if (tsxExists) {
     try {
       const { spawn } = require('child_process');
       
-      // For Windows, we need to spawn the .cmd file directly, not through node
-      const command = isWindows ? tsxPath : 'node';
-      const args = isWindows ? [srcPath] : [tsxPath, srcPath];
+      // For Windows, we need to spawn the .cmd file directly
+      // For Unix, we can use node with tsx directly
+      let command, args, useShell;
+      
+      if (isWindows) {
+        // On Windows, execute the .cmd file directly
+        command = tsxPath;
+        args = [srcPath];
+        useShell = false; // Don't use shell to avoid security warning
+      } else {
+        // On Unix, use node to execute tsx
+        command = 'node';
+        args = [tsxPath, srcPath];
+        useShell = false;
+      }
       
       const child = spawn(command, args, {
         stdio: 'inherit',
         env: process.env,
-        shell: isWindows // Use shell on Windows to handle .cmd files
+        shell: useShell
       });
       
       child.on('error', (error) => {
