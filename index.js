@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server v2.1.1');
+console.log('🚀 OptiDevDoc MCP Server v2.1.2');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
@@ -42,40 +42,61 @@ if (isEnhanced && fs.existsSync(enhancedServerPath)) {
   }
 }
 
-// Fall back to TypeScript execution using tsx if available
-const tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
-const tsxExists = fs.existsSync(tsxPath) || fs.existsSync(tsxPath + '.cmd') || fs.existsSync(tsxPath + '.ps1');
+// Try tsx execution if available and TypeScript files exist
+const isWindows = process.platform === 'win32';
+const tsxBasePath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+const tsxPath = isWindows ? tsxBasePath + '.cmd' : tsxBasePath;
+const tsxExists = fs.existsSync(tsxPath);
 
 if (tsxExists) {
-  const { spawn } = require('child_process');
   const srcPath = isEnhanced 
     ? path.join(__dirname, 'src', 'deploy-server-enhanced.ts')
     : path.join(__dirname, 'src', 'deploy-server-simple.ts');
   
   if (fs.existsSync(srcPath)) {
-    console.log(`🔧 Using tsx to execute TypeScript server: ${path.basename(srcPath)}`);
+    console.log(`🔧 Attempting tsx execution: ${path.basename(srcPath)}`);
     
-    const child = spawn('node', [tsxPath, srcPath], {
-      stdio: 'inherit',
-      env: process.env
-    });
-    
-    child.on('error', (error) => {
-      console.error('❌ Failed to start tsx server:', error);
+    try {
+      const { spawn } = require('child_process');
+      
+      // For Windows, we need to spawn the .cmd file directly, not through node
+      const command = isWindows ? tsxPath : 'node';
+      const args = isWindows ? [srcPath] : [tsxPath, srcPath];
+      
+      const child = spawn(command, args, {
+        stdio: 'inherit',
+        env: process.env,
+        shell: isWindows // Use shell on Windows to handle .cmd files
+      });
+      
+      child.on('error', (error) => {
+        console.error('❌ tsx execution failed:', error.message);
+        console.log('🔄 Falling back to standalone server...');
+        startStandaloneServer();
+      });
+      
+      child.on('exit', (code) => {
+        if (code !== 0) {
+          console.error(`❌ tsx server exited with code ${code}`);
+          console.log('🔄 Falling back to standalone server...');
+          startStandaloneServer();
+        } else {
+          process.exit(code || 0);
+        }
+      });
+      
+      // Give tsx a chance to start, then return
+      return;
+      
+    } catch (error) {
+      console.error('❌ Failed to spawn tsx:', error.message);
       console.log('🔄 Falling back to standalone server...');
-      startStandaloneServer();
-    });
-    
-    child.on('exit', (code) => {
-      process.exit(code || 0);
-    });
-    
-    return;
+    }
   }
 }
 
-// Final fallback to standalone server
-console.log('⚠️  No compiled or TypeScript servers available, using standalone server...');
+// Primary fallback: standalone server
+console.log('📋 Starting standalone MCP server...');
 startStandaloneServer();
 
 // Standalone server implementation
