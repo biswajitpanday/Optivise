@@ -9,17 +9,21 @@ const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
 
-console.error('🚀 OptiDevDoc Simple MCP Server v2.1.5');
+console.error('🚀 OptiDevDoc Simple MCP Server v2.1.6');
 console.error('📋 Fallback mode with basic tools');
 
 const server = new Server(
   {
     name: 'optidevdoc-simple',
-    version: '2.1.5',
+    version: '2.1.6',
   },
   {
     capabilities: {
-      tools: {},
+      tools: {
+        'search-optimizely-docs': true,
+        'find-optimizely-pattern': true,
+        'analyze-optimizely-bug': true
+      },
     },
   }
 );

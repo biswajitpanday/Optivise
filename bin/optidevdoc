@@ -310,7 +310,7 @@ After configuration, restart your IDE to enable OptiDevDoc v2.1.0.
 }
 
 function startMCPClient(isEnhanced = true, options = {}) {
-  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.5...`);
+  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.6...`);
   
   // Use the main compiled JS entry points instead of TypeScript files
   const mainServerPath = path.join(__dirname, '..', 'index.js');
