@@ -1,69 +1,19 @@
 services:
   - type: web
-    name: optidevdoc-mcp
+    name: optidevdoc
     env: node
-    repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: yarn install && yarn build
-    startCommand: node index.js
-    plan: free
-    region: oregon
-    branch: master
-    rootDir: .
-    
+    buildCommand: yarn install
+    startCommand: node main.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
-      - key: HOST
-        value: 0.0.0.0
-      - key: LOG_LEVEL
-        value: info
-      - key: DATABASE_TYPE
-        value: sqlite
-      - key: DATABASE_PATH
-        value: ./data/optidevdoc.db
-      - key: CACHE_ENABLED
-        value: true
-      - key: CRAWLER_ENABLED
-        value: true
-      - key: CRAWLER_INTERVAL_HOURS
-        value: 24
-      - key: CRAWLER_MAX_CONCURRENCY
-        value: 3
-      - key: RATE_LIMIT_MAX_REQUESTS
-        value: 100
-      - key: RATE_LIMIT_WINDOW_MS
-        value: 60000
-      - key: CORS_ENABLED
-        value: true
-      - key: CORS_ORIGINS
-        value: "*"
-        
-    # Optional: Add OpenAI API key for semantic search
-    # - key: OPENAI_API_KEY
-    #   sync: false  # This will be added manually in Render dashboard
-    
-    # Health check configuration
+      - key: RENDER
+        value: "true"
     healthCheckPath: /health
-    
-    # Disk configuration for SQLite database
+    autoDeploy: true
+    numInstances: 1
+    plan: free
     disk:
-      name: optidevdoc-data
-      mountPath: /opt/render/project/src/data
-      sizeGB: 1
-
-  # Optional PostgreSQL database for production (upgrade from free tier)
-  # - type: pserv
-  #   name: optidevdoc-postgres
-  #   env: postgresql
-  #   plan: free
-  #   databaseName: optidevdoc
-  #   databaseUser: optidevdoc
-  #   region: oregon
-
-# Optional: Redis for enhanced caching (upgrade from free tier)
-# - type: redis
-#   name: optidevdoc-redis
-#   plan: free
-#   region: oregon 
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 1 

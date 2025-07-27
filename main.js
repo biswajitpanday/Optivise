@@ -8,14 +8,22 @@
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
 const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontextprotocol/sdk/types.js');
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
 
-console.error('🚀 OptiDevDoc Simple MCP Server v2.1.6');
+const VERSION = '2.1.7';
+const PORT = process.env.PORT || 3000;
+const IS_RENDER = process.env.RENDER === 'true';
+
+console.error(`🚀 OptiDevDoc Simple MCP Server v${VERSION}`);
 console.error('📋 Fallback mode with basic tools');
 
+// Create MCP server instance
 const server = new Server(
   {
     name: 'optidevdoc-simple',
-    version: '2.1.6',
+    version: VERSION,
   },
   {
     capabilities: {
@@ -178,14 +186,64 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-// Start the server
+// Create Express app for HTTP server mode
+const app = express();
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', version: VERSION });
+});
+
+// Start the appropriate server
 async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error('✅ OptiDevDoc Simple MCP Server connected and ready!');
+  if (IS_RENDER) {
+    // HTTP server mode for Render deployment
+    const httpServer = app.listen(PORT, () => {
+      console.error(`✅ OptiDevDoc HTTP Server listening on port ${PORT}`);
+    });
+
+    // Handle shutdown gracefully
+    process.on('SIGTERM', () => {
+      console.error('📥 Received SIGTERM signal. Shutting down gracefully...');
+      httpServer.close(() => {
+        console.error('✅ HTTP server closed.');
+        process.exit(0);
+      });
+    });
+
+    process.on('SIGINT', () => {
+      console.error('📥 Received SIGINT signal. Shutting down gracefully...');
+      httpServer.close(() => {
+        console.error('✅ HTTP server closed.');
+        process.exit(0);
+      });
+    });
+
+    // Keep the process alive
+    process.stdin.resume();
+  } else {
+    // MCP server mode for local development
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error('✅ OptiDevDoc Simple MCP Server connected and ready!');
+  }
 }
 
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('❌ Uncaught Exception:', error);
+  // Don't exit immediately to allow graceful shutdown
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit immediately to allow graceful shutdown
+});
+
 main().catch((error) => {
-  console.error('❌ Failed to start MCP server:', error);
+  console.error('❌ Failed to start server:', error);
   process.exit(1);
 }); 
