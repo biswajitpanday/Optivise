@@ -321,7 +321,7 @@ fetch('/api/automations', {
     url: 'https://docs.developers.optimizely.com/content-marketing-platform/automation',
     product: 'cmp',
     category: 'best-practice',
-    version: '2.0',
+          version: '2.1.0',
     lastUpdated: '2024-01-20T09:15:00Z',
     relevanceScore: 0.95,
     codeExamples: [
@@ -598,8 +598,8 @@ async function startEnhancedDeployServer(): Promise<void> {
     app.get('/api/docs', (_req, res) => {
       res.json({
         title: 'OptiDevDoc Enhanced API',
-        version: '2.0.0',
-        description: 'Enhanced Optimizely documentation and pattern analysis API',
+        version: '2.1.0',
+        description: 'Enhanced Optimizely documentation and pattern analysis API with product-aware rules',
         endpoints: {
           '/api/search': {
             method: 'POST',
@@ -767,12 +767,13 @@ async function startEnhancedDeployServer(): Promise<void> {
       res.json({
         message: 'OptiDevDoc Enhanced Deploy Server',
         status: 'running',
-        version: '2.0.0',
+        version: '2.1.0',
         features: {
           enhanced_search: true,
           pattern_analysis: true,
           bug_analysis: true,
-          rule_extraction: true
+          rule_extraction: true,
+          product_aware_rules: true
         },
         endpoints: {
           health: '/health',

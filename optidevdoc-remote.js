@@ -15,7 +15,7 @@ const readline = require('readline');
 
 // Configuration
 const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = '2.0.0';
+const CLIENT_VERSION = '2.1.0';
 const PROTOCOL_VERSION = '2024-11-05';
 
 // Debug mode control
@@ -214,6 +214,78 @@ rl.on('line', async (line) => {
           result: {
             tools: [
               {
+                name: 'apply_development_rules',
+                description: 'Apply Optimizely Configured Commerce development rules to a specific scenario for context-aware guidance',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    scenario: { 
+                      type: 'string', 
+                      description: 'The development scenario or task you need guidance for' 
+                    },
+                    context: {
+                      type: 'object',
+                      description: 'Optional context to provide more specific rule matching',
+                      properties: {
+                        filePattern: {
+                          type: 'string',
+                          description: 'File pattern or extension (e.g., "*.tsx", "*Handler.cs")'
+                        },
+                        directory: {
+                          type: 'string',
+                          description: 'Directory context (e.g., "Extensions", "FrontEnd/blueprints")'
+                        },
+                        technology: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          description: 'Technologies being used (e.g., ["react", "typescript", "c#"])'
+                        },
+                        category: {
+                          type: 'string',
+                          enum: ['frontend', 'backend', 'project-structure', 'quality', 'general'],
+                          description: 'Development category'
+                        }
+                      }
+                    },
+                    includeExamples: {
+                      type: 'boolean',
+                      description: 'Whether to include code examples (default: true)'
+                    },
+                    maxRules: {
+                      type: 'number',
+                      description: 'Maximum number of rules to return (default: 5)'
+                    }
+                  },
+                  required: ['scenario']
+                }
+              },
+              {
+                name: 'generate_cursor_config',
+                description: 'Generate Cursor IDE configuration with integrated Optimizely development rules',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    projectPath: {
+                      type: 'string',
+                      description: 'Optional project path for configuration'
+                    },
+                    includeAllRules: {
+                      type: 'boolean',
+                      description: 'Whether to include all available rules (default: true)'
+                    },
+                    categories: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: ['frontend', 'backend', 'project-structure', 'quality', 'general']
+                      },
+                      description: 'Specific rule categories to include'
+                    }
+                  },
+                  required: []
+                }
+              },
+              {
                 name: 'search_optimizely_docs',
                 description: 'Search Optimizely documentation with enhanced pattern matching',
                 inputSchema: {
@@ -305,6 +377,16 @@ rl.on('line', async (line) => {
           let contentType = 'search';
 
           switch (toolName) {
+            case 'apply_development_rules':
+              result = await makeRequest('/api/apply-rules', 'POST', toolArgs);
+              contentType = 'rules';
+              break;
+
+            case 'generate_cursor_config':
+              result = await makeRequest('/api/generate-config', 'POST', toolArgs);
+              contentType = 'config';
+              break;
+
             case 'search_optimizely_docs':
               result = await makeRequest('/api/search', 'POST', toolArgs);
               contentType = 'search';
@@ -344,7 +426,7 @@ rl.on('line', async (line) => {
               content = `❌ No results found for "${toolArgs.query}". Try terms like:\n`;
               content += '• "pricing handler"\n• "content block"\n• "pipeline pattern"\n• "checkout workflow"';
             }
-          } else if (contentType === 'pattern' || contentType === 'bug') {
+          } else if (contentType === 'pattern' || contentType === 'bug' || contentType === 'rules' || contentType === 'config') {
             // Use the formatted content from the enhanced tools
             content = result.content?.text || result.content || 'No content available';
           }

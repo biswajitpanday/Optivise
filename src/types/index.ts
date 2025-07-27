@@ -145,6 +145,7 @@ export interface ServerConfig {
   logging?: LoggingConfig;
   crawler?: CrawlerConfig;
   search?: SearchConfig;
+  customRulesPath?: string;
 }
 
 export interface DatabaseConfig {
@@ -340,4 +341,119 @@ export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 
-export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>; 
+export type RequiredFields<T, K extends keyof T> = T & Required<Pick<T, K>>;
+
+export interface DevelopmentRule {
+  id: string;
+  title: string;
+  description: string;
+  category: 'frontend' | 'backend' | 'project-structure' | 'quality' | 'general';
+  product: OptimizelyProduct;
+  productVersion?: string; // e.g., "v14.0", "latest"
+  priority: 'high' | 'medium' | 'low';
+  tags: string[];
+  contexts: RuleContext[];
+  content: string;
+  examples?: CodeExample[];
+  violations?: string[];
+  references?: string[];
+  lastUpdated: string;
+  source: 'manual' | 'auto-generated' | 'documentation-derived';
+  applicableProducts?: OptimizelyProduct[]; // For shared rules
+}
+
+export interface RuleContext {
+  type: 'file-pattern' | 'directory' | 'technology' | 'scenario' | 'product-detection';
+  pattern: string;
+  description: string;
+  product?: OptimizelyProduct; // Product-specific context
+}
+
+export interface CodeExample {
+  language: string;
+  code: string;
+  description: string;
+  type: 'good' | 'bad' | 'neutral';
+  product?: OptimizelyProduct; // Product-specific examples
+}
+
+export interface RuleApplication {
+  rule: DevelopmentRule;
+  relevanceScore: number;
+  context: string;
+  suggestions: string[];
+  productMatch: boolean; // Whether the rule matches current product context
+}
+
+export interface RulesEngineConfig {
+  enableAutoApplication: boolean;
+  contextSensitivity: 'high' | 'medium' | 'low';
+  ruleCategories: string[];
+  customRulesPath?: string;
+  rulesSources: RuleSource[]; // Multiple rule sources
+  productDetection: ProductDetectionConfig;
+}
+
+export interface RuleSource {
+  type: 'local-directory' | 'remote-repository' | 'documentation-api' | 'database';
+  path: string;
+  product?: OptimizelyProduct; // Product-specific source
+  enabled: boolean;
+  refreshInterval?: number; // Minutes
+  authentication?: {
+    type: 'api-key' | 'oauth' | 'basic';
+    credentials: Record<string, string>;
+  };
+}
+
+export interface ProductDetectionConfig {
+  enabled: boolean;
+  methods: ProductDetectionMethod[];
+  fallbackProduct?: OptimizelyProduct;
+  confidence: {
+    threshold: number; // 0-1, minimum confidence to apply product-specific rules
+    filePatternWeight: number;
+    directoryWeight: number;
+    dependencyWeight: number;
+    configWeight: number;
+  };
+}
+
+export interface ProductDetectionMethod {
+  type: 'file-pattern' | 'directory-structure' | 'package-dependencies' | 'config-files' | 'user-explicit';
+  patterns: ProductDetectionPattern[];
+  weight: number; // 0-1, how much this method contributes to overall confidence
+}
+
+export interface ProductDetectionPattern {
+  pattern: string;
+  product: OptimizelyProduct;
+  confidence: number; // 0-1, how confident this pattern indicates the product
+  description: string;
+}
+
+export interface ProductContext {
+  detectedProduct: OptimizelyProduct;
+  confidence: number;
+  detectionMethods: {
+    method: string;
+    matches: string[];
+    confidence: number;
+  }[];
+  version?: string;
+  projectPath?: string;
+  configFiles?: string[];
+}
+
+export interface RuleGenerationConfig {
+  enabled: boolean;
+  sources: {
+    documentation: boolean;
+    codeExamples: boolean;
+    bestPractices: boolean;
+    errorPatterns: boolean;
+  };
+  products: OptimizelyProduct[];
+  outputPath: string;
+  reviewRequired: boolean; // Whether generated rules need manual review
+} 

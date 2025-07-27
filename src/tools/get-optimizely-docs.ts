@@ -146,6 +146,7 @@ Configure pricing rules in the admin interface under **Commerce > Pricing > Rule
           relevanceScore: 0.95,
           codeExamples: [
             {
+              type: 'good',
               language: 'csharp',
               code: `public class CustomPriceCalculator : IPriceCalculator
 {
@@ -236,6 +237,7 @@ const searchResults = await fetch('/api/episerver/v3.0/search', {
           relevanceScore: 0.88,
           codeExamples: [
             {
+              type: 'good',
               language: 'javascript',
               code: `fetch('/api/episerver/v3.0/content/123', {
     headers: {
