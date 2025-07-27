@@ -1,21 +1,64 @@
-# OptiDevDoc v2.1.0 - Product-Aware Optimizely Development Assistant
+# OptiDevDoc
 
-[![npm version](https://badge.fury.io/js/optidevdoc.svg)](https://badge.fury.io/js/optidevdoc)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A product-aware development assistant for Optimizely developers, providing intelligent guidance, pattern analysis, and documentation search across all Optimizely products.
 
-A revolutionary AI-powered development assistant for Optimizely developers, providing **product-aware rules**, pattern analysis, bug resolution, and enhanced documentation search with perfect isolation between different Optimizely products.
+## ✨ Features (as of July 27, 2025)
 
-## 🚀 **Quick Start**
+✅ **Product-Aware Intelligence**
+- Automatic detection of Commerce vs CMS vs Experimentation
+- Perfect rule isolation with zero cross-product contamination
+- Context-aware responses for each product
+
+✅ **Development Tools**
+- Documentation search with product filtering
+- Pattern analysis and best practices
+- Bug resolution with product-specific solutions
+- Development rules application
+- Cursor IDE configuration generation
+- Product detection
+
+✅ **Multi-Deployment Support**
+- NPM package for full features
+- Remote server for zero setup
+- Standalone mode for basic features
+
+## 🚀 Quick Start
 
 ```bash
 # Install globally
 npm install -g optidevdoc
 
-# Detect your Optimizely product
-optidevdoc detect
-
-# Start product-aware MCP server
+# Start MCP server
 optidevdoc mcp
+```
+
+## 🏗️ Architecture
+
+```mermaid
+%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
+graph TD
+    A[IDE Integration] --> B[MCP Server]
+    B --> C[Product Detection]
+    B --> D[Rules Engine]
+    B --> E[Pattern Analysis]
+    
+    C --> F[Project Context]
+    D --> G[Development Rules]
+    E --> H[Code Patterns]
+    
+    F --> I[Product-Aware Response]
+    G --> I
+    H --> I
+    
+    style A fill:#1a1a1a,stroke:#6366f1
+    style B fill:#1a1a1a,stroke:#6366f1
+    style C fill:#1a1a1a,stroke:#6366f1
+    style D fill:#1a1a1a,stroke:#6366f1
+    style E fill:#1a1a1a,stroke:#6366f1
+    style F fill:#1a1a1a,stroke:#6366f1
+    style G fill:#1a1a1a,stroke:#6366f1
+    style H fill:#1a1a1a,stroke:#6366f1
+    style I fill:#1a1a1a,stroke:#6366f1
 ```
 
 ### **Cursor IDE Configuration**

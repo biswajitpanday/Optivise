@@ -293,7 +293,7 @@ Configure pricing rules in the admin interface under **Commerce > Pricing > Rule
       product: 'configured-commerce',
       category: 'developer-guide',
       version: '12.x',
-      lastUpdated: '2024-01-15T10:30:00Z',
+      lastUpdated: '2025-07-27T10:30:00Z',
       relevanceScore: 1.0,
       tags: ['pricing', 'commerce', 'calculation', 'discounts'],
       breadcrumb: ['Home', 'Configured Commerce', 'Developer Guide', 'Pricing']

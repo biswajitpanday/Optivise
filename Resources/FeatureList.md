@@ -1,127 +1,24 @@
-# OptiDevDoc - Feature List & Implementation Status
+# OptiDevDoc Features
 
-## 🎯 **Overview**
+This document lists all features provided by OptiDevDoc, organized by category and implementation status.
 
-OptiDevDoc is a comprehensive AI-powered development assistant for Optimizely developers, providing **product-aware rules**, pattern analysis, bug resolution, and enhanced documentation search across all Optimizely products.
+## Core Features
 
----
-
-## 📊 **Feature Implementation Status**
+### Product Detection and Rule Management
 
 ```mermaid
-pie title Feature Implementation Status (v2.1.0)
-    "✅ Complete" : 70
-    "🔄 In Progress" : 20
-    "📋 Planned" : 10
-```
-
-### **Core Features Matrix**
-
-| Feature Category | Status | Implementation | Priority |
-|------------------|--------|----------------|----------|
-| **🎯 Product-Aware Architecture** | ✅ **Complete** | 95% | High |
-| **🛠️ MCP Tools Integration** | ✅ **Complete** | 90% | High |
-| **📚 Documentation Search** | ✅ **Complete** | 85% | High |
-| **🔍 Pattern Analysis** | ✅ **Complete** | 80% | High |
-| **🐛 Bug Resolution** | ✅ **Complete** | 75% | Medium |
-| **⚙️ Development Rules Engine** | 🔄 **In Progress** | 65% | High |
-| **🌐 Multi-Deployment Support** | ✅ **Complete** | 90% | High |
-| **🔧 CLI Integration** | ✅ **Complete** | 85% | Medium |
-
----
-
-## 🎯 **Product-Aware Architecture Features**
-
-### **✅ Implemented Features**
-
-#### **Automatic Product Detection**
-- **Status**: ✅ **Production Ready**
-- **Confidence**: 90%+ accuracy for major products
-- **Supported Products**:
-  - 🛒 **Configured Commerce**: Extensions/, FrontEnd/blueprints, Insite dependencies
-  - 📝 **CMS PaaS/SaaS**: modules/, App_Data/, Episerver patterns  
-  - 🧪 **Experimentation**: @optimizely/sdk dependencies, A/B testing patterns
-  - ⚙️ **General Stack**: React, TypeScript, .NET, ASP.NET detection
-
-```mermaid
-graph TB
-    A[Project Analysis] --> B{File Pattern Detection}
-    A --> C{Directory Structure}
-    A --> D{Package Dependencies}
-    A --> E{Config Files}
+%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
+graph TD
+    A[Project Analysis] -->|Detect Product| B[Product Detection Engine]
+    B -->|Load Rules| C[Rules Engine]
+    C -->|Apply Rules| D[Development Assistant]
+    D -->|Provide Guidance| E[IDE Integration]
     
-    B --> F[🛒 Commerce Score]
-    C --> F
-    D --> F
-    E --> F
-    
-    B --> G[📝 CMS Score]
-    C --> G
-    D --> G
-    E --> G
-    
-    B --> H[🧪 Experimentation Score]
-    C --> H
-    D --> H
-    E --> H
-    
-    F --> I{Confidence > 80%?}
-    G --> I
-    H --> I
-    
-    I -->|Yes| J[✅ Auto-Apply Product Rules]
-    I -->|No| K[🔄 Manual Selection]
-    
-    style A fill:#e1f5fe
-    style I fill:#fff3e0
-    style J fill:#c8e6c9
-    style K fill:#ffecb3
-```
-
-#### **Rule Isolation by Product**
-- **Status**: ✅ **Complete**
-- **Zero Cross-Contamination**: Commerce rules never interfere with CMS development
-- **Product-Specific Guidance**: Rules automatically apply based on detected project type
-- **Context-Aware Responses**: All tools provide product-relevant suggestions
-
-```mermaid
-graph LR
-    subgraph "🛒 Commerce Project"
-        A1[Handler Patterns]
-        A2[Extension Development]
-        A3[Blueprint Architecture]
-        A4[Commerce API Usage]
-    end
-    
-    subgraph "📝 CMS Project"
-        B1[Content Block Development]
-        B2[Razor Templates]
-        B3[Content Types]
-        B4[Editor Experience]
-    end
-    
-    subgraph "🧪 Experimentation Project"
-        C1[A/B Testing Patterns]
-        C2[Feature Flags]
-        C3[SDK Integration]
-        C4[Analytics Setup]
-    end
-    
-    subgraph "🔒 Isolation Layer"
-        D[Product Detection Engine]
-        E[Rule Router]
-        F[Context Filter]
-    end
-    
-    D --> E
-    E --> F
-    F --> A1
-    F --> B1
-    F --> C1
-    
-    style D fill:#ffecb3
-    style E fill:#e8f5e8
-    style F fill:#fce4ec
+    style A fill:#1a1a1a,stroke:#6366f1
+    style B fill:#1a1a1a,stroke:#6366f1
+    style C fill:#1a1a1a,stroke:#6366f1
+    style D fill:#1a1a1a,stroke:#6366f1
+    style E fill:#1a1a1a,stroke:#6366f1
 ```
 
 ---
@@ -376,63 +273,43 @@ graph TB
 
 ## 🌐 **Multi-Deployment Architecture**
 
-### **Deployment Modes**
+### Implementation Status (as of July 27, 2025)
 
-| Mode | Features | Status | Use Case |
-|------|----------|--------|----------|
-| **🌐 Remote Mode** | Basic tools, Zero setup | ✅ **Production** | Quick team onboarding |
-| **📦 NPM Mode** | Full features, Local processing | ✅ **Production** | Daily development work |
-| **🔗 Hybrid Mode** | Best of both worlds | 📋 **Planned v2.2** | Enterprise environments |
+✅ **Completed Features**:
+- Product Detection Engine
+- Rules Engine Integration
+- MCP Protocol Support
+- Documentation Search
+- Pattern Analysis
+- Bug Resolution
+- Multi-Deployment Support
+- CLI Tools
 
-### **Deployment Architecture**
+🔄 **In Progress Features**:
+- Enhanced Rule Generation
+- Cross-Product Pattern Analysis
+- Advanced Bug Resolution
+
+### Deployment Modes
 
 ```mermaid
-graph TB
-    subgraph "👥 Development Team"
-        A[Developer 1<br/>NPM Mode]
-        B[Developer 2<br/>Remote Mode] 
-        C[Developer 3<br/>Hybrid Mode]
-    end
+%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
+graph TD
+    A[OptiDevDoc] --> B[NPM Mode]
+    A --> C[Remote Mode]
+    A --> D[Standalone Mode]
     
-    subgraph "🌐 Remote Infrastructure"
-        D[Render.com Server]
-        E[Documentation Crawler]
-        F[Pattern Database]
-        G[Live API Endpoints]
-    end
+    B --> E[Full Features]
+    C --> F[Zero Setup]
+    D --> G[Basic Features]
     
-    subgraph "📦 NPM Package"
-        H[CLI Interface]
-        I[Local MCP Server]
-        J[SQLite Database]
-        K[Semantic Search]
-    end
-    
-    subgraph "🔗 Bridge Components"
-        L[MCP Bridge Client]
-        M[Protocol Translation]
-        N[Fallback Logic]
-    end
-    
-    A --> H
-    H --> I
-    I --> J
-    I --> K
-    
-    B --> L
-    L --> M
-    M --> D
-    D --> E
-    D --> F
-    D --> G
-    
-    C --> N
-    N --> H
-    N --> L
-    
-    style D fill:#e1f5fe
-    style I fill:#e8f5e8
-    style N fill:#fff3e0
+    style A fill:#1a1a1a,stroke:#6366f1
+    style B fill:#1a1a1a,stroke:#6366f1
+    style C fill:#1a1a1a,stroke:#6366f1
+    style D fill:#1a1a1a,stroke:#6366f1
+    style E fill:#1a1a1a,stroke:#6366f1
+    style F fill:#1a1a1a,stroke:#6366f1
+    style G fill:#1a1a1a,stroke:#6366f1
 ```
 
 ---

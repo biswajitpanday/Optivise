@@ -1,83 +1,40 @@
-# OptiDevDoc v2.1.0 - Complete Documentation
+# OptiDevDoc Documentation
 
-## 🎯 **Overview**
+## Architecture Overview
 
-OptiDevDoc is a revolutionary AI-powered development assistant for Optimizely developers, providing **product-aware rules**, pattern analysis, bug resolution, and enhanced documentation search with perfect isolation between different Optimizely products.
+OptiDevDoc is a product-aware development assistant for Optimizely developers, providing intelligent guidance, pattern analysis, and documentation search across all Optimizely products.
 
-### **🚀 Key Features**
-- **🎯 Product-Aware Intelligence**: Automatic detection of Commerce vs CMS vs Experimentation
-- **🔒 Perfect Rule Isolation**: Zero cross-product contamination
-- **⚡ Zero Configuration**: Works out-of-the-box with intelligent defaults
-- **🛠️ 6 MCP Tools**: Complete toolkit for Optimizely development
-- **🌐 Multi-Deployment**: NPM package + Remote server + Hybrid options
+### System Architecture (as of July 27, 2025)
 
----
-
-## 📦 **Quick Start**
-
-### **NPM Installation (Recommended)**
-```bash
-# Install globally
-npm install -g optidevdoc
-
-# Detect your Optimizely product
-optidevdoc detect
-
-# Start product-aware MCP server
-optidevdoc mcp
-```
-
-### **Cursor IDE Configuration**
-```json
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "optidevdoc",
-      "args": ["mcp"],
-      "env": {
-        "OPTIDEVDOC_MULTI_PRODUCT": "true"
-      }
-    }
-  }
-}
-```
-
----
-
-## 🏗️ **Architecture**
-
-### **Product-Aware Intelligence**
 ```mermaid
-graph TB
-    subgraph "🔍 Product Detection Engine"
-        A[Project Analysis]
-        B[File Pattern Recognition]
-        C[Dependency Analysis]
-        D[Directory Structure]
-        E[Config File Scanning]
-    end
+%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
+graph TD
+    A[IDE Integration] --> B[MCP Server]
+    B --> C[Product Detection]
+    B --> D[Rules Engine]
+    B --> E[Pattern Analysis]
     
-    subgraph "🎯 Product Classification"
-        F[🛒 Configured Commerce]
-        G[📝 CMS PaaS/SaaS]
-        H[🧪 Experimentation]
-        I[⚙️ General Stack]
-    end
+    C --> F[Project Context]
+    D --> G[Development Rules]
+    E --> H[Code Patterns]
     
-    subgraph "🔒 Rule Isolation Layer"
-        J[Commerce Rules Only]
-        K[CMS Rules Only] 
-        L[Experimentation Rules Only]
-        M[Shared Quality Rules]
-    end
+    F --> I[Product-Aware Response]
+    G --> I
+    H --> I
     
-    A --> B --> F --> J --> N[Context-Aware Response]
-    A --> C --> G --> K --> N
-    A --> D --> H --> L --> N
-    A --> E --> I --> M --> N
+    style A fill:#1a1a1a,stroke:#6366f1
+    style B fill:#1a1a1a,stroke:#6366f1
+    style C fill:#1a1a1a,stroke:#6366f1
+    style D fill:#1a1a1a,stroke:#6366f1
+    style E fill:#1a1a1a,stroke:#6366f1
+    style F fill:#1a1a1a,stroke:#6366f1
+    style G fill:#1a1a1a,stroke:#6366f1
+    style H fill:#1a1a1a,stroke:#6366f1
+    style I fill:#1a1a1a,stroke:#6366f1
 ```
 
-### **Multi-Deployment Architecture**
+### Multi-Deployment Architecture
+
 ```mermaid
 graph TB
     subgraph "👥 Development Team"
@@ -106,7 +63,7 @@ graph TB
     C --> M --> L
 ```
 
-### **Deployment Modes Comparison**
+### Deployment Modes Comparison
 
 | Mode | Features | Status | Use Case |
 |------|----------|--------|----------|
