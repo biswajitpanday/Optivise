@@ -16,30 +16,12 @@
     "allowImportingTsExtensions": false
   },
   "include": [
-    "src/deploy-server-simple.ts",
-    "src/deploy-server-enhanced.ts", 
-    "src/tools/get-optimizely-docs.ts",
-    "src/tools/optimizely-pattern-tool.ts",
-    "src/tools/optimizely-bug-analyzer.ts",
-    "src/config/default.ts",
-    "src/config/config-manager.ts",
-    "src/types/index.ts",
-    "src/utils/logger.ts",
-    "src/utils/error-handler.ts"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
     "**/*.test.ts",
-    "**/*.spec.ts",
-    "src/engine/**/*",
-    "src/server/**/*",
-    "src/database/**/*",
-    "src/search/**/*",
-    "src/tools/development-rules-tool.ts",
-    "src/tools/enhanced-development-rules-tool.ts",
-    "src/tools/resolve-optimizely-id.ts",
-    "src/config/product-aware-config.ts",
-    "src/index.ts"
+    "**/*.spec.ts"
   ]
 } 

@@ -1,6 +1,11 @@
 ---
-description: when there is a back-end changes required or understanding of front-end changes is needed.
-globs: 
+description: when there is a back-end changes required or understanding of back-end changes is needed.
+product: configured-commerce
+productVersion: "latest"
+category: backend
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["*.cs", "Extensions/**/*", "*Handler.cs", "*Pipeline.cs"]
 alwaysApply: false
 ---
 # Backend Extension Development Guidelines

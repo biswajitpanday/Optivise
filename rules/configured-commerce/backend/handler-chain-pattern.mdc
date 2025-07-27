@@ -1,6 +1,11 @@
 ---
 description: when implementing handler or pipe chain
-globs: 
+product: configured-commerce
+productVersion: "latest"
+category: backend
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["*Handler.cs", "*Pipeline.cs", "Extensions/**/*Handler*.cs"]
 alwaysApply: false
 ---
 # Handler Chain Pattern Guidelines

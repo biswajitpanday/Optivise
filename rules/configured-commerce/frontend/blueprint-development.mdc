@@ -1,6 +1,11 @@
 ---
 description: when there is a front-end changes required or understanding of front-end changes is needed.
-globs: 
+product: configured-commerce
+productVersion: "latest"
+category: frontend
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["*.tsx", "*.jsx", "FrontEnd/modules/blueprints/**/*"]
 alwaysApply: false
 ---
 # Blueprint Development Guidelines

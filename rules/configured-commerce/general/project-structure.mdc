@@ -1,6 +1,11 @@
 ---
-description: 
-globs: 
+description: Project structure guidelines for Optimizely Configured Commerce development
+product: configured-commerce
+productVersion: "latest"
+category: general
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["**/", "*.cs", "*.tsx", "*.jsx"]
 alwaysApply: true
 ---
 # Project Structure
