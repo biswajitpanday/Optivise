@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server v2.1.3');
+console.log('🚀 OptiDevDoc MCP Server v2.1.4');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
@@ -43,10 +43,7 @@ if (isEnhanced && fs.existsSync(enhancedServerPath)) {
 }
 
 // Try tsx execution if available and TypeScript files exist
-const isWindows = process.platform === 'win32';
-const tsxBasePath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
-const tsxPath = isWindows ? tsxBasePath + '.cmd' : tsxBasePath;
-const tsxExists = fs.existsSync(tsxPath);
+const tsxExists = checkTsxAvailability();
 
 if (tsxExists) {
   const srcPath = isEnhanced 
@@ -54,66 +51,152 @@ if (tsxExists) {
     : path.join(__dirname, 'src', 'deploy-server-simple.ts');
   
   if (fs.existsSync(srcPath)) {
-    console.log(`🔧 Attempting tsx execution: ${path.basename(srcPath)}`);
-    
-    try {
-      const { spawn } = require('child_process');
-      
-      // For Windows, we need to spawn the .cmd file directly
-      // For Unix, we can use node with tsx directly
-      let command, args, useShell;
-      
-      if (isWindows) {
-        // On Windows, execute the .cmd file directly
-        command = tsxPath;
-        args = [srcPath];
-        useShell = false; // Don't use shell to avoid security warning
-      } else {
-        // On Unix, use node to execute tsx
-        command = 'node';
-        args = [tsxPath, srcPath];
-        useShell = false;
-      }
-      
-      const child = spawn(command, args, {
-        stdio: 'inherit',
-        env: process.env,
-        shell: useShell
-      });
-      
-      child.on('error', (error) => {
-        console.error('❌ tsx execution failed:', error.message);
-        console.log('🔄 Falling back to standalone server...');
-        startStandaloneServer();
-      });
-      
-      child.on('exit', (code) => {
-        if (code !== 0) {
-          console.error(`❌ tsx server exited with code ${code}`);
-          console.log('🔄 Falling back to standalone server...');
-          startStandaloneServer();
-        } else {
-          process.exit(code || 0);
-        }
-      });
-      
-      // Give tsx a chance to start, then return
+    const tsxStarted = attemptTsxExecution(srcPath);
+    if (tsxStarted) {
+      // tsx is starting, let it handle the process
       return;
-      
-    } catch (error) {
-      console.error('❌ Failed to spawn tsx:', error.message);
-      console.log('🔄 Falling back to standalone server...');
     }
   }
 }
 
-// Primary fallback: standalone server
-console.log('📋 Starting standalone MCP server...');
-startStandaloneServer();
-
-// Standalone server implementation
-function startStandaloneServer() {
+// Primary fallback: For MCP mode, we should NOT start HTTP server
+if (isServerMode) {
+  console.log('📋 Starting standalone HTTP server...');
   startServer();
+} else {
+  console.log('📋 Starting standalone MCP server...');
+  startMCPServer();
+}
+
+// Function to check tsx availability
+function checkTsxAvailability() {
+  const isWindows = process.platform === 'win32';
+  let tsxPath;
+  
+  if (isWindows) {
+    // On Windows, tsx is a .CMD file
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.CMD');
+    if (!fs.existsSync(tsxPath)) {
+      tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd');
+    }
+  } else {
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+  }
+  
+  return fs.existsSync(tsxPath);
+}
+
+// Standalone MCP server (should NOT use HTTP)
+function startMCPServer() {
+  try {
+    // Use the simple MCP server fallback (main.js)
+    const fallbackServerPath = path.join(__dirname, 'main.js');
+    if (fs.existsSync(fallbackServerPath)) {
+      console.log('🎯 Loading fallback MCP server...');
+      require(fallbackServerPath);
+    } else {
+      console.error('❌ Fallback MCP server not found');
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('❌ Failed to start MCP server:', error);
+    process.exit(1);
+  }
+}
+
+function attemptTsxExecution(srcPath) {
+  if (process.env.OPTIDEVDOC_FORCE_STANDALONE === 'true') {
+    console.log('🔧 OPTIDEVDOC_FORCE_STANDALONE=true, skipping tsx...');
+    return false;
+  }
+
+  const isWindows = process.platform === 'win32';
+  
+  // Determine tsx path more reliably
+  let tsxPath;
+  if (isWindows) {
+    // On Windows, tsx is a .CMD file
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.CMD');
+    if (!fs.existsSync(tsxPath)) {
+      tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd');
+    }
+    if (!fs.existsSync(tsxPath)) {
+      console.error('❌ tsx.CMD not found at expected locations');
+      return false;
+    }
+  } else {
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+    if (!fs.existsSync(tsxPath)) {
+      console.error('❌ tsx not found at expected location');
+      return false;
+    }
+  }
+
+  console.log(`🔧 Found tsx at: ${tsxPath}`);
+  console.log(`🔧 Attempting tsx execution: ${path.basename(srcPath)}`);
+
+  if (!fs.existsSync(srcPath)) {
+    console.error(`❌ Source file not found: ${srcPath}`);
+    return false;
+  }
+
+  try {
+    const { spawn } = require('child_process');
+    
+    // On Windows, we need to execute the .CMD file directly
+    // For Unix, we can use node with tsx directly
+    let command, args, options;
+    
+    if (isWindows) {
+      // On Windows, use cmd to execute the .cmd file
+      command = 'cmd';
+      args = ['/c', tsxPath, srcPath];
+      options = {
+        stdio: 'inherit',
+        env: process.env,
+        shell: false
+      };
+    } else {
+      // On Unix, use node to execute tsx
+      command = 'node';
+      args = [tsxPath, srcPath];
+      options = {
+        stdio: 'inherit',
+        env: process.env,
+        shell: false
+      };
+    }
+    
+    console.log(`🔧 Executing: ${command} ${args.join(' ')}`);
+    
+    const child = spawn(command, args, options);
+    
+    child.on('error', (error) => {
+      console.error('❌ tsx execution failed:', error.message);
+      // Don't return here, the function should continue to fallback
+    });
+    
+    child.on('exit', (code) => {
+      if (code !== 0) {
+        console.error(`❌ tsx server exited with code ${code}`);
+        // Don't return here, let the process continue to fallback
+      } else {
+        process.exit(code || 0);
+      }
+    });
+    
+    // Give tsx some time to start and see if it errors immediately
+    setTimeout(() => {
+      // If we get here without error, tsx probably started successfully
+    }, 100);
+    
+    // Return true to indicate tsx was started successfully
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Failed to spawn tsx:', error.message);
+    return false;
+  }
 }
 
 function startServer() {
