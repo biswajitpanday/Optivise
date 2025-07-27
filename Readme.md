@@ -146,11 +146,11 @@ OptiDevDoc intelligently detects which Optimizely product you're working with:
 %%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
 graph TD
     A[Project Analysis] --> B{Product Detection}
-    B -->|Extensions/ directory| C["Configured Commerce"]
-    B -->|modules/ + App_Data/| D["CMS PaaS"]
-    B -->|modules/ + SaaS config| E["CMS SaaS"]
-    B -->|DXP patterns| F["DXP"]
-    B -->|@optimizely/sdk deps| G["Experimentation"]
+    B -->|"Extensions/"| C["Configured Commerce"]
+    B -->|"modules/ + App_Data/"| D["CMS PaaS"]
+    B -->|"modules/ + SaaS config"| E["CMS SaaS"]
+    B -->|"DXP patterns"| F["DXP"]
+    B -->|"@optimizely/sdk"| G["Experimentation"]
     
     C --> H["Commerce Rules"]
     D --> I["CMS PaaS Rules"]
