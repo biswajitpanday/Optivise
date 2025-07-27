@@ -18,7 +18,7 @@ const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
 
 function printUsage() {
   console.log(`
-OptiDevDoc v2.1.0 - Product-Aware Optimizely Development Assistant
+OptiDevDoc v2.1.1 - Product-Aware Optimizely Development Assistant
 
 USAGE:
   optidevdoc [COMMAND] [OPTIONS]
@@ -65,7 +65,7 @@ function printVersion() {
     console.log(`🔧 Enhanced Tools: Pattern Search, Bug Analysis, Documentation Search, Rules Engine`);
     console.log(`🎯 Product-Aware: Rules automatically apply based on your project context`);
   } catch (error) {
-    console.log('OptiDevDoc v2.1.0 - Product-Aware Release');
+    console.log('OptiDevDoc v2.1.1 - Product-Aware Release (Critical Fix)');
   }
 }
 
@@ -310,9 +310,13 @@ After configuration, restart your IDE to enable OptiDevDoc v2.1.0.
 }
 
 function startMCPClient(isEnhanced = true, options = {}) {
-  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.0...`);
+  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.1...`);
   
-  if (isEnhanced && fs.existsSync(enhancedServerPath)) {
+  // Use the main compiled JS entry points instead of TypeScript files
+  const mainServerPath = path.join(__dirname, '..', 'index.js');
+  const fallbackServerPath = path.join(__dirname, '..', 'main.js');
+  
+  if (fs.existsSync(mainServerPath)) {
     console.error('🎯 Using Enhanced Server with Product-Aware features');
     
     const env = { ...process.env };
@@ -321,51 +325,44 @@ function startMCPClient(isEnhanced = true, options = {}) {
     }
     env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
     env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_MODE = isEnhanced ? 'enhanced' : 'simple';
 
-    const child = spawn('npx', ['tsx', enhancedServerPath], {
+    const child = spawn('node', [mainServerPath], {
       stdio: 'inherit',
       env
     });
 
     child.on('error', (error) => {
       console.error('❌ Failed to start Enhanced MCP client:', error);
-      console.error('🔄 Falling back to simple mode...');
-      startMCPClient(false, options);
+      if (isEnhanced) {
+        console.error('🔄 Falling back to simple mode...');
+        startMCPClient(false, options);
+      } else {
+        fallbackToRemote(options);
+      }
     });
 
     child.on('exit', (code) => {
       process.exit(code || 0);
     });
     
-  } else if (fs.existsSync(simpleServerPath)) {
-    console.error('📋 Using Simple Server (Enhanced features unavailable)');
+  } else if (fs.existsSync(fallbackServerPath)) {
+    console.error('📋 Using Fallback Server');
     
     const env = { ...process.env };
     if (options.debug) {
       env.DEBUG_MCP = 'true';
     }
+    env.OPTIDEVDOC_VERSION = '2.1.0';
 
-    const child = spawn('npx', ['tsx', simpleServerPath], {
+    const child = spawn('node', [fallbackServerPath], {
       stdio: 'inherit',
       env
     });
 
     child.on('error', (error) => {
-      console.error('❌ Failed to start Simple MCP client:', error);
-      
-      if (fs.existsSync(remoteClientPath)) {
-        console.error('🌐 Falling back to remote client...');
-        const remoteChild = spawn('node', [remoteClientPath], {
-          stdio: 'inherit',
-          env: { ...process.env, ...env }
-        });
-        
-        remoteChild.on('exit', (code) => {
-          process.exit(code || 0);
-        });
-      } else {
-        process.exit(1);
-      }
+      console.error('❌ Failed to start Fallback MCP client:', error);
+      fallbackToRemote(options);
     });
 
     child.on('exit', (code) => {
@@ -374,27 +371,63 @@ function startMCPClient(isEnhanced = true, options = {}) {
     
   } else {
     console.error('❌ No server files found');
-    console.error(`❌ Expected: ${enhancedServerPath} or ${simpleServerPath}`);
+    console.error(`❌ Expected: ${mainServerPath} or ${fallbackServerPath}`);
+    fallbackToRemote(options);
+  }
+}
+
+function fallbackToRemote(options = {}) {
+  if (fs.existsSync(remoteClientPath)) {
+    console.error('🌐 Falling back to remote client...');
+    const remoteChild = spawn('node', [remoteClientPath], {
+      stdio: 'inherit',
+      env: { 
+        ...process.env,
+        DEBUG_MCP: options.debug ? 'true' : undefined
+      }
+    });
+    
+    remoteChild.on('exit', (code) => {
+      process.exit(code || 0);
+    });
+  } else {
+    console.error('❌ All fallback options exhausted');
     console.error('❌ Please reinstall the package: npm install -g optidevdoc');
     process.exit(1);
   }
 }
 
 function startServer(isEnhanced = false, options = {}) {
-  const serverScript = isEnhanced ? 'dev:enhanced' : 'dev';
   const port = options.port || 3000;
   
-  console.log(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc Server v2.1.0 on port ${port}...`);
+      console.log(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc Server v2.1.1 on port ${port}...`);
   
-  const env = { ...process.env, PORT: port.toString() };
+  // Use direct node execution instead of npm run scripts
+  const mainServerPath = path.join(__dirname, '..', 'index.js');
+  const fallbackServerPath = path.join(__dirname, '..', 'main.js');
+  
+  const env = { 
+    ...process.env, 
+    PORT: port.toString(),
+    OPTIDEVDOC_SERVER_MODE: 'http'
+  };
+  
   if (isEnhanced) {
     env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
     env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_MODE = 'enhanced';
   }
   
-  const child = spawn('npm', ['run', serverScript], {
+  const serverPath = fs.existsSync(mainServerPath) ? mainServerPath : fallbackServerPath;
+  
+  if (!fs.existsSync(serverPath)) {
+    console.error('❌ Server files not found');
+    console.error('❌ Please reinstall the package: npm install -g optidevdoc');
+    process.exit(1);
+  }
+
+  const child = spawn('node', [serverPath], {
     stdio: 'inherit',
-    cwd: PACKAGE_ROOT,
     env
   });
 

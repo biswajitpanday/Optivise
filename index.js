@@ -2,48 +2,83 @@
 
 /**
  * OptiDevDoc MCP Server - Production Entry Point
- * This file loads the compiled TypeScript deploy server
+ * This file loads the appropriate server based on environment and mode
  */
 
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server - Production Version');
+console.log('🚀 OptiDevDoc MCP Server v2.1.1');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
-// Try to load the compiled enhanced deploy server first
+// Check environment variables to determine mode
+const isEnhanced = process.env.OPTIDEVDOC_MODE === 'enhanced' || process.env.OPTIDEVDOC_MULTI_PRODUCT === 'true';
+const isServerMode = process.env.OPTIDEVDOC_SERVER_MODE === 'http';
+
+console.log('Mode:', isEnhanced ? 'Enhanced Product-Aware' : 'Simple');
+console.log('Server Mode:', isServerMode ? 'HTTP Server' : 'MCP Server');
+
+// Try to load the compiled TypeScript deploy server first
 const enhancedServerPath = path.join(__dirname, 'dist', 'deploy-server-enhanced.js');
 const simpleServerPath = path.join(__dirname, 'dist', 'deploy-server-simple.js');
 
-if (fs.existsSync(enhancedServerPath)) {
-  console.log('🚀 Loading enhanced TypeScript deploy server...');
+// Check if we have compiled versions
+if (isEnhanced && fs.existsSync(enhancedServerPath)) {
+  console.log('🎯 Loading compiled enhanced server...');
   try {
     require(enhancedServerPath);
+    return;
   } catch (error) {
-    console.error('❌ Failed to load enhanced server:', error);
-    console.log('🔄 Falling back to simple server...');
-    if (fs.existsSync(simpleServerPath)) {
-      require(simpleServerPath);
-    } else {
-      startStandaloneServer();
-    }
+    console.error('❌ Failed to load compiled enhanced server:', error);
   }
 } else if (fs.existsSync(simpleServerPath)) {
-  console.log('📦 Loading simple TypeScript deploy server...');
+  console.log('📦 Loading compiled simple server...');
   try {
     require(simpleServerPath);
+    return;
   } catch (error) {
-    console.error('❌ Failed to load simple server:', error);
-    console.log('🔄 Falling back to standalone server...');
-    startStandaloneServer();
+    console.error('❌ Failed to load compiled simple server:', error);
   }
-} else {
-  console.log('⚠️  Compiled server not found, using standalone server...');
-  startStandaloneServer();
 }
 
-// If this is running as the main file and no compiled version exists, start the standalone server
+// Fall back to TypeScript execution using tsx if available
+const tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+const tsxExists = fs.existsSync(tsxPath) || fs.existsSync(tsxPath + '.cmd') || fs.existsSync(tsxPath + '.ps1');
+
+if (tsxExists) {
+  const { spawn } = require('child_process');
+  const srcPath = isEnhanced 
+    ? path.join(__dirname, 'src', 'deploy-server-enhanced.ts')
+    : path.join(__dirname, 'src', 'deploy-server-simple.ts');
+  
+  if (fs.existsSync(srcPath)) {
+    console.log(`🔧 Using tsx to execute TypeScript server: ${path.basename(srcPath)}`);
+    
+    const child = spawn('node', [tsxPath, srcPath], {
+      stdio: 'inherit',
+      env: process.env
+    });
+    
+    child.on('error', (error) => {
+      console.error('❌ Failed to start tsx server:', error);
+      console.log('🔄 Falling back to standalone server...');
+      startStandaloneServer();
+    });
+    
+    child.on('exit', (code) => {
+      process.exit(code || 0);
+    });
+    
+    return;
+  }
+}
+
+// Final fallback to standalone server
+console.log('⚠️  No compiled or TypeScript servers available, using standalone server...');
+startStandaloneServer();
+
+// Standalone server implementation
 function startStandaloneServer() {
   startServer();
 }
