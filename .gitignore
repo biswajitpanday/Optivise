@@ -115,3 +115,4 @@ security-scan-results/
 
 # PromptHistories (as requested)
 PromptHistories/ 
+.cursor/
