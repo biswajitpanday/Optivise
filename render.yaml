@@ -2,18 +2,79 @@ services:
   - type: web
     name: optidevdoc
     env: node
+    repo: https://github.com/biswajitpanday/OptiDevDoc.git
     buildCommand: yarn install
     startCommand: node main.js
+    plan: free
+    region: oregon
+    branch: master
+    rootDir: .
+    
     envVars:
       - key: NODE_ENV
         value: production
       - key: RENDER
         value: "true"
+      - key: PORT
+        value: "10000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_TYPE
+        value: sqlite
+      - key: DATABASE_PATH
+        value: ./data/optidevdoc.db
+      - key: CACHE_ENABLED
+        value: "true"
+      - key: CRAWLER_ENABLED
+        value: "true"
+      - key: CRAWLER_INTERVAL_HOURS
+        value: "24"
+      - key: CRAWLER_MAX_CONCURRENCY
+        value: "3"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: CORS_ENABLED
+        value: "true"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: MCP_MODE
+        value: "http"
+      - key: ENHANCED_FEATURES
+        value: "true"
+      - key: PRODUCT_DETECTION
+        value: "true"
+      - key: RULES_PATH
+        value: "./rules"
+        
+    # Health check configuration
     healthCheckPath: /health
     autoDeploy: true
     numInstances: 1
-    plan: free
+    
+    # Disk configuration for SQLite database and rules
     disk:
-      name: tmp
-      mountPath: /tmp
-      sizeGB: 1 
+      name: optidevdoc-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+
+  # Optional PostgreSQL database for production (upgrade from free tier)
+  - type: pserv
+    name: optidevdoc-postgres
+    env: postgresql
+    plan: free
+    ipAllowList: []  # Only allow internal connections
+    disk:
+      name: pg-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
+
+  # Optional Redis for enhanced caching (upgrade from free tier)
+  - type: redis
+    name: optidevdoc-redis
+    ipAllowList: []  # Only allow internal connections
+    plan: free
+    maxmemoryPolicy: volatile-lru 

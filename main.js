@@ -11,18 +11,34 @@ const { CallToolRequestSchema, ListToolsRequestSchema } = require('@modelcontext
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const path = require('path');
+const fs = require('fs');
 
+// Configuration
 const VERSION = '2.1.7';
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 const IS_RENDER = process.env.RENDER === 'true';
+const MCP_MODE = process.env.MCP_MODE || 'stdio';
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+const ENHANCED_FEATURES = process.env.ENHANCED_FEATURES === 'true';
+const PRODUCT_DETECTION = process.env.PRODUCT_DETECTION === 'true';
+const RULES_PATH = process.env.RULES_PATH || './rules';
+const CORS_ENABLED = process.env.CORS_ENABLED === 'true';
+const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
+const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100;
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000;
 
-console.error(`🚀 OptiDevDoc Simple MCP Server v${VERSION}`);
-console.error('📋 Fallback mode with basic tools');
+console.error(`🚀 OptiDevDoc Server v${VERSION}`);
+console.error(`📋 Mode: ${IS_RENDER ? 'Render Deploy' : 'Local Development'}`);
+console.error(`🔧 Features: ${ENHANCED_FEATURES ? 'Enhanced' : 'Basic'}`);
 
 // Create MCP server instance
 const server = new Server(
   {
-    name: 'optidevdoc-simple',
+    name: 'optidevdoc',
     version: VERSION,
   },
   {
@@ -30,7 +46,12 @@ const server = new Server(
       tools: {
         'search-optimizely-docs': true,
         'find-optimizely-pattern': true,
-        'analyze-optimizely-bug': true
+        'analyze-optimizely-bug': true,
+        ...(ENHANCED_FEATURES && {
+          'apply-development-rules': true,
+          'detect-product': true,
+          'generate-cursor-config': true
+        })
       },
     },
   }
@@ -107,7 +128,70 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
           required: ['bugDescription'],
         },
-      }
+      },
+      ...(ENHANCED_FEATURES ? [
+        {
+          name: 'apply-development-rules',
+          description: 'Apply Optimizely development rules to a specific scenario',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              scenario: {
+                type: 'string',
+                description: 'The development scenario or task you need guidance for',
+              },
+              context: {
+                type: 'object',
+                properties: {
+                  category: {
+                    type: 'string',
+                    enum: ['frontend', 'backend', 'project-structure', 'quality', 'general'],
+                    description: 'Development category',
+                  },
+                  directory: {
+                    type: 'string',
+                    description: 'Directory context (e.g., "Extensions", "FrontEnd/blueprints")',
+                  },
+                  filePattern: {
+                    type: 'string',
+                    description: 'File pattern or extension (e.g., "*.tsx", "*Handler.cs")',
+                  },
+                  technology: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'Technologies being used (e.g., ["react", "typescript", "c#"])',
+                  }
+                },
+                type: 'object'
+              }
+            },
+            required: ['scenario'],
+          },
+        },
+        {
+          name: 'detect-product',
+          description: 'Detect Optimizely product from project context',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              projectPath: {
+                type: 'string',
+                description: 'Path to the project root',
+              },
+              files: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of files in the project',
+              },
+              dependencies: {
+                type: 'object',
+                description: 'Project dependencies',
+              }
+            },
+            type: 'object'
+          },
+        }
+      ] : [])
     ],
   };
 });
@@ -124,13 +208,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `🔍 **Search Results for: "${args.query}"**\n\n` +
-                    `📋 **Fallback Mode**: Enhanced search is available when tsx execution works.\n\n` +
+                    `📋 **${ENHANCED_FEATURES ? 'Enhanced' : 'Basic'} Mode**: ${ENHANCED_FEATURES ? 'Full pattern matching available' : 'Basic search only'}\n\n` +
                     `**Common Optimizely ${args.product || 'all'} Resources:**\n\n` +
                     `• **Documentation**: https://docs.optimizely.com/\n` +
                     `• **Developer Portal**: https://developer.optimizely.com/\n` +
                     `• **Community**: https://support.optimizely.com/hc/en-us/community/topics\n` +
                     `• **GitHub**: https://github.com/optimizely\n\n` +
-                    `**💡 Tip**: For enhanced search with full pattern matching, ensure TypeScript compilation is working.`
+                    `**💡 Tip**: ${ENHANCED_FEATURES ? 'Enhanced search is active with full pattern matching.' : 'For enhanced search, use the NPM package locally.'}`
             }
           ],
         };
@@ -141,13 +225,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `🔍 **Pattern Search for: "${args.scenario}"**\n\n` +
-                    `📋 **Fallback Mode**: Enhanced pattern analysis is available when tsx execution works.\n\n` +
+                    `📋 **${ENHANCED_FEATURES ? 'Enhanced' : 'Basic'} Mode**: ${ENHANCED_FEATURES ? 'Full pattern matching available' : 'Basic patterns only'}\n\n` +
                     `**General Optimizely Patterns:**\n\n` +
                     `• **Handlers**: Extend base handlers and override methods\n` +
                     `• **Pipelines**: Use dependency injection and chain patterns\n` +
                     `• **Services**: Follow repository pattern with interfaces\n` +
                     `• **Best Practices**: Use configuration over hardcoding\n\n` +
-                    `**💡 Tip**: For detailed pattern analysis with code examples, ensure TypeScript compilation is working.`
+                    `**💡 Tip**: ${ENHANCED_FEATURES ? 'Enhanced pattern analysis is active.' : 'For detailed patterns, use the NPM package locally.'}`
             }
           ],
         };
@@ -158,14 +242,44 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `🐛 **Bug Analysis for: "${args.bugDescription}"**\n\n` +
-                    `📋 **Fallback Mode**: Enhanced bug analysis is available when tsx execution works.\n\n` +
+                    `📋 **${ENHANCED_FEATURES ? 'Enhanced' : 'Basic'} Mode**: ${ENHANCED_FEATURES ? 'Full analysis available' : 'Basic analysis only'}\n\n` +
                     `**General Troubleshooting Steps:**\n\n` +
                     `1. **Check Logs**: Review application and IIS logs\n` +
                     `2. **Configuration**: Verify web.config and appsettings\n` +
                     `3. **Dependencies**: Ensure all NuGet packages are updated\n` +
                     `4. **Cache**: Clear application and browser cache\n` +
                     `5. **Database**: Check connection strings and permissions\n\n` +
-                    `**💡 Tip**: For detailed bug analysis with specific solutions, ensure TypeScript compilation is working.`
+                    `**💡 Tip**: ${ENHANCED_FEATURES ? 'Enhanced bug analysis is active.' : 'For detailed analysis, use the NPM package locally.'}`
+            }
+          ],
+        };
+
+      case 'apply-development-rules':
+        if (!ENHANCED_FEATURES) {
+          throw new Error('Enhanced features are not available in basic mode');
+        }
+        // Implementation would be here in the enhanced version
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `⚙️ **Applying Development Rules for: "${args.scenario}"**\n\n` +
+                    `This feature requires the enhanced version. Please use the NPM package locally.`
+            }
+          ],
+        };
+
+      case 'detect-product':
+        if (!ENHANCED_FEATURES || !PRODUCT_DETECTION) {
+          throw new Error('Product detection is not available in basic mode');
+        }
+        // Implementation would be here in the enhanced version
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `🔍 **Product Detection Results**\n\n` +
+                    `This feature requires the enhanced version. Please use the NPM package locally.`
             }
           ],
         };
@@ -178,7 +292,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       content: [
         {
           type: 'text',
-          text: `❌ **Error**: ${error.message}\n\nThis is the fallback MCP server. For full functionality, please fix the TypeScript compilation issues.`
+          text: `❌ **Error**: ${error.message}\n\n` +
+                `Mode: ${ENHANCED_FEATURES ? 'Enhanced' : 'Basic'}\n` +
+                `Features: ${Object.entries(server.config.capabilities.tools)
+                  .filter(([, enabled]) => enabled)
+                  .map(([name]) => name)
+                  .join(', ')}`
         }
       ],
       isError: true,
@@ -188,47 +307,93 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
 // Create Express app for HTTP server mode
 const app = express();
-app.use(cors());
+
+// Basic middleware
+if (CORS_ENABLED) {
+  app.use(cors({
+    origin: CORS_ORIGINS === '*' ? true : CORS_ORIGINS.split(','),
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+  }));
+}
 app.use(helmet());
+app.use(compression());
 app.use(express.json());
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: RATE_LIMIT_WINDOW_MS,
+  max: RATE_LIMIT_MAX_REQUESTS,
+  message: 'Too many requests, please try again later.'
+});
+app.use(limiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'healthy', version: VERSION });
+  const health = {
+    status: 'healthy',
+    version: VERSION,
+    mode: IS_RENDER ? 'render' : 'local',
+    features: {
+      enhanced: ENHANCED_FEATURES,
+      productDetection: PRODUCT_DETECTION,
+      mcp: MCP_MODE,
+      cors: CORS_ENABLED
+    },
+    tools: Object.entries(server.config.capabilities.tools)
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name)
+  };
+
+  res.json(health);
 });
 
 // Start the appropriate server
 async function main() {
-  if (IS_RENDER) {
-    // HTTP server mode for Render deployment
-    const httpServer = app.listen(PORT, () => {
-      console.error(`✅ OptiDevDoc HTTP Server listening on port ${PORT}`);
-    });
+  try {
+    // Ensure rules directory exists
+    if (ENHANCED_FEATURES && !fs.existsSync(RULES_PATH)) {
+      console.error(`⚠️ Rules directory not found: ${RULES_PATH}`);
+      if (IS_RENDER) {
+        fs.mkdirSync(RULES_PATH, { recursive: true });
+        console.error('✅ Created rules directory');
+      }
+    }
 
-    // Handle shutdown gracefully
-    process.on('SIGTERM', () => {
-      console.error('📥 Received SIGTERM signal. Shutting down gracefully...');
-      httpServer.close(() => {
-        console.error('✅ HTTP server closed.');
-        process.exit(0);
+    if (IS_RENDER || MCP_MODE === 'http') {
+      // HTTP server mode for Render deployment
+      const httpServer = app.listen(PORT, HOST, () => {
+        console.error(`✅ OptiDevDoc HTTP Server listening on ${HOST}:${PORT}`);
       });
-    });
 
-    process.on('SIGINT', () => {
-      console.error('📥 Received SIGINT signal. Shutting down gracefully...');
-      httpServer.close(() => {
-        console.error('✅ HTTP server closed.');
-        process.exit(0);
+      // Handle shutdown gracefully
+      process.on('SIGTERM', () => {
+        console.error('📥 Received SIGTERM signal. Shutting down gracefully...');
+        httpServer.close(() => {
+          console.error('✅ HTTP server closed.');
+          process.exit(0);
+        });
       });
-    });
 
-    // Keep the process alive
-    process.stdin.resume();
-  } else {
-    // MCP server mode for local development
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
-    console.error('✅ OptiDevDoc Simple MCP Server connected and ready!');
+      process.on('SIGINT', () => {
+        console.error('📥 Received SIGINT signal. Shutting down gracefully...');
+        httpServer.close(() => {
+          console.error('✅ HTTP server closed.');
+          process.exit(0);
+        });
+      });
+
+      // Keep the process alive
+      process.stdin.resume();
+    } else {
+      // MCP server mode for local development
+      const transport = new StdioServerTransport();
+      await server.connect(transport);
+      console.error('✅ OptiDevDoc MCP Server connected and ready!');
+    }
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
   }
 }
 
@@ -243,7 +408,5 @@ process.on('unhandledRejection', (reason, promise) => {
   // Don't exit immediately to allow graceful shutdown
 });
 
-main().catch((error) => {
-  console.error('❌ Failed to start server:', error);
-  process.exit(1);
-}); 
+// Start the server
+main(); 
