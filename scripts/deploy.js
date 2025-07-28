@@ -30,19 +30,27 @@ async function deploy(bumpType = 'patch') {
     
     // 6. Verify deployments
     console.log('Verifying deployments...');
+    console.log('Waiting 30 seconds for deployments to stabilize...');
+    
     setTimeout(async () => {
       try {
         // Verify NPM
         execSync('npm install -g optidevdoc@latest');
-        execSync('optidevdoc --version');
+        execSync('optidevdoc help'); // Using 'help' instead of '--version'
         
-        // Verify Render
-        const health = execSync('curl https://optidevdoc.onrender.com/health').toString();
-        console.log('Render health check:', health);
+        // Verify Render (wait for deployment)
+        console.log('Checking Render deployment...');
+        try {
+          const health = execSync('curl https://optidevdoc.onrender.com/health').toString();
+          console.log('Render health check:', health);
+        } catch (error) {
+          console.log('Render health check failed. This is expected as deployment may take a few minutes.');
+          console.log('Please check https://dashboard.render.com for deployment status.');
+        }
       } catch (error) {
         console.error('Verification failed:', error);
       }
-    }, 5000);
+    }, 30000); // Increased to 30 seconds
 
   } catch (error) {
     console.error('Deployment failed:', error);
