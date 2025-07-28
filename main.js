@@ -365,9 +365,18 @@ app.get('/health', (req, res) => {
       mcp: MCP_MODE,
       cors: CORS_ENABLED
     },
-    tools: Object.entries(server.config.capabilities.tools)
-      .filter(([, enabled]) => enabled)
-      .map(([name]) => name)
+    capabilities: {
+      tools: {
+        'search-optimizely-docs': true,
+        'find-optimizely-pattern': true,
+        'analyze-optimizely-bug': true,
+        ...(ENHANCED_FEATURES && {
+          'apply-development-rules': true,
+          'detect-product': PRODUCT_DETECTION,
+          'generate-cursor-config': true
+        })
+      }
+    }
   };
 
   res.json(health);
