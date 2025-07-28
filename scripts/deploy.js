@@ -1,5 +1,14 @@
 const { execSync } = require('child_process');
-const { APP_CONFIG } = require('../src/config/constants');
+const path = require('path');
+
+// Get version from package.json
+const { version } = require('../package.json');
+
+// Configuration constants
+const CONFIG = {
+  REMOTE_SERVER: process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com',
+  VERSION: version
+};
 
 async function deploy(bumpType = 'patch') {
   try {
@@ -41,7 +50,7 @@ async function deploy(bumpType = 'patch') {
         // Verify Render (wait for deployment)
         console.log('Checking Render deployment...');
         try {
-          const health = execSync(`curl ${APP_CONFIG.REMOTE_SERVER}/health`).toString();
+          const health = execSync(`curl ${CONFIG.REMOTE_SERVER}/health`).toString();
           console.log('Render health check:', health);
         } catch (error) {
           console.log('Render health check failed. This is expected as deployment may take a few minutes.');
