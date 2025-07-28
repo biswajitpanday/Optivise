@@ -1,10 +1,10 @@
 {
   "name": "optidevdoc",
-  "version": "3.0.1",
+  "version": "2.1.14",
   "description": "Intelligent Optimizely development assistant with product-aware rules, pattern analysis, bug resolution, and comprehensive documentation search",
   "main": "index.js",
   "bin": {
-    "optidevdoc": "bin/optidevdoc"
+    "optidevdoc": "./bin/optidevdoc"
   },
   "scripts": {
     "dev": "tsx src/deploy-server-simple.ts",
@@ -20,10 +20,7 @@
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "prepare": "echo 'Package ready for NPM distribution'",
-    "prepublishOnly": "echo 'Publishing optidevdoc v2.1.0 with strategic build approach'",
-    "deploy": "node scripts/deploy.js",
-    "deploy:minor": "node scripts/deploy.js minor",
-    "deploy:major": "node scripts/deploy.js major"
+    "prepublishOnly": "echo 'Publishing optidevdoc v2.1.0 with strategic build approach'"
   },
   "keywords": [
     "optimizely",
@@ -43,7 +40,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/biswajitpanday/OptiDevDoc.git"
+    "url": "https://github.com/biswajitpanday/OptiDevDoc.git"
   },
   "bugs": {
     "url": "https://github.com/biswajitpanday/OptiDevDoc/issues"
@@ -64,8 +61,7 @@
     "render.yaml",
     "tsconfig.json",
     "package.json",
-    "README.md",
-    "scripts/"
+    "README.md"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
@@ -84,7 +80,6 @@
     "p-queue": "^8.0.1",
     "p-retry": "^6.2.0",
     "rate-limiter-flexible": "^5.0.3",
-    "semver": "^7.5.4",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3",
     "winston": "^3.14.0",
