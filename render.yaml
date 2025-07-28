@@ -43,12 +43,24 @@ services:
         value: "*"
       - key: MCP_MODE
         value: "http"
-      - key: ENHANCED_FEATURES
+      - key: OPTIDEVDOC_VERSION
+        value: "2.1.14"
+      - key: OPTIDEVDOC_MODE
+        value: "enhanced"
+      - key: OPTIDEVDOC_MULTI_PRODUCT
         value: "true"
-      - key: PRODUCT_DETECTION
+      - key: OPTIDEVDOC_ENHANCED
         value: "true"
-      - key: RULES_PATH
-        value: "./rules"
+      - key: OPTIDEVDOC_DEBUG
+        value: "false"
+      - key: ENABLE_PRODUCT_DETECTION
+        value: "true"
+      - key: ENABLE_ENHANCED_RULES
+        value: "true"
+      - key: ENABLE_CORS
+        value: "false"
+      - key: PROTOCOL_VERSION
+        value: "2025-07-27"
         
     # Health check configuration
     healthCheckPath: /health
