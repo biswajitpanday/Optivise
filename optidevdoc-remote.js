@@ -15,7 +15,7 @@ const readline = require('readline');
 
 // Configuration
 const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = '2.1.0';
+const CLIENT_VERSION = '2.1.10';
 const PROTOCOL_VERSION = '2025-07-27';
 
 // Debug mode control
@@ -169,23 +169,60 @@ rl.on('line', async (line) => {
 
     switch (request.method) {
       case 'initialize':
-        sendResponse({
-          jsonrpc: '2.0',
-          id: request.id,
-          result: {
-            protocolVersion: PROTOCOL_VERSION,
-            capabilities: {
-              tools: {},
-              logging: {},
-              prompts: {},
-              resources: {}
+        // Get server capabilities first
+        try {
+          const health = await makeRequest('/health', 'GET');
+          const capabilities = {
+            tools: {
+              'search-optimizely-docs': true,
+              'find-optimizely-pattern': true,
+              'analyze-optimizely-bug': true,
+              'apply-development-rules': health.features?.enhanced || false,
+              'detect-product': health.features?.productDetection || false,
+              'generate-cursor-config': health.features?.enhanced || false
             },
-            serverInfo: {
-              name: 'optidevdoc-enhanced-remote',
-              version: CLIENT_VERSION
+            logging: {},
+            prompts: {},
+            resources: {}
+          };
+
+          sendResponse({
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              protocolVersion: PROTOCOL_VERSION,
+              capabilities,
+              serverInfo: {
+                name: 'optidevdoc-remote',
+                version: health.version || CLIENT_VERSION
+              }
             }
-          }
-        });
+          });
+        } catch (error) {
+          console.error('Failed to get server capabilities:', error);
+          // Fallback to basic capabilities
+          sendResponse({
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              protocolVersion: PROTOCOL_VERSION,
+              capabilities: {
+                tools: {
+                  'search-optimizely-docs': true,
+                  'find-optimizely-pattern': true,
+                  'analyze-optimizely-bug': true
+                },
+                logging: {},
+                prompts: {},
+                resources: {}
+              },
+              serverInfo: {
+                name: 'optidevdoc-remote',
+                version: CLIENT_VERSION
+              }
+            }
+          });
+        }
         break;
 
       case 'initialized':
