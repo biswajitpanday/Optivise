@@ -1,0 +1,52 @@
+---
+description: Project structure guidelines for Optimizely Configured Commerce development
+product: configured-commerce
+productVersion: latest
+category: general
+priority: high
+applicableProducts:
+  - configured-commerce
+globs:
+  - "**/"
+  - "*.cs"
+  - "*.tsx"
+  - "*.jsx"
+alwaysApply: true
+version: 1.0.0
+---
+# Project Structure
+
+This codebase is organized as a multi-tier application with separated frontend and backend components.
+
+## Core Development Areas
+
+### Frontend [FrontEnd](mdc:FrontEnd)
+- **Important**: We only make changes to the blueprint folder [auer-steel](mdc:FrontEnd/modules/blueprints/auer-steel)
+- We do not modify code in [client-library](mdc:FrontEnd/modules/client-library), [client-framework](mdc:FrontEnd/modules/client-framework), or other folders
+- Development process: Copy widgets or components from other modules and paste them into the proper folder inside the blueprint for customization
+
+### Backend
+- [InsiteCommerce.Web](mdc:InsiteCommerce.Web) - Main .NET backend solution (we don't modify this directly)
+- **[Extensions](mdc:Extensions)** - This is where we make all custom backend changes:
+  - Override or enhance Insite.Commerce.Private and Insite.Commerce.Public DLL behavior using Handler or Pipe chain
+  - The "Order" parameter in handler/pipe files determines execution order
+  - We copy required CS files from the base project to Extensions and modify them to override (keeping the same Order value) or extend (increasing the Order value)
+
+### Do Not Modify
+- [client-library](mdc:FrontEnd/modules/client-library), [client-framework](mdc:FrontEnd/modules/client-framework) - Core frontend modules
+- [InsiteCommerce.Web/Themes](mdc:InsiteCommerce.Web/Themes) - Theme files
+- [insiteCommerceBase] - Base project files that generate Insite.Commerce.Private and Insite.Commerce.Public DLLs
+
+## Other Components
+- [Integration.Api](mdc:Integration.Api) - Integration API services
+- [Storefront.Api](mdc:Storefront.Api) - Storefront-specific API endpoints
+- [Admin.Api](mdc:Admin.Api) - Administration API endpoints
+- [Alaska.Integration](mdc:Alaska.Integration) - Integration with Alaska systems
+- [Database.Updater](mdc:Database.Updater) - Database migration utilities
+- [tools](mdc:tools) - Project-wide utility scripts
+
+## Testing & Automation
+- [cdt-automated](mdc:cdt-automated) - Automated testing resources
+
+
+

@@ -1,0 +1,43 @@
+---
+description: Best practices for implementing Optimizely Experimentation SDK
+product: experimentation
+productVersion: "4.0"
+category: frontend
+priority: high
+applicableProducts: ["experimentation"]
+globs: ["*.js", "*.ts", "*.jsx", "*.tsx"]
+alwaysApply: false
+---
+# Experimentation SDK Implementation
+
+## SDK Initialization
+- Initialize once at application start
+- Use environment-specific datafiles
+- Implement proper error handling
+
+## Feature Flag Patterns
+- **Important**: Always provide fallback values
+- Use typed feature flag interfaces
+- Implement tracking for decision events
+
+## Code Example
+```typescript
+import { createInstance } from '@optimizely/optimizely-sdk';
+
+const optimizely = createInstance({
+  datafile: process.env.OPTIMIZELY_DATAFILE,
+  errorHandler: {
+    handleError: (error) => console.error('Optimizely Error:', error)
+  }
+});
+
+// Feature flag usage
+const isNewFeatureEnabled = optimizely.isFeatureEnabled('new_feature', userId);
+```
+
+## Best Practices
+- Use typed feature flags for better development experience
+- Implement proper user tracking and identification
+- Handle SDK errors gracefully
+- Use feature variables for configuration values
+- Implement proper logging for debugging
