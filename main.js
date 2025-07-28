@@ -378,19 +378,19 @@ app.get('/health', (req, res) => {
     version: VERSION,
     mode: IS_RENDER ? 'render' : 'local',
     features: {
-      enhanced: ENHANCED_FEATURES,
-      productDetection: PRODUCT_DETECTION,
-      mcp: MCP_MODE,
-      cors: CORS_ENABLED
+      enhanced: process.env.OPTIDEVDOC_ENHANCED === 'true',
+      productDetection: process.env.ENABLE_PRODUCT_DETECTION === 'true',
+      mcp: process.env.MCP_MODE || 'stdio',
+      cors: process.env.ENABLE_CORS === 'true'
     },
     capabilities: {
       tools: {
         'search-optimizely-docs': true,
         'find-optimizely-pattern': true,
         'analyze-optimizely-bug': true,
-        ...(ENHANCED_FEATURES && {
+        ...(process.env.OPTIDEVDOC_ENHANCED === 'true' && {
           'apply-development-rules': true,
-          'detect-product': PRODUCT_DETECTION,
+          'detect-product': process.env.ENABLE_PRODUCT_DETECTION === 'true',
           'generate-cursor-config': true
         })
       }
