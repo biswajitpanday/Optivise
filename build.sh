@@ -2,6 +2,7 @@
 
 # Install dependencies
 yarn install
+yarn add dotenv
 
 # Create .env file
 cat > .env << EOL

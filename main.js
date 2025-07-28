@@ -16,6 +16,13 @@ const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables
+try {
+  require('dotenv').config();
+} catch (error) {
+  console.error('Warning: dotenv not found, using default environment variables');
+}
+
 // Configuration
 const VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.14';
 const PORT = process.env.PORT || 3000;
@@ -30,6 +37,14 @@ const CORS_ENABLED = process.env.ENABLE_CORS === 'true';
 const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
 const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100;
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000;
+
+// Log configuration for debugging
+console.error('📋 Environment Configuration:');
+console.error(`• VERSION: ${VERSION}`);
+console.error(`• ENHANCED_FEATURES: ${ENHANCED_FEATURES}`);
+console.error(`• PRODUCT_DETECTION: ${PRODUCT_DETECTION}`);
+console.error(`• CORS_ENABLED: ${CORS_ENABLED}`);
+console.error(`• MCP_MODE: ${MCP_MODE}`);
 
 console.error(`🚀 OptiDevDoc Server v${VERSION}`);
 console.error(`📋 Mode: ${IS_RENDER ? 'Render Deploy' : 'Local Development'}`);
