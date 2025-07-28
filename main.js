@@ -17,7 +17,7 @@ const path = require('path');
 const fs = require('fs');
 
 // Configuration
-const VERSION = '2.1.7';
+const VERSION = '2.1.10';
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IS_RENDER = process.env.RENDER === 'true';
@@ -328,6 +328,31 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'OptiDevDoc',
+    version: VERSION,
+    description: 'Intelligent Optimizely development assistant',
+    mode: IS_RENDER ? 'Remote Server' : 'Local Development',
+    features: {
+      enhanced: ENHANCED_FEATURES,
+      productDetection: PRODUCT_DETECTION,
+      mcp: MCP_MODE,
+      cors: CORS_ENABLED
+    },
+    endpoints: {
+      health: '/health',
+      search: '/api/search',
+      patterns: '/api/patterns',
+      bugs: '/api/bugs',
+      rules: '/api/rules',
+      detect: '/api/detect'
+    },
+    documentation: 'https://github.com/biswajitpanday/OptiDevDoc#readme'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   const health = {
@@ -348,6 +373,148 @@ app.get('/health', (req, res) => {
   res.json(health);
 });
 
+// API endpoints
+app.post('/api/search', async (req, res) => {
+  try {
+    const { query, product = 'all' } = req.body;
+    if (!query) {
+      return res.status(400).json({
+        error: 'Query parameter is required'
+      });
+    }
+
+    const result = await server.handleRequest(CallToolRequestSchema, {
+      params: {
+        name: 'search-optimizely-docs',
+        arguments: { query, product }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+    });
+  }
+});
+
+app.post('/api/patterns', async (req, res) => {
+  try {
+    const { scenario, category = 'any', product = 'any' } = req.body;
+    if (!scenario) {
+      return res.status(400).json({
+        error: 'Scenario parameter is required'
+      });
+    }
+
+    const result = await server.handleRequest(CallToolRequestSchema, {
+      params: {
+        name: 'find-optimizely-pattern',
+        arguments: { scenario, category, product }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+    });
+  }
+});
+
+app.post('/api/bugs', async (req, res) => {
+  try {
+    const { bugDescription, context, errorMessage } = req.body;
+    if (!bugDescription) {
+      return res.status(400).json({
+        error: 'Bug description is required'
+      });
+    }
+
+    const result = await server.handleRequest(CallToolRequestSchema, {
+      params: {
+        name: 'analyze-optimizely-bug',
+        arguments: { bugDescription, context, errorMessage }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+    });
+  }
+});
+
+app.post('/api/rules', async (req, res) => {
+  try {
+    if (!ENHANCED_FEATURES) {
+      return res.status(403).json({
+        error: 'Enhanced features are not available in basic mode'
+      });
+    }
+
+    const { scenario, context } = req.body;
+    if (!scenario) {
+      return res.status(400).json({
+        error: 'Scenario parameter is required'
+      });
+    }
+
+    const result = await server.handleRequest(CallToolRequestSchema, {
+      params: {
+        name: 'apply-development-rules',
+        arguments: { scenario, context }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+    });
+  }
+});
+
+app.post('/api/detect', async (req, res) => {
+  try {
+    if (!ENHANCED_FEATURES || !PRODUCT_DETECTION) {
+      return res.status(403).json({
+        error: 'Product detection is not available in basic mode'
+      });
+    }
+
+    const { projectPath, files, dependencies } = req.body;
+    const result = await server.handleRequest(CallToolRequestSchema, {
+      params: {
+        name: 'detect-product',
+        arguments: { projectPath, files, dependencies }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+      mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+    });
+  }
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: err.message,
+    mode: ENHANCED_FEATURES ? 'Enhanced' : 'Basic'
+  });
+});
+
 // Start the appropriate server
 async function main() {
   try {
@@ -364,6 +531,14 @@ async function main() {
       // HTTP server mode for Render deployment
       const httpServer = app.listen(PORT, HOST, () => {
         console.error(`✅ OptiDevDoc HTTP Server listening on ${HOST}:${PORT}`);
+        console.error('📋 Available endpoints:');
+        console.error('   • GET  /         - API information');
+        console.error('   • GET  /health   - Health check');
+        console.error('   • POST /api/search   - Search documentation');
+        console.error('   • POST /api/patterns - Find patterns');
+        console.error('   • POST /api/bugs     - Analyze bugs');
+        console.error('   • POST /api/rules    - Apply rules');
+        console.error('   • POST /api/detect   - Detect product');
       });
 
       // Handle shutdown gracefully
