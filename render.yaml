@@ -3,18 +3,10 @@ services:
     name: optidevdoc
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: yarn install
-    startCommand: |
-      export OPTIDEVDOC_VERSION=2.1.14
-      export OPTIDEVDOC_MODE=enhanced
-      export OPTIDEVDOC_MULTI_PRODUCT=true
-      export OPTIDEVDOC_ENHANCED=true
-      export OPTIDEVDOC_DEBUG=false
-      export ENABLE_PRODUCT_DETECTION=true
-      export ENABLE_ENHANCED_RULES=true
-      export ENABLE_CORS=false
-      export PROTOCOL_VERSION=2025-07-27
-      node main.js
+    buildCommand: |
+      yarn install
+      chmod +x start.sh
+    startCommand: ./start.sh
     plan: free
     region: oregon
     branch: master
