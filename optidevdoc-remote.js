@@ -34,7 +34,7 @@ if (!APP_CONFIG.DEBUG_MODE) {
   };
 }
 
-console.error(`🚀 OptiDevDoc Enhanced Remote Client`);
+console.error(`🚀 ${APP_CONFIG.NAME} Enhanced Remote Client`);
 console.error(`📡 Connecting to: ${APP_CONFIG.REMOTE_SERVER}`);
 console.error(`✨ Features: Documentation Search, Pattern Analysis, Bug Analysis`);
 
@@ -187,8 +187,8 @@ rl.on('line', async (line) => {
               protocolVersion: APP_CONFIG.PROTOCOL_VERSION,
               capabilities,
               serverInfo: {
-                name: 'optidevdoc-remote',
-                version: health.version || APP_CONFIG.VERSION
+                name: APP_CONFIG.NAME,
+                version: APP_CONFIG.VERSION
               }
             }
           });
@@ -211,7 +211,7 @@ rl.on('line', async (line) => {
                 resources: {}
               },
               serverInfo: {
-                name: 'optidevdoc-remote',
+                name: APP_CONFIG.NAME,
                 version: APP_CONFIG.VERSION
               }
             }

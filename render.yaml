@@ -3,8 +3,8 @@ services:
     name: optidevdoc
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: yarn install
-    startCommand: node main.js
+    buildCommand: yarn install && yarn build
+    startCommand: node -r dotenv/config main.js
     plan: free
     region: oregon
     branch: master
@@ -67,6 +67,14 @@ services:
         value: "true"
       - key: OPTIDEVDOC_RULES_PATH
         value: ./rules
+      - key: OPTIDEVDOC_MODE
+        value: remote
+      - key: OPTIDEVDOC_DEBUG
+        value: "false"
+      - key: REMOTE_SERVER
+        sync: true
+      - key: VERSION
+        fromPackageJson: version
         
     # Health check configuration
     healthCheckPath: /health

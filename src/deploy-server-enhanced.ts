@@ -13,6 +13,7 @@ import { OptimizelyBugAnalyzer } from './tools/optimizely-bug-analyzer.js';
 import { GetOptimizelyDocsTool } from './tools/get-optimizely-docs.js';
 import { Logger } from './utils/logger.js';
 import { ConfigManager } from './config/config-manager.js';
+import { APP_CONFIG } from './config/constants.js';
 import type { ServerConfig } from './types/index.js';
 
 // Initialize configuration
@@ -38,8 +39,8 @@ const docsTool = new GetOptimizelyDocsTool(config, logger);
 // Create MCP server
 const server = new Server(
   {
-    name: 'optidevdoc-enhanced',
-    version: '2.1.5',
+    name: APP_CONFIG.NAME,
+    version: APP_CONFIG.VERSION,
   },
   {
     capabilities: {

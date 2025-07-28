@@ -1,8 +1,10 @@
-import { version } from '../../package.json';
+import { version, name, description } from '../../package.json';
 
 export const APP_CONFIG = {
   // Version Management
   VERSION: version, // Automatically syncs with package.json
+  NAME: name,
+  DESCRIPTION: description,
   PROTOCOL_VERSION: '2025-07-27',
   
   // Server Configuration

@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { APP_CONFIG } from './config/constants.js';
 
 // Mock data for deployment testing
 const mockDocumentation = [
@@ -268,9 +269,9 @@ async function startSimpleDeployServer() {
       res.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        version: process.env.npm_package_version || '1.0.0',
+        version: APP_CONFIG.VERSION,
         uptime: process.uptime(),
-        server: 'OptiDevDoc Simple Deploy Server',
+        server: APP_CONFIG.NAME,
         documentation_count: mockDocumentation.length,
       });
     });
@@ -278,9 +279,9 @@ async function startSimpleDeployServer() {
     // API docs
     app.get('/api/docs', (_req, res) => {
       res.json({
-        name: 'OptiDevDoc Simple Deploy Server',
-        version: process.env.npm_package_version || '1.0.0',
-        description: 'Simplified HTTP API for Optimizely documentation search - deployment version',
+        name: APP_CONFIG.NAME,
+        version: APP_CONFIG.VERSION,
+        description: APP_CONFIG.DESCRIPTION,
         endpoints: {
           health: { method: 'GET', path: '/health', description: 'Server health check' },
           search: { method: 'POST', path: '/api/search', description: 'Search documentation' },
@@ -372,7 +373,7 @@ async function startSimpleDeployServer() {
       res.json({
         message: 'OptiDevDoc Simple Deploy Server',
         status: 'running',
-        version: process.env.npm_package_version || '1.0.0',
+        version: APP_CONFIG.VERSION,
         endpoints: {
           health: '/health',
           api_docs: '/api/docs',

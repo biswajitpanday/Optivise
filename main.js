@@ -15,6 +15,7 @@ const rateLimit = require('express-rate-limit');
 const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
+const { version } = require('./package.json');
 
 // Load environment variables
 try {
@@ -24,7 +25,7 @@ try {
 }
 
 // Configuration
-const VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.14';
+const VERSION = process.env.VERSION || version;
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IS_RENDER = process.env.RENDER === 'true';

@@ -2,27 +2,50 @@ import { z } from 'zod';
 
 // Core Types for OptiDevDoc
 export interface ServerConfig {
-  server: {
-    port: number;
-    host: string;
-    timeout: number;
-  };
+  port?: number;
+  host?: string;
+  timeout?: number;
   logging: {
     level: 'debug' | 'info' | 'warn' | 'error';
     console: {
       enabled: boolean;
+      colorize?: boolean;
+    };
+    file?: {
+      enabled: boolean;
+      path: string;
+      maxSize: string;
+      maxFiles: string;
     };
   };
   crawler?: {
     enabled: boolean;
     interval_hours: number;
     max_concurrency: number;
-    sources: string[];
+    sources: CrawlerSource[];
   };
   database?: {
-    type: 'sqlite' | 'memory';
+    type: 'sqlite' | 'postgresql' | 'memory';
     path?: string;
     cache_size?: number;
+    maxConnections?: number;
+    host?: string;
+    database?: string;
+  };
+  cache?: {
+    enabled: boolean;
+    ttl: number;
+    maxSize: number;
+    type: 'memory' | 'redis';
+    redis?: {
+      host: string;
+      port: number;
+    };
+  };
+  search?: {
+    keyword: {
+      enabled: boolean;
+    };
   };
   ai?: {
     enabled: boolean;
@@ -36,19 +59,59 @@ export interface ServerConfig {
   cors?: {
     origin: string[];
     credentials: boolean;
+    enabled?: boolean;
   };
+  mcp?: {
+    mode: string;
+    multiProduct: boolean;
+    rulesPath: string;
+  };
+  features?: {
+    productDetection: boolean;
+    enhancedRules: boolean;
+    cors: boolean;
+  };
+  version?: {
+    current: string;
+    protocol: string;
+  };
+  debug?: {
+    mcp: boolean;
+    level: string;
+  };
+  customRulesPath?: string;
 }
 
-// Optimizely Products - using string literal types for compatibility
-export type OptimizelyProduct = 
-  | 'configured-commerce'
-  | 'cms-paas' 
-  | 'cms-saas'
-  | 'cmp'
-  | 'odp'
-  | 'experimentation'
-  | 'commerce-connect'
-  | 'search-navigation';
+export interface CrawlerSource {
+  id: string;
+  name: string;
+  url: string;
+  product: OptimizelyProduct;
+  selectors: {
+    container: string;
+    title: string;
+    content: string;
+    navigation: string;
+    breadcrumb: string;
+    lastUpdated: string;
+  };
+  enabled: boolean;
+  priority: number;
+}
+
+// Optimizely Products
+export enum OptimizelyProduct {
+  CONFIGURED_COMMERCE = 'configured-commerce',
+  CMS_PAAS = 'cms-paas',
+  CMS_SAAS = 'cms-saas',
+  CMP = 'cmp',
+  ODP = 'odp',
+  EXPERIMENTATION = 'experimentation',
+  COMMERCE_CONNECT = 'commerce-connect',
+  SEARCH_NAVIGATION = 'search-navigation'
+}
+
+export type OptimizelyProductType = keyof typeof OptimizelyProduct;
 
 // Enum for backward compatibility
 export enum OptimizelyProductEnum {
@@ -186,6 +249,7 @@ export interface ProductDetectionMethod {
 
 export interface ProductDetectionPattern {
   product: OptimizelyProduct;
+  pattern: string;
   indicators: string[]; // File patterns, directory names, dependency names, etc.
   confidence: number; // 0-1, confidence when this pattern matches
 }
@@ -209,3 +273,72 @@ export interface RuleGenerationConfig {
 // Legacy compatibility exports
 export type Product = OptimizelyProduct;
 export const Product = OptimizelyProductEnum; 
+
+// Error Types
+export enum ErrorCode {
+  INVALID_REQUEST = 'INVALID_REQUEST',
+  NOT_FOUND = 'NOT_FOUND',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  SERVER_ERROR = 'SERVER_ERROR'
+}
+
+export interface OptimizelyError {
+  code: ErrorCode;
+  message: string;
+  details?: unknown;
+}
+
+// Search Types
+export interface SearchQuery {
+  query: string;
+  product?: OptimizelyProduct;
+  maxResults?: number;
+  documentId?: string;
+}
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  content: string;
+  relevance: number;
+}
+
+// Documentation Types
+export type DocumentationCategory = 
+  | 'developer-guide'
+  | 'api-reference'
+  | 'best-practices'
+  | 'tutorials'
+  | 'examples';
+
+export interface OptimizelyDocumentationResult {
+  id: string;
+  title: string;
+  content: string;
+  url: string;
+  product: OptimizelyProduct;
+  category: DocumentationCategory;
+  version: string;
+  lastUpdated: string;
+  relevanceScore: number;
+  codeExamples: CodeExample[];
+  tags: string[];
+  breadcrumb: string[];
+}
+
+// Tool Context Types
+export interface OptimizelyToolContext {
+  product: OptimizelyProduct;
+  version?: string;
+  projectPath?: string;
+  files?: string[];
+  dependencies?: Record<string, string>;
+}
+
+export const OptimizelyToolContextSchema = z.object({
+  product: z.nativeEnum(OptimizelyProduct),
+  version: z.string().optional(),
+  projectPath: z.string().optional(),
+  files: z.array(z.string()).optional(),
+  dependencies: z.record(z.string()).optional()
+}); 
