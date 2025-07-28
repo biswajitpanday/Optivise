@@ -1,0 +1,10 @@
+---
+description: Quality standards for all Optimizely development
+product: configured-commerce
+category: quality
+priority: high
+applicableProducts: ["configured-commerce", "cms-paas", "cms-saas", "experimentation", "odp", "cmp"]
+globs: ["**/*"]
+alwaysApply: true
+---
+Be 100% sure before implementing anything. If you have any confusion, please ask feedback questions.
