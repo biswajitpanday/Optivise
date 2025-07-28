@@ -1,7 +1,14 @@
 const { execSync } = require('child_process');
-const semver = require('semver');
-const fs = require('fs');
 const path = require('path');
+
+// Get version from package.json
+const { version } = require('../package.json');
+
+// Configuration constants
+const CONFIG = {
+  REMOTE_SERVER: process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com',
+  VERSION: version
+};
 
 async function deploy(bumpType = 'patch') {
   try {
@@ -16,31 +23,21 @@ async function deploy(bumpType = 'patch') {
     console.log(`Bumping ${bumpType} version...`);
     const newVersion = execSync(`npm version ${bumpType}`).toString().trim();
 
-    // 3. Update environment files
-    console.log('Updating environment configurations...');
-    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-    
-    // Create production .env if it doesn't exist
-    if (!fs.existsSync('.env')) {
-      fs.copyFileSync('src/config/.env.example', '.env');
-      console.log('Created .env from example');
-    }
-
-    // 4. Deploy to NPM
+    // 3. Deploy to NPM
     console.log('Publishing to NPM...');
     execSync('npm publish');
 
-    // 5. Push git tags
+    // 4. Push git tags
     console.log('Pushing git tags...');
     execSync('git push origin --tags');
 
-    // 6. Deploy to Render (master branch)
+    // 5. Deploy to Render (master branch)
     console.log('Deploying to Render...');
     execSync('git push origin master');
 
     console.log(`Successfully deployed version ${newVersion}`);
     
-    // 7. Verify deployments
+    // 6. Verify deployments
     console.log('Verifying deployments...');
     console.log('Waiting 30 seconds for deployments to stabilize...');
     
@@ -53,7 +50,7 @@ async function deploy(bumpType = 'patch') {
         // Verify Render (wait for deployment)
         console.log('Checking Render deployment...');
         try {
-          const health = execSync('curl https://optidevdoc.onrender.com/health').toString();
+          const health = execSync(`curl ${CONFIG.REMOTE_SERVER}/health`).toString();
           console.log('Render health check:', health);
         } catch (error) {
           console.log('Render health check failed. This is expected as deployment may take a few minutes.');

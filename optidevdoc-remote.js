@@ -13,13 +13,17 @@
 const https = require('https');
 const readline = require('readline');
 const path = require('path');
-const { config } = require('./src/config/env');
+const { APP_CONFIG } = require('./src/config/constants');
 
-// State management
-let isInitialized = false;
+// Setup readline interface for JSON-RPC communication
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false
+});
 
 // Suppress startup messages in production mode
-if (!config.debug.mcp) {
+if (!APP_CONFIG.DEBUG_MODE) {
   const originalConsoleError = console.error;
   console.error = (...args) => {
     // Only show critical errors, suppress routine messages
@@ -31,22 +35,18 @@ if (!config.debug.mcp) {
 }
 
 console.error(`🚀 OptiDevDoc Enhanced Remote Client`);
-console.error(`📡 Connecting to: ${config.server.remote}`);
+console.error(`📡 Connecting to: ${APP_CONFIG.REMOTE_SERVER}`);
 console.error(`✨ Features: Documentation Search, Pattern Analysis, Bug Analysis`);
 
-// Setup readline interface for JSON-RPC communication
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: false
-});
+// State management
+let isInitialized = false;
 
 /**
  * Send JSON-RPC response
  */
 function sendResponse(response) {
   console.log(JSON.stringify(response));
-  if (config.debug.mcp) {
+  if (APP_CONFIG.DEBUG_MODE) {
     console.error('📤 Response sent:', JSON.stringify(response, null, 2));
   }
 }
@@ -61,7 +61,7 @@ function sendError(id, code, message, data = undefined) {
     error: { code, message, ...(data && { data }) }
   };
   console.log(JSON.stringify(error));
-  if (config.debug.mcp) {
+  if (APP_CONFIG.DEBUG_MODE) {
     console.error('❌ Error sent:', JSON.stringify(error, null, 2));
   }
 }
@@ -71,7 +71,7 @@ function sendError(id, code, message, data = undefined) {
  */
 function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
   return new Promise((resolve, reject) => {
-    const url = new URL(path, config.server.remote);
+    const url = new URL(path, APP_CONFIG.REMOTE_SERVER);
     const postData = data ? JSON.stringify(data) : null;
     
     const options = {
@@ -87,7 +87,7 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       timeout
     };
 
-    if (config.debug.mcp) {
+    if (APP_CONFIG.DEBUG_MODE) {
       console.error(`📡 Making ${method} request to: ${url.href}`);
       if (postData) {
         console.error('📤 Request data:', postData);
@@ -104,7 +104,7 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       res.on('end', () => {
         try {
           const result = JSON.parse(responseData);
-          if (config.debug.mcp) {
+          if (APP_CONFIG.DEBUG_MODE) {
             console.error('📥 Response received:', JSON.stringify(result, null, 2).substring(0, 500) + '...');
           }
           resolve(result);
@@ -157,7 +157,7 @@ rl.on('line', async (line) => {
   try {
     const request = JSON.parse(line.trim());
     
-    if (config.debug.mcp) {
+    if (APP_CONFIG.DEBUG_MODE) {
       console.error('📥 Request received:', JSON.stringify(request, null, 2));
     }
 
@@ -168,12 +168,12 @@ rl.on('line', async (line) => {
           const health = await makeRequest('/health', 'GET');
           const capabilities = {
             tools: {
-              'search-optimizely-docs': true,
-              'find-optimizely-pattern': true,
-              'analyze-optimizely-bug': true,
-              'apply-development-rules': health.features?.enhanced || false,
+              [APP_CONFIG.TOOLS.SEARCH]: true,
+              [APP_CONFIG.TOOLS.PATTERN]: true,
+              [APP_CONFIG.TOOLS.BUG_ANALYSIS]: true,
+              [APP_CONFIG.TOOLS.RULES]: health.features?.enhanced || false,
               'detect-product': health.features?.productDetection || false,
-              'generate-cursor-config': health.features?.enhanced || false
+              [APP_CONFIG.TOOLS.CONFIG]: health.features?.enhanced || false
             },
             logging: {},
             prompts: {},
@@ -184,11 +184,11 @@ rl.on('line', async (line) => {
             jsonrpc: '2.0',
             id: request.id,
             result: {
-              protocolVersion: config.version.protocol,
+              protocolVersion: APP_CONFIG.PROTOCOL_VERSION,
               capabilities,
               serverInfo: {
                 name: 'optidevdoc-remote',
-                version: health.version || config.version.current
+                version: health.version || APP_CONFIG.VERSION
               }
             }
           });
@@ -199,12 +199,12 @@ rl.on('line', async (line) => {
             jsonrpc: '2.0',
             id: request.id,
             result: {
-              protocolVersion: config.version.protocol,
+              protocolVersion: APP_CONFIG.PROTOCOL_VERSION,
               capabilities: {
                 tools: {
-                  'search-optimizely-docs': true,
-                  'find-optimizely-pattern': true,
-                  'analyze-optimizely-bug': true
+                  [APP_CONFIG.TOOLS.SEARCH]: true,
+                  [APP_CONFIG.TOOLS.PATTERN]: true,
+                  [APP_CONFIG.TOOLS.BUG_ANALYSIS]: true
                 },
                 logging: {},
                 prompts: {},
@@ -212,7 +212,7 @@ rl.on('line', async (line) => {
               },
               serverInfo: {
                 name: 'optidevdoc-remote',
-                version: config.version.current
+                version: APP_CONFIG.VERSION
               }
             }
           });
@@ -221,7 +221,7 @@ rl.on('line', async (line) => {
 
       case 'initialized':
         isInitialized = true;
-        if (config.debug.mcp) {
+        if (APP_CONFIG.DEBUG_MODE) {
           console.error('✅ Enhanced MCP Client initialized successfully');
         }
         break;
@@ -232,7 +232,7 @@ rl.on('line', async (line) => {
           id: request.id, 
           result: { 
             status: 'healthy',
-            version: config.version.current,
+            version: APP_CONFIG.VERSION,
             features: ['search', 'patterns', 'bug_analysis']
           } 
         });
@@ -245,7 +245,7 @@ rl.on('line', async (line) => {
           result: {
             tools: [
               {
-                name: 'apply_development_rules',
+                name: APP_CONFIG.TOOLS.RULES,
                 description: 'Apply Optimizely Configured Commerce development rules to a specific scenario for context-aware guidance',
                 inputSchema: {
                   type: 'object',
@@ -291,7 +291,7 @@ rl.on('line', async (line) => {
                 }
               },
               {
-                name: 'generate_cursor_config',
+                name: APP_CONFIG.TOOLS.CONFIG,
                 description: 'Generate Cursor IDE configuration with integrated Optimizely development rules',
                 inputSchema: {
                   type: 'object',
@@ -317,7 +317,7 @@ rl.on('line', async (line) => {
                 }
               },
               {
-                name: 'search_optimizely_docs',
+                name: APP_CONFIG.TOOLS.SEARCH,
                 description: 'Search Optimizely documentation with enhanced pattern matching',
                 inputSchema: {
                   type: 'object',
@@ -329,14 +329,14 @@ rl.on('line', async (line) => {
                     product: {
                       type: 'string',
                       description: 'Filter by Optimizely product',
-                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'all']
+                      enum: [...APP_CONFIG.SUPPORTED_PRODUCTS, 'all']
                     }
                   },
                   required: ['query']
                 }
               },
               {
-                name: 'find_optimizely_pattern',
+                name: APP_CONFIG.TOOLS.PATTERN,
                 description: 'Find Optimizely coding patterns and best practices for specific scenarios',
                 inputSchema: {
                   type: 'object',
@@ -348,7 +348,7 @@ rl.on('line', async (line) => {
                     product: {
                       type: 'string',
                       description: 'Optimizely product',
-                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'any'],
+                      enum: [...APP_CONFIG.SUPPORTED_PRODUCTS, 'any'],
                       default: 'any'
                     },
                     category: {
@@ -367,7 +367,7 @@ rl.on('line', async (line) => {
                 }
               },
               {
-                name: 'analyze_optimizely_bug',
+                name: APP_CONFIG.TOOLS.BUG_ANALYSIS,
                 description: 'Analyze bugs and get Optimizely-specific solutions and guidance',
                 inputSchema: {
                   type: 'object',
@@ -383,7 +383,7 @@ rl.on('line', async (line) => {
                     product: {
                       type: 'string',
                       description: 'Optimizely product (auto-detect if not specified)',
-                      enum: ['configured-commerce', 'cms-paas', 'cms-saas', 'cmp', 'odp', 'experimentation', 'commerce-connect', 'search-navigation', 'auto-detect'],
+                      enum: [...APP_CONFIG.SUPPORTED_PRODUCTS, 'auto-detect'],
                       default: 'auto-detect'
                     },
                     context: {
@@ -408,27 +408,27 @@ rl.on('line', async (line) => {
           let contentType = 'search';
 
           switch (toolName) {
-            case 'apply_development_rules':
+            case APP_CONFIG.TOOLS.RULES:
               result = await makeRequest('/api/apply-rules', 'POST', toolArgs);
               contentType = 'rules';
               break;
 
-            case 'generate_cursor_config':
+            case APP_CONFIG.TOOLS.CONFIG:
               result = await makeRequest('/api/generate-config', 'POST', toolArgs);
               contentType = 'config';
               break;
 
-            case 'search_optimizely_docs':
+            case APP_CONFIG.TOOLS.SEARCH:
               result = await makeRequest('/api/search', 'POST', toolArgs);
               contentType = 'search';
               break;
 
-            case 'find_optimizely_pattern':
+            case APP_CONFIG.TOOLS.PATTERN:
               result = await makeRequest('/api/patterns', 'POST', toolArgs);
               contentType = 'pattern';
               break;
 
-            case 'analyze_optimizely_bug':
+            case APP_CONFIG.TOOLS.BUG_ANALYSIS:
               result = await makeRequest('/api/analyze-bug', 'POST', toolArgs);
               contentType = 'bug';
               break;
@@ -502,7 +502,7 @@ rl.on('line', async (line) => {
 
 // Handle process termination
 function handleExit(signal) {
-  if (config.debug.mcp) {
+  if (APP_CONFIG.DEBUG_MODE) {
     console.error(`\n🔄 Received ${signal}, cleaning up...`);
   }
   process.exit(0);
@@ -526,7 +526,7 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-if (config.debug.mcp) {
+if (APP_CONFIG.DEBUG_MODE) {
   console.error('🎯 Enhanced MCP Client ready for requests');
-  console.error('📋 Available tools: search_optimizely_docs, find_optimizely_pattern, analyze_optimizely_bug');
+  console.error(`📋 Available tools: ${Object.values(APP_CONFIG.TOOLS).join(', ')}`);
 } 
