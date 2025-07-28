@@ -4,7 +4,7 @@
   "description": "Intelligent Optimizely development assistant with product-aware rules, pattern analysis, bug resolution, and comprehensive documentation search",
   "main": "index.js",
   "bin": {
-    "./bin/optidevdoc": "./bin/optidevdoc"
+    "optidevdoc": "./bin/optidevdoc"
   },
   "scripts": {
     "dev": "tsx src/deploy-server-simple.ts",
