@@ -3,7 +3,17 @@ services:
     name: optidevdoc
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: yarn install
+    buildCommand: |
+      yarn install
+      echo "export OPTIDEVDOC_VERSION=2.1.14" >> .env
+      echo "export OPTIDEVDOC_MODE=enhanced" >> .env
+      echo "export OPTIDEVDOC_MULTI_PRODUCT=true" >> .env
+      echo "export OPTIDEVDOC_ENHANCED=true" >> .env
+      echo "export OPTIDEVDOC_DEBUG=false" >> .env
+      echo "export ENABLE_PRODUCT_DETECTION=true" >> .env
+      echo "export ENABLE_ENHANCED_RULES=true" >> .env
+      echo "export ENABLE_CORS=false" >> .env
+      echo "export PROTOCOL_VERSION=2025-07-27" >> .env
     startCommand: node main.js
     plan: free
     region: oregon
@@ -37,8 +47,6 @@ services:
         value: "100"
       - key: RATE_LIMIT_WINDOW_MS
         value: "60000"
-      - key: CORS_ENABLED
-        value: "true"
       - key: CORS_ORIGINS
         value: "*"
       - key: MCP_MODE

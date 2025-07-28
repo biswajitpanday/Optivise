@@ -17,16 +17,16 @@ const path = require('path');
 const fs = require('fs');
 
 // Configuration
-const VERSION = '2.1.10';
+const VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.14';
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IS_RENDER = process.env.RENDER === 'true';
 const MCP_MODE = process.env.MCP_MODE || 'stdio';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-const ENHANCED_FEATURES = process.env.ENHANCED_FEATURES === 'true';
-const PRODUCT_DETECTION = process.env.PRODUCT_DETECTION === 'true';
+const ENHANCED_FEATURES = process.env.OPTIDEVDOC_ENHANCED === 'true';
+const PRODUCT_DETECTION = process.env.ENABLE_PRODUCT_DETECTION === 'true';
 const RULES_PATH = process.env.RULES_PATH || './rules';
-const CORS_ENABLED = process.env.CORS_ENABLED === 'true';
+const CORS_ENABLED = process.env.ENABLE_CORS === 'true';
 const CORS_ORIGINS = process.env.CORS_ORIGINS || '*';
 const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100;
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 60000;
