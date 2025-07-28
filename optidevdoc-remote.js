@@ -15,7 +15,7 @@ const readline = require('readline');
 
 // Configuration
 const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = '2.1.10';
+const CLIENT_VERSION = '2.1.13';
 const PROTOCOL_VERSION = '2025-07-27';
 
 // Debug mode control
