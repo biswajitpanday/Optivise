@@ -12,14 +12,21 @@
 
 const https = require('https');
 const readline = require('readline');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-// Configuration
-const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = '2.1.13';
-const PROTOCOL_VERSION = '2025-07-27';
+// Configuration from environment variables
+const REMOTE_SERVER = process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com';
+const CLIENT_VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.13';
+const PROTOCOL_VERSION = process.env.PROTOCOL_VERSION || '2025-07-27';
 
 // Debug mode control
-const DEBUG_MODE = process.env.DEBUG_MCP === 'true';
+const DEBUG_MODE = process.env.OPTIDEVDOC_DEBUG === 'true';
+
+// Feature flags
+const ENABLE_PRODUCT_DETECTION = process.env.ENABLE_PRODUCT_DETECTION === 'true';
+const ENABLE_ENHANCED_RULES = process.env.ENABLE_ENHANCED_RULES === 'true';
+const ENABLE_CORS = process.env.ENABLE_CORS === 'true';
 
 // State management
 let isInitialized = false;
