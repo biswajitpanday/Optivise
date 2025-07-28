@@ -179,15 +179,16 @@ function detectOptimizelyProduct(options) {
 }
 
 function migrateRulesStructure(options) {
-  console.log('🔄 Migrating Rules to Product-Aware Structure v2.1.0...\n');
+  console.log('🔄 Migrating Rules to Product-Aware Structure v2.1.8...\n');
   
   const oldRulesPath = path.join(process.cwd(), 'Resources', 'rules');
   const newRulesPath = path.join(process.cwd(), 'rules');
+  const yaml = require('yaml');
   
   if (!fs.existsSync(oldRulesPath)) {
     console.log('❓ No existing rules found at Resources/rules');
     console.log('💡 If your rules are in a different location, please move them manually');
-    console.log('📚 See MIGRATION_GUIDE.md for detailed instructions');
+    console.log('📚 See Resources/DOCUMENTATION.md for detailed instructions');
     return;
   }
   
@@ -195,8 +196,9 @@ function migrateRulesStructure(options) {
     console.log('📋 Migration Plan:');
     console.log('   • Backup existing rules');
     console.log('   • Create new product-specific structure');
-    console.log('   • Move rules to appropriate product directories');
-    console.log('   • Update rule files with product metadata\n');
+    console.log('   • Analyze and categorize rules');
+    console.log('   • Update frontmatter with product metadata');
+    console.log('   • Move rules to appropriate directories\n');
     
     // Create backup
     const backupPath = `${oldRulesPath}-backup-${Date.now()}`;
@@ -204,54 +206,217 @@ function migrateRulesStructure(options) {
     console.log(`✅ Backup created: ${backupPath}`);
     
     // Create new structure
-    const commercePath = path.join(newRulesPath, 'configured-commerce');
-    fs.mkdirSync(path.join(commercePath, 'frontend'), { recursive: true });
-    fs.mkdirSync(path.join(commercePath, 'backend'), { recursive: true });
-    fs.mkdirSync(path.join(commercePath, 'general'), { recursive: true });
-    fs.mkdirSync(path.join(newRulesPath, 'shared'), { recursive: true });
+    const productDirs = {
+      'configured-commerce': ['frontend', 'backend', 'general'],
+      'cms-paas': ['content-types', 'templates', 'general'],
+      'cms-saas': ['content-types', 'templates', 'general'],
+      'experimentation': ['sdk', 'integrations', 'general'],
+      'dxp': ['patterns', 'integrations', 'general'],
+      'shared': ['']
+    };
     
-    // Create CMS structure
-    const cmsPath = path.join(newRulesPath, 'cms-paas');
-    fs.mkdirSync(path.join(cmsPath, 'content-types'), { recursive: true });
-    fs.mkdirSync(path.join(cmsPath, 'templates'), { recursive: true });
-    fs.mkdirSync(path.join(cmsPath, 'general'), { recursive: true });
+    // Create directories
+    Object.entries(productDirs).forEach(([product, subdirs]) => {
+      subdirs.forEach(subdir => {
+        const dirPath = subdir ? path.join(newRulesPath, product, subdir) : path.join(newRulesPath, product);
+        fs.mkdirSync(dirPath, { recursive: true });
+      });
+    });
     
     console.log('✅ Created new directory structure');
     
-    // Move files
-    const rulesFiles = fs.readdirSync(oldRulesPath).filter(f => f.endsWith('.mdc'));
-    
-    rulesFiles.forEach(file => {
-      const sourcePath = path.join(oldRulesPath, file);
-      let targetPath;
+    // Helper function to detect product from content
+    function detectProductFromContent(content, filename) {
+      const patterns = {
+        'configured-commerce': ['commerce', 'cart', 'checkout', 'pricing', 'catalog', 'blueprint', 'extension', 'handler'],
+        'cms-paas': ['cms', 'content', 'block', 'page', 'template', 'episerver'],
+        'cms-saas': ['cms cloud', 'saas', 'content cloud'],
+        'experimentation': ['experiment', 'ab test', 'feature flag', 'sdk'],
+        'dxp': ['dxp', 'digital experience', 'platform']
+      };
       
-      if (file.includes('blueprint')) {
-        targetPath = path.join(commercePath, 'frontend', file);
-      } else if (file.includes('extension') || file.includes('handler')) {
-        targetPath = path.join(commercePath, 'backend', file);
-      } else if (file.includes('project-structure')) {
-        targetPath = path.join(commercePath, 'general', file);
-      } else if (file.includes('perfection')) {
-        targetPath = path.join(newRulesPath, 'shared', file);
-      } else {
-        targetPath = path.join(commercePath, 'general', file);
+      // First check filename patterns
+      if (filename.includes('blueprint') || filename.includes('extension') || filename.includes('handler')) {
+        return 'configured-commerce';
+      }
+      if (filename.includes('block') || filename.includes('template')) {
+        return 'cms-paas';
+      }
+      if (filename.includes('experiment') || filename.includes('sdk')) {
+        return 'experimentation';
       }
       
-      fs.copyFileSync(sourcePath, targetPath);
-      console.log(`   📄 Moved ${file} to ${path.relative(process.cwd(), targetPath)}`);
-    });
+      // Then check content patterns
+      for (const [product, keywords] of Object.entries(patterns)) {
+        if (keywords.some(keyword => content.toLowerCase().includes(keyword))) {
+          return product;
+        }
+      }
+      
+      return 'shared';
+    }
+    
+    // Helper function to parse and update frontmatter
+    function updateFrontmatter(content, product, filename) {
+      const parts = content.split('---\n');
+      let frontmatter = {};
+      let mainContent = content;
+      
+      if (parts.length >= 3) {
+        try {
+          frontmatter = yaml.parse(parts[1]);
+          mainContent = parts.slice(2).join('---\n');
+        } catch (e) {
+          console.log(`   ⚠️ Invalid frontmatter in ${filename}, creating new`);
+        }
+      }
+      
+      // Update or add product information
+      frontmatter.product = product;
+      frontmatter.version = frontmatter.version || '1.0.0';
+      frontmatter.category = frontmatter.category || (
+        filename.includes('frontend') ? 'frontend' :
+        filename.includes('backend') ? 'backend' :
+        filename.includes('general') ? 'general' :
+        'development'
+      );
+      frontmatter.applicableProducts = frontmatter.applicableProducts || [product];
+      if (!frontmatter.applicableProducts.includes(product)) {
+        frontmatter.applicableProducts.push(product);
+      }
+      
+      // Add default globs if not present
+      frontmatter.globs = frontmatter.globs || {
+        'configured-commerce': ['**/*.cs', '**/*.tsx', '**/*.razor'],
+        'cms-paas': ['**/*.cshtml', '**/*.cs', '**/*.config'],
+        'cms-saas': ['**/*.cshtml', '**/*.cs', '**/*.config'],
+        'experimentation': ['**/*.js', '**/*.ts', '**/*.html'],
+        'dxp': ['**/*.cs', '**/*.cshtml', '**/*.config']
+      }[product] || ['**/*'];
+      
+      return `---\n${yaml.stringify(frontmatter)}---\n${mainContent}`;
+    }
+    
+    // Process all .mdc files recursively
+    function processDirectory(dir) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const sourcePath = path.join(dir, entry.name);
+        
+        if (entry.isDirectory()) {
+          processDirectory(sourcePath);
+          continue;
+        }
+        
+        if (!entry.name.endsWith('.mdc')) continue;
+        
+        // Read and analyze file
+        const content = fs.readFileSync(sourcePath, 'utf8');
+        const product = detectProductFromContent(content, entry.name);
+        const updatedContent = updateFrontmatter(content, product, entry.name);
+        
+        // Determine target directory
+        let targetSubdir = 'general';
+        if (product === 'configured-commerce') {
+          if (entry.name.includes('blueprint')) targetSubdir = 'frontend';
+          else if (entry.name.includes('extension') || entry.name.includes('handler')) targetSubdir = 'backend';
+        } else if (product === 'cms-paas' || product === 'cms-saas') {
+          if (entry.name.includes('block')) targetSubdir = 'content-types';
+          else if (entry.name.includes('template')) targetSubdir = 'templates';
+        } else if (product === 'experimentation') {
+          if (entry.name.includes('sdk')) targetSubdir = 'sdk';
+          else if (entry.name.includes('integration')) targetSubdir = 'integrations';
+        }
+        
+        const targetDir = product === 'shared' ? 
+          path.join(newRulesPath, product) : 
+          path.join(newRulesPath, product, targetSubdir);
+          
+        const targetPath = path.join(targetDir, entry.name);
+        
+        // Write updated file
+        fs.writeFileSync(targetPath, updatedContent);
+        console.log(`   📄 Migrated ${path.relative(process.cwd(), sourcePath)} to ${path.relative(process.cwd(), targetPath)}`);
+      }
+    }
+    
+    // Start processing
+    processDirectory(oldRulesPath);
+    
+    // Create README.md in rules directory
+    const readmePath = path.join(newRulesPath, 'README.md');
+    const readmeContent = `# OptiDevDoc Development Rules
+
+Your rules have been successfully migrated to the new product-aware structure.
+
+## Directory Structure
+
+\`\`\`
+rules/
+├── configured-commerce/   # Optimizely Configured Commerce rules
+│   ├── frontend/         # React, Redux, TypeScript patterns
+│   ├── backend/         # .NET, handlers, extensions
+│   └── general/         # Project structure, best practices
+├── cms-paas/            # Optimizely CMS (PaaS) rules
+│   ├── content-types/   # Blocks, pages, media
+│   ├── templates/       # Templates, layouts
+│   └── general/         # CMS best practices
+├── cms-saas/            # Optimizely CMS (SaaS) rules
+│   ├── content-types/   # Cloud-specific content types
+│   ├── templates/       # Cloud templates
+│   └── general/         # Cloud best practices
+├── experimentation/     # Optimizely Experimentation rules
+│   ├── sdk/            # SDK implementation patterns
+│   ├── integrations/   # Integration patterns
+│   └── general/        # Testing best practices
+├── dxp/                # Optimizely DXP rules
+│   ├── patterns/       # DXP-specific patterns
+│   ├── integrations/   # Integration patterns
+│   └── general/        # Platform best practices
+└── shared/             # Common rules for all products
+\`\`\`
+
+## Rule Format
+
+Each rule file (\`.mdc\`) includes frontmatter with:
+
+- \`product\`: Primary Optimizely product
+- \`version\`: Rule version
+- \`category\`: Development category
+- \`applicableProducts\`: List of products where rule applies
+- \`globs\`: File patterns for rule application
+
+## Usage
+
+Set the rules path in your environment:
+
+\`\`\`bash
+export OPTIDEVDOC_RULES_PATH="${newRulesPath}"
+\`\`\`
+
+Test with:
+
+\`\`\`bash
+optidevdoc detect
+\`\`\`
+`;
+    
+    fs.writeFileSync(readmePath, readmeContent);
+    console.log('✅ Created new README.md with structure documentation');
     
     console.log('\n✅ Migration completed successfully!');
     console.log('\n📚 Next Steps:');
-    console.log('   1. Review the new structure in: rules/');
-    console.log('   2. Update rule files with product frontmatter (see MIGRATION_GUIDE.md)');
+    console.log('   1. Review the migrated rules in: rules/');
+    console.log('   2. Verify product categorization is correct');
     console.log('   3. Set OPTIDEVDOC_RULES_PATH environment variable:');
     console.log(`      export OPTIDEVDOC_RULES_PATH="${newRulesPath}"`);
     console.log('   4. Test with: optidevdoc detect');
+    console.log('\n💡 Your original rules are backed up at:', backupPath);
     
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
-    console.log('📚 Please see MIGRATION_GUIDE.md for manual migration steps');
+    console.log('📚 Please see Resources/DOCUMENTATION.md for manual migration steps');
   }
 }
 
