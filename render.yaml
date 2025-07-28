@@ -3,21 +3,16 @@ services:
     name: optidevdoc
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: |
-      yarn install
-      chmod +x start.sh
-    startCommand: ./start.sh
+    buildCommand: yarn install
+    startCommand: node main.js
     plan: free
     region: oregon
     branch: master
     rootDir: .
     
     envVars:
-      - fromGroup: optidevdoc-env
       - key: NODE_ENV
         value: production
-      - key: RENDER
-        value: "true"
       - key: PORT
         value: "10000"
       - key: HOST
@@ -30,20 +25,48 @@ services:
         value: ./data/optidevdoc.db
       - key: CACHE_ENABLED
         value: "true"
+      - key: CACHE_TYPE
+        value: memory
+      - key: CACHE_TTL
+        value: "3600"
+      - key: CACHE_MAX_SIZE
+        value: "1000"
+      - key: LOG_FILE_ENABLED
+        value: "true"
+      - key: LOG_FILE_PATH
+        value: ./logs
+      - key: LOG_FILE_MAX_SIZE
+        value: 10m
+      - key: LOG_FILE_MAX_FILES
+        value: "5"
+      - key: LOG_CONSOLE_ENABLED
+        value: "true"
+      - key: LOG_CONSOLE_COLORIZE
+        value: "true"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "100"
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "60000"
+      - key: MCP_MODE
+        value: http
+      - key: ENABLE_PRODUCT_DETECTION
+        value: "true"
+      - key: ENABLE_ENHANCED_RULES
+        value: "true"
+      - key: ENABLE_CORS
+        value: "true"
+      - key: DEBUG_MCP
+        value: "false"
       - key: CRAWLER_ENABLED
         value: "true"
       - key: CRAWLER_INTERVAL_HOURS
         value: "24"
       - key: CRAWLER_MAX_CONCURRENCY
         value: "3"
-      - key: RATE_LIMIT_MAX_REQUESTS
-        value: "100"
-      - key: RATE_LIMIT_WINDOW_MS
-        value: "60000"
-      - key: CORS_ORIGINS
-        value: "*"
-      - key: MCP_MODE
-        value: "http"
+      - key: OPTIDEVDOC_MULTI_PRODUCT
+        value: "true"
+      - key: OPTIDEVDOC_RULES_PATH
+        value: ./rules
         
     # Health check configuration
     healthCheckPath: /health
@@ -72,26 +95,4 @@ services:
     name: optidevdoc-redis
     ipAllowList: []  # Only allow internal connections
     plan: free
-    maxmemoryPolicy: volatile-lru
-
-envGroups:
-  - name: optidevdoc-env
-    envVars:
-      - key: OPTIDEVDOC_VERSION
-        value: "2.1.14"
-      - key: OPTIDEVDOC_MODE
-        value: "enhanced"
-      - key: OPTIDEVDOC_MULTI_PRODUCT
-        value: "true"
-      - key: OPTIDEVDOC_ENHANCED
-        value: "true"
-      - key: OPTIDEVDOC_DEBUG
-        value: "false"
-      - key: ENABLE_PRODUCT_DETECTION
-        value: "true"
-      - key: ENABLE_ENHANCED_RULES
-        value: "true"
-      - key: ENABLE_CORS
-        value: "false"
-      - key: PROTOCOL_VERSION
-        value: "2025-07-27" 
+    maxmemoryPolicy: volatile-lru 

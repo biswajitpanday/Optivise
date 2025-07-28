@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * OptiDevDoc Enhanced Remote MCP Client v2.0
+ * OptiDevDoc Enhanced Remote MCP Client
  * 
  * This enhanced version includes:
  * - Original documentation search
@@ -13,26 +13,13 @@
 const https = require('https');
 const readline = require('readline');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
-
-// Configuration from environment variables
-const REMOTE_SERVER = process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.13';
-const PROTOCOL_VERSION = process.env.PROTOCOL_VERSION || '2025-07-27';
-
-// Debug mode control
-const DEBUG_MODE = process.env.OPTIDEVDOC_DEBUG === 'true';
-
-// Feature flags
-const ENABLE_PRODUCT_DETECTION = process.env.ENABLE_PRODUCT_DETECTION === 'true';
-const ENABLE_ENHANCED_RULES = process.env.ENABLE_ENHANCED_RULES === 'true';
-const ENABLE_CORS = process.env.ENABLE_CORS === 'true';
+const { config } = require('./src/config/env');
 
 // State management
 let isInitialized = false;
 
 // Suppress startup messages in production mode
-if (!DEBUG_MODE) {
+if (!config.debug.mcp) {
   const originalConsoleError = console.error;
   console.error = (...args) => {
     // Only show critical errors, suppress routine messages
@@ -43,8 +30,8 @@ if (!DEBUG_MODE) {
   };
 }
 
-console.error(`🚀 OptiDevDoc Enhanced Remote Client v${CLIENT_VERSION}`);
-console.error(`📡 Connecting to: ${REMOTE_SERVER}`);
+console.error(`🚀 OptiDevDoc Enhanced Remote Client`);
+console.error(`📡 Connecting to: ${config.server.remote}`);
 console.error(`✨ Features: Documentation Search, Pattern Analysis, Bug Analysis`);
 
 // Setup readline interface for JSON-RPC communication
@@ -59,7 +46,7 @@ const rl = readline.createInterface({
  */
 function sendResponse(response) {
   console.log(JSON.stringify(response));
-  if (DEBUG_MODE) {
+  if (config.debug.mcp) {
     console.error('📤 Response sent:', JSON.stringify(response, null, 2));
   }
 }
@@ -74,7 +61,7 @@ function sendError(id, code, message, data = undefined) {
     error: { code, message, ...(data && { data }) }
   };
   console.log(JSON.stringify(error));
-  if (DEBUG_MODE) {
+  if (config.debug.mcp) {
     console.error('❌ Error sent:', JSON.stringify(error, null, 2));
   }
 }
@@ -84,7 +71,7 @@ function sendError(id, code, message, data = undefined) {
  */
 function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
   return new Promise((resolve, reject) => {
-    const url = new URL(path, REMOTE_SERVER);
+    const url = new URL(path, config.server.remote);
     const postData = data ? JSON.stringify(data) : null;
     
     const options = {
@@ -94,13 +81,13 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': `OptiDevDoc-Enhanced-MCP-Client/${CLIENT_VERSION}`,
+        'User-Agent': `OptiDevDoc-Enhanced-MCP-Client`,
         ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
       },
       timeout
     };
 
-    if (DEBUG_MODE) {
+    if (config.debug.mcp) {
       console.error(`📡 Making ${method} request to: ${url.href}`);
       if (postData) {
         console.error('📤 Request data:', postData);
@@ -117,7 +104,7 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       res.on('end', () => {
         try {
           const result = JSON.parse(responseData);
-          if (DEBUG_MODE) {
+          if (config.debug.mcp) {
             console.error('📥 Response received:', JSON.stringify(result, null, 2).substring(0, 500) + '...');
           }
           resolve(result);
@@ -170,7 +157,7 @@ rl.on('line', async (line) => {
   try {
     const request = JSON.parse(line.trim());
     
-    if (DEBUG_MODE) {
+    if (config.debug.mcp) {
       console.error('📥 Request received:', JSON.stringify(request, null, 2));
     }
 
@@ -197,11 +184,11 @@ rl.on('line', async (line) => {
             jsonrpc: '2.0',
             id: request.id,
             result: {
-              protocolVersion: PROTOCOL_VERSION,
+              protocolVersion: config.version.protocol,
               capabilities,
               serverInfo: {
                 name: 'optidevdoc-remote',
-                version: health.version || CLIENT_VERSION
+                version: health.version || config.version.current
               }
             }
           });
@@ -212,7 +199,7 @@ rl.on('line', async (line) => {
             jsonrpc: '2.0',
             id: request.id,
             result: {
-              protocolVersion: PROTOCOL_VERSION,
+              protocolVersion: config.version.protocol,
               capabilities: {
                 tools: {
                   'search-optimizely-docs': true,
@@ -225,7 +212,7 @@ rl.on('line', async (line) => {
               },
               serverInfo: {
                 name: 'optidevdoc-remote',
-                version: CLIENT_VERSION
+                version: config.version.current
               }
             }
           });
@@ -234,7 +221,7 @@ rl.on('line', async (line) => {
 
       case 'initialized':
         isInitialized = true;
-        if (DEBUG_MODE) {
+        if (config.debug.mcp) {
           console.error('✅ Enhanced MCP Client initialized successfully');
         }
         break;
@@ -245,7 +232,7 @@ rl.on('line', async (line) => {
           id: request.id, 
           result: { 
             status: 'healthy',
-            version: CLIENT_VERSION,
+            version: config.version.current,
             features: ['search', 'patterns', 'bug_analysis']
           } 
         });
@@ -515,7 +502,7 @@ rl.on('line', async (line) => {
 
 // Handle process termination
 function handleExit(signal) {
-  if (DEBUG_MODE) {
+  if (config.debug.mcp) {
     console.error(`\n🔄 Received ${signal}, cleaning up...`);
   }
   process.exit(0);
@@ -539,7 +526,7 @@ process.on('unhandledRejection', (reason, promise) => {
   process.exit(1);
 });
 
-if (DEBUG_MODE) {
+if (config.debug.mcp) {
   console.error('🎯 Enhanced MCP Client ready for requests');
   console.error('📋 Available tools: search_optimizely_docs, find_optimizely_pattern, analyze_optimizely_bug');
 } 
