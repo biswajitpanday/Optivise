@@ -1,5 +1,5 @@
-import { OptimizelyProduct } from '@/types/index.js';
-import type { ServerConfig } from '@/types/index.js';
+import { OptimizelyProduct } from '../types/index.js';
+import type { ServerConfig } from '../types/index.js';
 
 export const defaultConfig: ServerConfig = {
   port: 3000,

@@ -2,50 +2,201 @@
 
 /**
  * OptiDevDoc MCP Server - Production Entry Point
- * This file loads the compiled TypeScript deploy server
+ * This file loads the appropriate server based on environment and mode
  */
 
 const fs = require('fs');
 const path = require('path');
 
-console.log('🚀 OptiDevDoc MCP Server - Production Version');
+console.log('🚀 OptiDevDoc MCP Server v2.1.5');
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
-// Try to load the compiled enhanced deploy server first
+// Check environment variables to determine mode
+const isEnhanced = process.env.OPTIDEVDOC_MODE === 'enhanced' || process.env.OPTIDEVDOC_MULTI_PRODUCT === 'true';
+const isServerMode = process.env.OPTIDEVDOC_SERVER_MODE === 'http';
+
+console.log('Mode:', isEnhanced ? 'Enhanced Product-Aware' : 'Simple');
+console.log('Server Mode:', isServerMode ? 'HTTP Server' : 'MCP Server');
+
+// Try to load the compiled TypeScript deploy server first
 const enhancedServerPath = path.join(__dirname, 'dist', 'deploy-server-enhanced.js');
 const simpleServerPath = path.join(__dirname, 'dist', 'deploy-server-simple.js');
 
-if (fs.existsSync(enhancedServerPath)) {
-  console.log('🚀 Loading enhanced TypeScript deploy server...');
+// Check if we have compiled versions
+if (isEnhanced && fs.existsSync(enhancedServerPath)) {
+  console.log('🎯 Loading compiled enhanced server...');
   try {
     require(enhancedServerPath);
+    return;
   } catch (error) {
-    console.error('❌ Failed to load enhanced server:', error);
-    console.log('🔄 Falling back to simple server...');
-    if (fs.existsSync(simpleServerPath)) {
-      require(simpleServerPath);
-    } else {
-      startStandaloneServer();
-    }
+    console.error('❌ Failed to load compiled enhanced server:', error);
   }
 } else if (fs.existsSync(simpleServerPath)) {
-  console.log('📦 Loading simple TypeScript deploy server...');
+  console.log('📦 Loading compiled simple server...');
   try {
     require(simpleServerPath);
+    return;
   } catch (error) {
-    console.error('❌ Failed to load simple server:', error);
-    console.log('🔄 Falling back to standalone server...');
-    startStandaloneServer();
+    console.error('❌ Failed to load compiled simple server:', error);
   }
-} else {
-  console.log('⚠️  Compiled server not found, using standalone server...');
-  startStandaloneServer();
 }
 
-// If this is running as the main file and no compiled version exists, start the standalone server
-function startStandaloneServer() {
+// Try tsx execution if available and TypeScript files exist
+const tsxExists = checkTsxAvailability();
+
+if (tsxExists) {
+  const srcPath = isEnhanced 
+    ? path.join(__dirname, 'src', 'deploy-server-enhanced.ts')
+    : path.join(__dirname, 'src', 'deploy-server-simple.ts');
+  
+  if (fs.existsSync(srcPath)) {
+    const tsxStarted = attemptTsxExecution(srcPath);
+    if (tsxStarted) {
+      // tsx is starting, let it handle the process
+      return;
+    }
+  }
+}
+
+// Primary fallback: For MCP mode, we should NOT start HTTP server
+if (isServerMode) {
+  console.log('📋 Starting standalone HTTP server...');
   startServer();
+} else {
+  console.log('📋 Starting standalone MCP server...');
+  startMCPServer();
+}
+
+// Function to check tsx availability
+function checkTsxAvailability() {
+  const isWindows = process.platform === 'win32';
+  let tsxPath;
+  
+  if (isWindows) {
+    // On Windows, tsx is a .CMD file
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.CMD');
+    if (!fs.existsSync(tsxPath)) {
+      tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd');
+    }
+  } else {
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+  }
+  
+  return fs.existsSync(tsxPath);
+}
+
+// Standalone MCP server (should NOT use HTTP)
+function startMCPServer() {
+  try {
+    // Use the simple MCP server fallback (main.js)
+    const fallbackServerPath = path.join(__dirname, 'main.js');
+    if (fs.existsSync(fallbackServerPath)) {
+      console.log('🎯 Loading fallback MCP server...');
+      require(fallbackServerPath);
+    } else {
+      console.error('❌ Fallback MCP server not found');
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('❌ Failed to start MCP server:', error);
+    process.exit(1);
+  }
+}
+
+function attemptTsxExecution(srcPath) {
+  if (process.env.OPTIDEVDOC_FORCE_STANDALONE === 'true') {
+    console.log('🔧 OPTIDEVDOC_FORCE_STANDALONE=true, skipping tsx...');
+    return false;
+  }
+
+  const isWindows = process.platform === 'win32';
+  
+  // Determine tsx path more reliably
+  let tsxPath;
+  if (isWindows) {
+    // On Windows, tsx is a .CMD file
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.CMD');
+    if (!fs.existsSync(tsxPath)) {
+      tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx.cmd');
+    }
+    if (!fs.existsSync(tsxPath)) {
+      console.error('❌ tsx.CMD not found at expected locations');
+      return false;
+    }
+  } else {
+    tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
+    if (!fs.existsSync(tsxPath)) {
+      console.error('❌ tsx not found at expected location');
+      return false;
+    }
+  }
+
+  console.log(`🔧 Found tsx at: ${tsxPath}`);
+  console.log(`🔧 Attempting tsx execution: ${path.basename(srcPath)}`);
+
+  if (!fs.existsSync(srcPath)) {
+    console.error(`❌ Source file not found: ${srcPath}`);
+    return false;
+  }
+
+  try {
+    const { spawn } = require('child_process');
+    
+    // On Windows, we need to execute the .CMD file directly
+    // For Unix, we can use node with tsx directly
+    let command, args, options;
+    
+    if (isWindows) {
+      // On Windows, use cmd to execute the .cmd file
+      command = 'cmd';
+      args = ['/c', tsxPath, srcPath];
+      options = {
+        stdio: 'inherit',
+        env: process.env,
+        shell: false
+      };
+    } else {
+      // On Unix, use node to execute tsx
+      command = 'node';
+      args = [tsxPath, srcPath];
+      options = {
+        stdio: 'inherit',
+        env: process.env,
+        shell: false
+      };
+    }
+    
+    console.log(`🔧 Executing: ${command} ${args.join(' ')}`);
+    
+    const child = spawn(command, args, options);
+    
+    child.on('error', (error) => {
+      console.error('❌ tsx execution failed:', error.message);
+      // Don't return here, the function should continue to fallback
+    });
+    
+    child.on('exit', (code) => {
+      if (code !== 0) {
+        console.error(`❌ tsx server exited with code ${code}`);
+        // Don't return here, let the process continue to fallback
+      } else {
+        process.exit(code || 0);
+      }
+    });
+    
+    // Give tsx some time to start and see if it errors immediately
+    setTimeout(() => {
+      // If we get here without error, tsx probably started successfully
+    }, 100);
+    
+    // Return true to indicate tsx was started successfully
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Failed to spawn tsx:', error.message);
+    return false;
+  }
 }
 
 function startServer() {
@@ -142,7 +293,7 @@ Configure pricing rules in the admin interface under **Commerce > Pricing > Rule
       product: 'configured-commerce',
       category: 'developer-guide',
       version: '12.x',
-      lastUpdated: '2024-01-15T10:30:00Z',
+      lastUpdated: '2025-07-27T10:30:00Z',
       relevanceScore: 1.0,
       tags: ['pricing', 'commerce', 'calculation', 'discounts'],
       breadcrumb: ['Home', 'Configured Commerce', 'Developer Guide', 'Pricing']

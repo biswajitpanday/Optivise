@@ -1,7 +1,7 @@
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import type { Logger } from './logger.js';
-import type { OptimizelyError } from '@/types/index.js';
-import { ErrorCode as OptiErrorCode } from '@/types/index.js';
+import type { OptimizelyError } from '../types/index.js';
+import { ErrorCode as OptiErrorCode } from '../types/index.js';
 
 export class ErrorHandler {
   private logger: Logger;

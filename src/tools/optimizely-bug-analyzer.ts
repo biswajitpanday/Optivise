@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { Logger } from '@/utils/logger.js';
-import type { ServerConfig } from '@/types/index.js';
+import type { Logger } from '../utils/logger.js';
+import type { ServerConfig } from '../types/index.js';
 import type { OptimizelyPattern } from '../engine/optimizely-pattern-crawler.js';
 
 const AnalyzeOptimizelyBugArgsSchema = z.object({

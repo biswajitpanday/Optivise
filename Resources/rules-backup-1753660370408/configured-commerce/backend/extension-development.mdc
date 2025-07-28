@@ -1,0 +1,159 @@
+---
+description: when there is a back-end changes required or understanding of back-end changes is needed.
+product: configured-commerce
+productVersion: "latest"
+category: backend
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["*.cs", "Extensions/**/*", "*Handler.cs", "*Pipeline.cs"]
+alwaysApply: false
+---
+# Backend Extension Development Guidelines
+
+This guide provides standards for backend extension development in the Optimizely Configured Commerce system.
+
+## Backend Extension Architecture
+- All custom backend code belongs in the [Extensions](mdc:Extensions) directory
+- Use handler and pipe chain patterns for extending functionality
+- Maintain the same class/file structure as the base code being extended
+- We copy required CS files from the base project (e.g., [Handlers](mdc:insiteCommerceBase/Core/Insite.Public.Core/Services/Handlers), [Pipelines](mdc:insiteCommerceBase/Core/Insite.Core.Interfaces/Plugins/Pipelines)) to Extensions and modify them to override or extend
+
+## Handler Development
+- Handlers use the [Chain of Responsibility pattern](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/handlers)
+- The "Order" parameter determines execution priority
+- Override existing handlers by using the same Order value
+- Extend functionality by using a higher Order value
+- Reference documentation: [Handlers](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/handlers)
+
+## Pipeline Development
+- Pipelines process data through a sequence of steps
+- Each pipeline step (pipe) performs a specific operation
+- Replace or add pipes to modify behavior
+- Reference documentation: [Pipelines](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/pipelines)
+
+## Key Extension Points
+- API handlers for customizing service responses
+  - [Cart API handler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/cart-api-handler)
+  - [Products API handler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/products-api-handler)
+  - [Orders API handler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/orders-api-handler)
+- Pipelines for business logic
+  - [Catalog pipeline](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/catalog-pipeline)
+  - [Pricing pipeline](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/pricing-pipeline)
+  - [Inventory pipeline](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/inventory-pipeline)
+- Custom WebAPI controllers for new endpoints
+- Database extensions for custom entities and properties
+
+## Best Practices
+- Follow dependency injection patterns
+- Use existing helpers and utilities when available
+- Create unit tests for custom handlers and pipes
+- Document all custom extensions with code comments
+- Consider performance implications for all extensions
+
+## Database Customizations
+- Use [custom properties](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/custom-properties) for extending existing entities
+- Create [custom tables](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-custom-tables-with-an-entity-and-webapi) with proper Entity Framework mapping
+- Follow database migration patterns for schema changes
+
+*All backend development should follow the [official Optimizely Configured Commerce documentation](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/handlers)*
+
+# Extension Development Pattern
+
+The [Extensions](mdc:Extensions) project is where we implement all custom backend functionality by extending or overriding the behavior of the core Insite Commerce libraries.
+
+## Key Concepts
+
+### Handler/Pipe Chain Pattern
+- Core functionality is implemented using a pipeline/chain of responsibility pattern
+- Each handler has an `Order` property that determines execution sequence
+- Lower `Order` numbers execute first, higher numbers execute later
+- Handlers implement `HandlerBase<TParameter, TResult>` and use `NextHandler` property to pass control
+- Pipes implement `IPipe<TParameter, TResult>` and are assembled into pipelines
+
+### Development Process
+1. **Never modify** the core InsiteCommerce files directly
+2. **To override behavior**: Copy the required CS file from the base project (e.g., [Handlers](mdc:insiteCommerceBase/Core/Insite.Public.Core/Services/Handlers), [Pipelines](mdc:insiteCommerceBase/Core/Insite.Core.Interfaces/Plugins/Pipelines)) to the Extensions project, maintaining the same folder structure and the same `Order` value
+3. **To extend behavior**: Copy the required CS file, place it in the appropriate folder, and increase the `Order` value to execute after the original handler
+4. **To execute before**: Create a new handler with an `Order` value lower than the original handler
+
+### Dependency Injection
+Handlers and Pipes are registered with the DI system using the `[DependencyName]` attribute:
+
+```csharp
+[DependencyName(nameof(MyCustomHandler))]
+public class MyCustomHandler : HandlerBase<TParameter, TResult>
+{
+    // Implementation
+}
+```
+
+### Important Folders in Extensions
+- [Handlers](mdc:Extensions/Handlers) - Custom handler implementations
+- [Services](mdc:Extensions/Services) - Custom service implementations
+- [Entities](mdc:Extensions/Entities) - Custom entity definitions
+- [IntegrationProcessors](mdc:Extensions/IntegrationProcessors) - Integration processors
+- [Controllers](mdc:Extensions/Controllers) - Custom API controllers
+- [Integration](mdc:Extensions/Integration) - Integration implementations (SXe, etc.)
+- [Mapper](mdc:Extensions/Mapper) - Custom object mappers
+
+## Handler Implementation Example
+
+```csharp
+[DependencyName(nameof(CustomProductHandler))]
+public class CustomProductHandler : HandlerBase<GetProductParameter, GetProductResult>
+{
+    private readonly ICustomService _customService;
+    
+    public CustomProductHandler(ICustomService customService)
+    {
+        _customService = customService;
+    }
+    
+    public override int Order => 810; // After standard handler (800)
+
+    public override GetProductResult Execute(IUnitOfWork unitOfWork, GetProductParameter parameter, GetProductResult result)
+    {
+        // Implement custom logic here
+        
+        // Pass to next handler in the chain
+        return this.NextHandler.Execute(unitOfWork, parameter, result);
+    }
+}
+```
+
+## Extension Best Practices
+
+1. **Order Values**:
+   - Follow the "+10 rule" for extension handlers (increment by 10 from the original)
+   - Use "-10 rule" for intercepting handlers that need to run before the original
+
+2. **Debugging Extensions**:
+   - Add breakpoints in your custom handlers
+   - Check execution order if your handler isn't being called
+   - Verify handler registration in the DI container
+
+3. **Performance Considerations**:
+   - Avoid unnecessary database calls in handlers
+   - Cache results when appropriate
+   - Use async patterns for I/O operations
+
+## Hanlder Implementation Examples with Fulfillment Method Persistence
+
+This implementation persists fulfillment method and warehouse selections between guest and authenticated sessions:
+
+1. **CaptureGuestFulfillmentMethod (Order: 680)**
+   - Runs before the standard SetSiteContext handler (Order: 700)
+   - Captures guest fulfillment method and warehouse settings from cookies
+   - Stores them in per-request cache
+
+2. **PersistGuestFulfillmentMethod (Order: 710)**
+   - Runs after the standard SetSiteContext handler
+   - Retrieves previously saved guest settings
+   - Restores them to the authenticated session if the user doesn't have default settings
+   - Only persists PickUp or Delivery fulfillment methods
+
+This implementation shows how to properly extend functionality by:
+- Using an Order value lower than the original handler to execute before it
+- Using an Order value higher than the original handler to execute after it
+- Following the +10 rule for extension handlers
+

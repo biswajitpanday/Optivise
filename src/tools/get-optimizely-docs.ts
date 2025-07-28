@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { OptimizelyProduct, DocumentationCategory } from '@/types/index.js';
-import type { Logger } from '@/utils/logger.js';
-import type { ServerConfig, OptimizelyDocumentationResult, SearchQuery } from '@/types/index.js';
-import { DatabaseManager } from '@/database/database-manager.js';
+import { OptimizelyProduct, DocumentationCategory } from '../types/index.js';
+import type { Logger } from '../utils/logger.js';
+import type { ServerConfig, OptimizelyDocumentationResult, SearchQuery } from '../types/index.js';
+import { DatabaseManager } from '../database/database-manager.js';
 
 const GetOptimizelyDocsArgsSchema = z.object({
   documentId: z.string().optional(),
@@ -142,10 +142,11 @@ Configure pricing rules in the admin interface under **Commerce > Pricing > Rule
           product: OptimizelyProduct.CONFIGURED_COMMERCE,
                      category: DocumentationCategory.DEVELOPER_GUIDE,
           version: '12.x',
-          lastUpdated: '2024-01-15T10:30:00Z',
+          lastUpdated: '2025-07-27T10:30:00Z',
           relevanceScore: 0.95,
           codeExamples: [
             {
+              type: 'good',
               language: 'csharp',
               code: `public class CustomPriceCalculator : IPriceCalculator
 {
@@ -236,6 +237,7 @@ const searchResults = await fetch('/api/episerver/v3.0/search', {
           relevanceScore: 0.88,
           codeExamples: [
             {
+              type: 'good',
               language: 'javascript',
               code: `fetch('/api/episerver/v3.0/content/123', {
     headers: {

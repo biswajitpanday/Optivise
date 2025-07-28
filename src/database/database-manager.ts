@@ -3,13 +3,13 @@ import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { DATABASE_SCHEMA, SAMPLE_DATA_QUERIES } from './schema.js';
-import type { Logger } from '@/utils/logger.js';
+import type { Logger } from '../utils/logger.js';
 import type { 
   SearchQuery, 
   SearchResult, 
   OptimizelyDocumentationResult,
   DatabaseConfig 
-} from '@/types/index.js';
+} from '../types/index.js';
 
 export class DatabaseManager {
   private db: sqlite3.Database | null = null;

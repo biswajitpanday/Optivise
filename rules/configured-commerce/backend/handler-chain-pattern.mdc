@@ -1,0 +1,154 @@
+---
+description: when implementing handler or pipe chain
+product: configured-commerce
+productVersion: latest
+category: backend
+priority: high
+applicableProducts:
+  - configured-commerce
+globs:
+  - "*Handler.cs"
+  - "*Pipeline.cs"
+  - Extensions/**/*Handler*.cs
+alwaysApply: false
+version: 1.0.0
+---
+# Handler Chain Pattern Guidelines
+
+This guide provides implementation details for the Handler Chain pattern used in Optimizely Configured Commerce.
+
+## Core Concepts
+- Handlers use the Chain of Responsibility design pattern
+- Each handler has a specific responsibility in processing a request
+- Handlers are executed in sequence based on their Order value
+- Reference documentation: [Handlers](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/handlers)
+
+## Handler Structure
+- Implement the appropriate interface for the handler type
+- Set the Order property to control execution sequence
+- Lower Order values execute first, higher values execute later
+- Override existing handlers by using the same Order value
+- Extend functionality by using a higher Order value
+
+## Implementation Pattern
+```csharp
+public class CustomHandler : IHandler<TRequest, TResult>
+{
+    private readonly IHandler<TRequest, TResult> _nextHandler;
+    
+    // Order determines execution sequence
+    public int Order => 500; // Standard handlers use increments of 100
+    
+    public CustomHandler(IHandler<TRequest, TResult> nextHandler)
+    {
+        _nextHandler = nextHandler;
+    }
+    
+    public TResult Execute(TRequest parameter)
+    {
+        // Perform custom logic before calling next handler
+        
+        // Call the next handler in the chain
+        var result = _nextHandler.Execute(parameter);
+        
+        // Perform custom logic after calling next handler
+        
+        return result;
+    }
+}
+```
+
+## Common Handler Types
+- [GetCartHandler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/cart-api-handler) - Customizes cart retrieval
+- [GetProductHandler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/products-api-handler) - Customizes product data
+- [AddCartLineHandler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/cart-api-handler) - Customizes cart line addition
+- [GetOrderCollectionHandler](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/orders-api-handler) - Customizes order history
+
+## Pipe Structure (Similar Pattern)
+- Implements IPipe<TParameter> interface
+- Uses Execute method to process and modify data
+- Chains with other pipes in a pipeline
+- Reference documentation: [Pipelines](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/pipelines)
+
+## Best Practices
+- Keep handlers focused on a single responsibility
+- Avoid blocking operations in handlers
+- Consider caching for expensive operations
+- Always call the next handler unless specifically intending to short-circuit
+- Add appropriate error handling and logging
+
+## Example Files
+- See existing implementations in [Extensions/Handlers](mdc:Extensions/Handlers)
+- Base handler implementations in [insiteCommerceBase/Core/Insite.Public.Core/Services/Handlers](mdc:insiteCommerceBase/Core/Insite.Public.Core/Services/Handlers)
+- Base pipeline implementations in [insiteCommerceBase/Core/Insite.Core.Interfaces/Plugins/Pipelines](mdc:insiteCommerceBase/Core/Insite.Core.Interfaces/Plugins/Pipelines)
+
+*All handler implementations should follow the [official Optimizely Configured Commerce documentation](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/handlers)*
+
+# Handler Chain Pattern
+
+The application uses a Handler Chain pattern (Chain of Responsibility) for processing various operations, particularly in the inventory and integration systems.
+
+## Handlers
+
+Handlers follow this pattern:
+- Handlers implement `HandlerBase<TParameter, TResult>`
+- Each handler has an `Order` property that determines execution sequence
+- Handlers are executed in sequence through the `NextHandler` property
+
+Example from [AddNoPullResponse.cs](mdc:Extensions/Integration/SXeV11/Pipelines/Pipes/PopulateAvailabilities/AddNoPullResponse.cs):
+
+```csharp
+[DependencyName(nameof(AddNoPullResponse))]
+public class AddNoPullResponse : HandlerBase<GetRealTimeInventoryParameter, GetRealTimeInventoryResult>
+{
+    // Dependencies injected via constructor
+    
+    public override int Order => 825;
+
+    public override GetRealTimeInventoryResult Execute(IUnitOfWork unitOfWork, GetRealTimeInventoryParameter parameter, GetRealTimeInventoryResult result)
+    {
+        // Handler logic
+        
+        // Pass to next handler in the chain
+        return this.NextHandler.Execute(unitOfWork, parameter, result);
+    }
+}
+```
+
+## Pipes
+
+Similarly, Pipes follow this pattern:
+- Pipes implement `IPipe<TParameter, TResult>`
+- Each pipe has an `Order` property that determines execution sequence
+- Pipes are assembled into a pipeline
+
+Example from [PopulateAvailabilities.cs](mdc:Extensions/Integration/SXeV11/Pipelines/Pipes/PopulateAvailabilities/PopulateAvailabilities.cs):
+
+```csharp
+public class PopulateAvailabilities : IPipe<PopulateAvailabilitiesParameter, PopulateAvailabilitiesResult>
+{
+    // Dependencies injected via constructor
+    
+    public int Order => 100;
+
+    public PopulateAvailabilitiesResult Execute(IUnitOfWork unitOfWork, PopulateAvailabilitiesParameter parameter, PopulateAvailabilitiesResult result)
+    {
+        // Pipe logic
+        
+        return result;
+    }
+}
+```
+
+## Dependency Injection
+
+Handlers and Pipes are registered with the DI system using the `[DependencyName]` attribute:
+
+```csharp
+[DependencyName(nameof(HandlerClassName))]
+public class HandlerClassName : HandlerBase<TParameter, TResult>
+{
+    // Implementation
+}
+```
+

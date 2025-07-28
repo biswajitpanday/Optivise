@@ -12,14 +12,21 @@
 
 const https = require('https');
 const readline = require('readline');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
-// Configuration
-const REMOTE_SERVER = 'https://optidevdoc.onrender.com';
-const CLIENT_VERSION = '2.0.0';
-const PROTOCOL_VERSION = '2024-11-05';
+// Configuration from environment variables
+const REMOTE_SERVER = process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com';
+const CLIENT_VERSION = process.env.OPTIDEVDOC_VERSION || '2.1.13';
+const PROTOCOL_VERSION = process.env.PROTOCOL_VERSION || '2025-07-27';
 
 // Debug mode control
-const DEBUG_MODE = process.env.DEBUG_MCP === 'true';
+const DEBUG_MODE = process.env.OPTIDEVDOC_DEBUG === 'true';
+
+// Feature flags
+const ENABLE_PRODUCT_DETECTION = process.env.ENABLE_PRODUCT_DETECTION === 'true';
+const ENABLE_ENHANCED_RULES = process.env.ENABLE_ENHANCED_RULES === 'true';
+const ENABLE_CORS = process.env.ENABLE_CORS === 'true';
 
 // State management
 let isInitialized = false;
@@ -169,23 +176,60 @@ rl.on('line', async (line) => {
 
     switch (request.method) {
       case 'initialize':
-        sendResponse({
-          jsonrpc: '2.0',
-          id: request.id,
-          result: {
-            protocolVersion: PROTOCOL_VERSION,
-            capabilities: {
-              tools: {},
-              logging: {},
-              prompts: {},
-              resources: {}
+        // Get server capabilities first
+        try {
+          const health = await makeRequest('/health', 'GET');
+          const capabilities = {
+            tools: {
+              'search-optimizely-docs': true,
+              'find-optimizely-pattern': true,
+              'analyze-optimizely-bug': true,
+              'apply-development-rules': health.features?.enhanced || false,
+              'detect-product': health.features?.productDetection || false,
+              'generate-cursor-config': health.features?.enhanced || false
             },
-            serverInfo: {
-              name: 'optidevdoc-enhanced-remote',
-              version: CLIENT_VERSION
+            logging: {},
+            prompts: {},
+            resources: {}
+          };
+
+          sendResponse({
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              protocolVersion: PROTOCOL_VERSION,
+              capabilities,
+              serverInfo: {
+                name: 'optidevdoc-remote',
+                version: health.version || CLIENT_VERSION
+              }
             }
-          }
-        });
+          });
+        } catch (error) {
+          console.error('Failed to get server capabilities:', error);
+          // Fallback to basic capabilities
+          sendResponse({
+            jsonrpc: '2.0',
+            id: request.id,
+            result: {
+              protocolVersion: PROTOCOL_VERSION,
+              capabilities: {
+                tools: {
+                  'search-optimizely-docs': true,
+                  'find-optimizely-pattern': true,
+                  'analyze-optimizely-bug': true
+                },
+                logging: {},
+                prompts: {},
+                resources: {}
+              },
+              serverInfo: {
+                name: 'optidevdoc-remote',
+                version: CLIENT_VERSION
+              }
+            }
+          });
+        }
         break;
 
       case 'initialized':
@@ -213,6 +257,78 @@ rl.on('line', async (line) => {
           id: request.id,
           result: {
             tools: [
+              {
+                name: 'apply_development_rules',
+                description: 'Apply Optimizely Configured Commerce development rules to a specific scenario for context-aware guidance',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    scenario: { 
+                      type: 'string', 
+                      description: 'The development scenario or task you need guidance for' 
+                    },
+                    context: {
+                      type: 'object',
+                      description: 'Optional context to provide more specific rule matching',
+                      properties: {
+                        filePattern: {
+                          type: 'string',
+                          description: 'File pattern or extension (e.g., "*.tsx", "*Handler.cs")'
+                        },
+                        directory: {
+                          type: 'string',
+                          description: 'Directory context (e.g., "Extensions", "FrontEnd/blueprints")'
+                        },
+                        technology: {
+                          type: 'array',
+                          items: { type: 'string' },
+                          description: 'Technologies being used (e.g., ["react", "typescript", "c#"])'
+                        },
+                        category: {
+                          type: 'string',
+                          enum: ['frontend', 'backend', 'project-structure', 'quality', 'general'],
+                          description: 'Development category'
+                        }
+                      }
+                    },
+                    includeExamples: {
+                      type: 'boolean',
+                      description: 'Whether to include code examples (default: true)'
+                    },
+                    maxRules: {
+                      type: 'number',
+                      description: 'Maximum number of rules to return (default: 5)'
+                    }
+                  },
+                  required: ['scenario']
+                }
+              },
+              {
+                name: 'generate_cursor_config',
+                description: 'Generate Cursor IDE configuration with integrated Optimizely development rules',
+                inputSchema: {
+                  type: 'object',
+                  properties: {
+                    projectPath: {
+                      type: 'string',
+                      description: 'Optional project path for configuration'
+                    },
+                    includeAllRules: {
+                      type: 'boolean',
+                      description: 'Whether to include all available rules (default: true)'
+                    },
+                    categories: {
+                      type: 'array',
+                      items: {
+                        type: 'string',
+                        enum: ['frontend', 'backend', 'project-structure', 'quality', 'general']
+                      },
+                      description: 'Specific rule categories to include'
+                    }
+                  },
+                  required: []
+                }
+              },
               {
                 name: 'search_optimizely_docs',
                 description: 'Search Optimizely documentation with enhanced pattern matching',
@@ -305,6 +421,16 @@ rl.on('line', async (line) => {
           let contentType = 'search';
 
           switch (toolName) {
+            case 'apply_development_rules':
+              result = await makeRequest('/api/apply-rules', 'POST', toolArgs);
+              contentType = 'rules';
+              break;
+
+            case 'generate_cursor_config':
+              result = await makeRequest('/api/generate-config', 'POST', toolArgs);
+              contentType = 'config';
+              break;
+
             case 'search_optimizely_docs':
               result = await makeRequest('/api/search', 'POST', toolArgs);
               contentType = 'search';
@@ -344,7 +470,7 @@ rl.on('line', async (line) => {
               content = `❌ No results found for "${toolArgs.query}". Try terms like:\n`;
               content += '• "pricing handler"\n• "content block"\n• "pipeline pattern"\n• "checkout workflow"';
             }
-          } else if (contentType === 'pattern' || contentType === 'bug') {
+          } else if (contentType === 'pattern' || contentType === 'bug' || contentType === 'rules' || contentType === 'config') {
             // Use the formatted content from the enhanced tools
             content = result.content?.text || result.content || 'No content available';
           }

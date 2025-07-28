@@ -1,0 +1,47 @@
+---
+description: when there is a front-end changes required or understanding of front-end changes is needed.
+product: configured-commerce
+productVersion: "latest"
+category: frontend
+priority: high
+applicableProducts: ["configured-commerce"]
+globs: ["*.tsx", "*.jsx", "FrontEnd/modules/blueprints/**/*"]
+alwaysApply: false
+---
+# Blueprint Development Guidelines
+
+This guide provides standards for frontend development in the Optimizely Configured Commerce system.
+
+## Spire CMS Architecture
+- Our project uses Spire CMS for frontend development
+- **Important**: All custom widgets should be developed in [client-framework](mdc:FrontEnd/modules/client-framework)
+- Follow the [Mobius design language](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/mobius-design-language) for UI components
+- We do not modify code in [client-library](mdc:FrontEnd/modules/client-library), [client-framework](mdc:FrontEnd/modules/client-framework), or other folders
+
+## Widget Development Patterns
+- Three main widget types:
+  1. [Basic custom widget](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-a-basic-custom-widget) - for simple UI components
+  2. [CMS fields widget](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-a-cms-fields-widget) - for content-managed components
+  3. [Redux-connected widget](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-a-redux-connected-custom-widget) - for state-dependent components
+- Development process: Copy widgets or components from other modules and paste them into the proper folder inside the blueprint [auer-steel](mdc:FrontEnd/modules/blueprints/auer-steel) for customization
+
+## Best Practices
+- Ensure [server-side rendering (SSR)](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/server-side-rendering-ssr-guidelines-for-spire) compatibility for all components
+- Follow React best practices for component structure
+- Use Redux for state management where appropriate
+- Reuse Mobius UI components when possible
+- Consider mobile usage patterns for all UI development
+
+## Extension Points
+- [Replace existing widgets](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/replace-a-widget-in-spire) with custom implementations
+- [Add custom page types](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/add-a-page-type) when needed
+- Extend existing pages with new zones or components
+- [Create custom reducers](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-a-custom-reducer) for complex state management
+
+## Testing & Performance
+- Test widgets across different devices and browsers
+- Ensure responsive design for all screen sizes
+- Optimize bundle size and component rendering performance
+
+*All frontend development should follow the [official Optimizely Configured Commerce documentation](mdc:https:/docs.developers.optimizely.com/configured-commerce/docs/create-new-blueprints-in-spire)*
+

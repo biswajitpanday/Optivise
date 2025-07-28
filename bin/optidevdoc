@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * OptiDevDoc CLI - NPM Package Entry Point
- * Global CLI tool for Optimizely development assistance
+ * OptiDevDoc CLI - NPM Package Entry Point v2.1.0
+ * Global CLI tool for Optimizely development assistance with Product-Aware features
  */
 
 const { spawn } = require('child_process');
@@ -12,19 +12,22 @@ const fs = require('fs');
 const PACKAGE_ROOT = path.join(__dirname, '..');
 
 // Check if we have the required files
-const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote-enhanced.js');
-const simpleClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
+const enhancedServerPath = path.join(PACKAGE_ROOT, 'src', 'deploy-server-enhanced.ts');
+const simpleServerPath = path.join(PACKAGE_ROOT, 'src', 'deploy-server-simple.ts');
+const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
 
 function printUsage() {
   console.log(`
-OptiDevDoc - Optimizely Development Assistant
+OptiDevDoc v2.1.1 - Product-Aware Optimizely Development Assistant
 
 USAGE:
   optidevdoc [COMMAND] [OPTIONS]
 
 COMMANDS:
-  mcp           Start MCP client (enhanced version with pattern analysis)
+  mcp           Start enhanced MCP client with product-aware rules engine
   mcp-simple    Start simple MCP client (basic documentation search)
+  detect        Detect Optimizely product in current directory
+  migrate       Migrate existing rules to product-aware structure
   serve         Start local HTTP server
   serve-enhanced Start enhanced HTTP server with all features
   setup         Interactive setup for IDE configuration
@@ -36,12 +39,19 @@ OPTIONS:
   --help        Show this help message
 
 EXAMPLES:
-  optidevdoc mcp                    # Start enhanced MCP client
+  optidevdoc mcp                    # Start enhanced MCP client with product detection
+  optidevdoc detect                 # Detect Optimizely product in current project
+  optidevdoc migrate                # Migrate rules to product-aware structure
   optidevdoc serve --port 3001      # Start server on port 3001
-  optidevdoc setup                  # Interactive IDE setup
+  optidevdoc setup                  # Interactive IDE setup with product rules
   optidevdoc --debug mcp            # Start MCP client with debug logs
 
-For more information, visit: https://github.com/your-org/optidevdoc-mcp
+🎉 NEW in v2.1.0: Product-Aware Rules Engine
+   • Automatic detection of Commerce vs CMS vs Experimentation projects
+   • Rule isolation - no cross-product contamination
+   • Zero configuration setup
+
+For more information, visit: https://github.com/biswajitpanday/OptiDevDoc
   `);
 }
 
@@ -49,18 +59,370 @@ function printVersion() {
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    console.log(`OptiDevDoc v${packageData.version}`);
-    console.log(`🚀 Optimizely Development Assistant`);
+    console.log(`OptiDevDoc v${packageData.version} - Product-Aware Release`);
+    console.log(`🚀 Optimizely Development Assistant with Intelligent Product Detection`);
     console.log(`📚 Multi-product support: Commerce, CMS, CMP, ODP, Experimentation`);
-    console.log(`🔧 Tools: Pattern Search, Bug Analysis, Documentation Search`);
+    console.log(`🔧 Enhanced Tools: Pattern Search, Bug Analysis, Documentation Search, Rules Engine`);
+    console.log(`🎯 Product-Aware: Rules automatically apply based on your project context`);
   } catch (error) {
-    console.log('OptiDevDoc (version unknown)');
+    console.log('OptiDevDoc v2.1.2 - Product-Aware Release (tsx Execution Fix)');
+  }
+}
+
+function detectOptimizelyProduct(options) {
+  console.log('🔍 Detecting Optimizely Product...');
+  
+  const projectPath = process.cwd();
+  console.log(`📁 Analyzing project: ${projectPath}\n`);
+  
+  // Enhanced detection logic for CLI
+  const detectedFeatures = [];
+  
+  try {
+    // Check for Commerce indicators
+    if (fs.existsSync('Extensions') || fs.existsSync('InsiteCommerce.Web')) {
+      detectedFeatures.push('🛒 Configured Commerce - Extensions directory found');
+    }
+    
+    if (fs.existsSync('FrontEnd/modules/blueprints')) {
+      detectedFeatures.push('🛒 Configured Commerce - Blueprint structure found');
+    }
+    
+    if (fs.existsSync('FrontEnd/modules/content-library')) {
+      detectedFeatures.push('🛒 Configured Commerce - Content library found');
+    }
+    
+    // Check for CMS indicators
+    if (fs.existsSync('modules') && fs.existsSync('App_Data')) {
+      detectedFeatures.push('📝 CMS - Module structure found');
+    }
+    
+    if (fs.existsSync('Views') && fs.existsSync('Models')) {
+      detectedFeatures.push('📝 CMS - MVC structure found');
+    }
+    
+    // Check package.json for dependencies
+    if (fs.existsSync('package.json')) {
+      const packageData = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      const allDeps = { ...packageData.dependencies, ...packageData.devDependencies };
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('insite'))) {
+        detectedFeatures.push('🛒 Configured Commerce - Insite dependencies found');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('episerver'))) {
+        detectedFeatures.push('📝 CMS - Episerver dependencies found');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('@optimizely/optimizely-sdk'))) {
+        detectedFeatures.push('🧪 Experimentation - SDK dependencies found');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('react'))) {
+        detectedFeatures.push('⚛️ React - Frontend framework detected');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('typescript'))) {
+        detectedFeatures.push('📘 TypeScript - Type safety detected');
+      }
+    }
+    
+    // Check for .csproj files
+    const csprojFiles = fs.readdirSync('.').filter(file => file.endsWith('.csproj'));
+    if (csprojFiles.length > 0) {
+      detectedFeatures.push('⚙️ .NET Project - C# project files found');
+    }
+    
+    // Check for web.config
+    if (fs.existsSync('web.config') || fs.existsSync('Web.config')) {
+      detectedFeatures.push('🌐 ASP.NET - Web configuration found');
+    }
+    
+    if (detectedFeatures.length > 0) {
+      console.log('✅ Detection Results:');
+      detectedFeatures.forEach(feature => console.log(`   ${feature}`));
+      console.log('\n💡 Recommendations:');
+      
+      if (detectedFeatures.some(f => f.includes('Configured Commerce'))) {
+        console.log('   • Use Commerce-specific rules and patterns');
+        console.log('   • Set OPTIMIZELY_PRODUCT=configured-commerce');
+        console.log('   • Focus on Extensions/ and FrontEnd/ directories');
+      }
+      
+      if (detectedFeatures.some(f => f.includes('CMS'))) {
+        console.log('   • Use CMS-specific content development rules');
+        console.log('   • Set OPTIMIZELY_PRODUCT=cms-paas');
+        console.log('   • Focus on content blocks and templates');
+      }
+      
+      if (detectedFeatures.some(f => f.includes('Experimentation'))) {
+        console.log('   • Use Experimentation SDK patterns');
+        console.log('   • Set OPTIMIZELY_PRODUCT=experimentation');
+        console.log('   • Focus on A/B testing implementation');
+      }
+      
+    } else {
+      console.log('❓ No clear Optimizely product indicators found');
+      console.log('   This might be a general project or a different Optimizely product');
+      console.log('\n💡 You can manually specify the product:');
+      console.log('   export OPTIMIZELY_PRODUCT=configured-commerce');
+    }
+    
+    console.log('\n🚀 Next Steps:');
+    console.log('   • Run "optidevdoc setup" to configure your IDE');
+    console.log('   • Use "optidevdoc mcp" to start the development assistant');
+    console.log('   • Try product-aware rules with context-sensitive guidance');
+    
+  } catch (error) {
+    console.error('❌ Error during detection:', error.message);
+  }
+}
+
+function migrateRulesStructure(options) {
+  console.log('🔄 Migrating Rules to Product-Aware Structure v2.1.8...\n');
+  
+  const oldRulesPath = path.join(process.cwd(), 'Resources', 'rules');
+  const newRulesPath = path.join(process.cwd(), 'rules');
+  const yaml = require('yaml');
+  
+  if (!fs.existsSync(oldRulesPath)) {
+    console.log('❓ No existing rules found at Resources/rules');
+    console.log('💡 If your rules are in a different location, please move them manually');
+    console.log('📚 See Resources/DOCUMENTATION.md for detailed instructions');
+    return;
+  }
+  
+  try {
+    console.log('📋 Migration Plan:');
+    console.log('   • Backup existing rules');
+    console.log('   • Create new product-specific structure');
+    console.log('   • Analyze and categorize rules');
+    console.log('   • Update frontmatter with product metadata');
+    console.log('   • Move rules to appropriate directories\n');
+    
+    // Create backup
+    const backupPath = `${oldRulesPath}-backup-${Date.now()}`;
+    fs.cpSync(oldRulesPath, backupPath, { recursive: true });
+    console.log(`✅ Backup created: ${backupPath}`);
+    
+    // Create new structure
+    const productDirs = {
+      'configured-commerce': ['frontend', 'backend', 'general'],
+      'cms-paas': ['content-types', 'templates', 'general'],
+      'cms-saas': ['content-types', 'templates', 'general'],
+      'experimentation': ['sdk', 'integrations', 'general'],
+      'dxp': ['patterns', 'integrations', 'general'],
+      'shared': ['']
+    };
+    
+    // Create directories
+    Object.entries(productDirs).forEach(([product, subdirs]) => {
+      subdirs.forEach(subdir => {
+        const dirPath = subdir ? path.join(newRulesPath, product, subdir) : path.join(newRulesPath, product);
+        fs.mkdirSync(dirPath, { recursive: true });
+      });
+    });
+    
+    console.log('✅ Created new directory structure');
+    
+    // Helper function to detect product from content
+    function detectProductFromContent(content, filename) {
+      const patterns = {
+        'configured-commerce': ['commerce', 'cart', 'checkout', 'pricing', 'catalog', 'blueprint', 'extension', 'handler'],
+        'cms-paas': ['cms', 'content', 'block', 'page', 'template', 'episerver'],
+        'cms-saas': ['cms cloud', 'saas', 'content cloud'],
+        'experimentation': ['experiment', 'ab test', 'feature flag', 'sdk'],
+        'dxp': ['dxp', 'digital experience', 'platform']
+      };
+      
+      // First check filename patterns
+      if (filename.includes('blueprint') || filename.includes('extension') || filename.includes('handler')) {
+        return 'configured-commerce';
+      }
+      if (filename.includes('block') || filename.includes('template')) {
+        return 'cms-paas';
+      }
+      if (filename.includes('experiment') || filename.includes('sdk')) {
+        return 'experimentation';
+      }
+      
+      // Then check content patterns
+      for (const [product, keywords] of Object.entries(patterns)) {
+        if (keywords.some(keyword => content.toLowerCase().includes(keyword))) {
+          return product;
+        }
+      }
+      
+      return 'shared';
+    }
+    
+    // Helper function to parse and update frontmatter
+    function updateFrontmatter(content, product, filename) {
+      const parts = content.split('---\n');
+      let frontmatter = {};
+      let mainContent = content;
+      
+      if (parts.length >= 3) {
+        try {
+          frontmatter = yaml.parse(parts[1]);
+          mainContent = parts.slice(2).join('---\n');
+        } catch (e) {
+          console.log(`   ⚠️ Invalid frontmatter in ${filename}, creating new`);
+        }
+      }
+      
+      // Update or add product information
+      frontmatter.product = product;
+      frontmatter.version = frontmatter.version || '1.0.0';
+      frontmatter.category = frontmatter.category || (
+        filename.includes('frontend') ? 'frontend' :
+        filename.includes('backend') ? 'backend' :
+        filename.includes('general') ? 'general' :
+        'development'
+      );
+      frontmatter.applicableProducts = frontmatter.applicableProducts || [product];
+      if (!frontmatter.applicableProducts.includes(product)) {
+        frontmatter.applicableProducts.push(product);
+      }
+      
+      // Add default globs if not present
+      frontmatter.globs = frontmatter.globs || {
+        'configured-commerce': ['**/*.cs', '**/*.tsx', '**/*.razor'],
+        'cms-paas': ['**/*.cshtml', '**/*.cs', '**/*.config'],
+        'cms-saas': ['**/*.cshtml', '**/*.cs', '**/*.config'],
+        'experimentation': ['**/*.js', '**/*.ts', '**/*.html'],
+        'dxp': ['**/*.cs', '**/*.cshtml', '**/*.config']
+      }[product] || ['**/*'];
+      
+      return `---\n${yaml.stringify(frontmatter)}---\n${mainContent}`;
+    }
+    
+    // Process all .mdc files recursively
+    function processDirectory(dir) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      
+      for (const entry of entries) {
+        const sourcePath = path.join(dir, entry.name);
+        
+        if (entry.isDirectory()) {
+          processDirectory(sourcePath);
+          continue;
+        }
+        
+        if (!entry.name.endsWith('.mdc')) continue;
+        
+        // Read and analyze file
+        const content = fs.readFileSync(sourcePath, 'utf8');
+        const product = detectProductFromContent(content, entry.name);
+        const updatedContent = updateFrontmatter(content, product, entry.name);
+        
+        // Determine target directory
+        let targetSubdir = 'general';
+        if (product === 'configured-commerce') {
+          if (entry.name.includes('blueprint')) targetSubdir = 'frontend';
+          else if (entry.name.includes('extension') || entry.name.includes('handler')) targetSubdir = 'backend';
+        } else if (product === 'cms-paas' || product === 'cms-saas') {
+          if (entry.name.includes('block')) targetSubdir = 'content-types';
+          else if (entry.name.includes('template')) targetSubdir = 'templates';
+        } else if (product === 'experimentation') {
+          if (entry.name.includes('sdk')) targetSubdir = 'sdk';
+          else if (entry.name.includes('integration')) targetSubdir = 'integrations';
+        }
+        
+        const targetDir = product === 'shared' ? 
+          path.join(newRulesPath, product) : 
+          path.join(newRulesPath, product, targetSubdir);
+          
+        const targetPath = path.join(targetDir, entry.name);
+        
+        // Write updated file
+        fs.writeFileSync(targetPath, updatedContent);
+        console.log(`   📄 Migrated ${path.relative(process.cwd(), sourcePath)} to ${path.relative(process.cwd(), targetPath)}`);
+      }
+    }
+    
+    // Start processing
+    processDirectory(oldRulesPath);
+    
+    // Create README.md in rules directory
+    const readmePath = path.join(newRulesPath, 'README.md');
+    const readmeContent = `# OptiDevDoc Development Rules
+
+Your rules have been successfully migrated to the new product-aware structure.
+
+## Directory Structure
+
+\`\`\`
+rules/
+├── configured-commerce/   # Optimizely Configured Commerce rules
+│   ├── frontend/         # React, Redux, TypeScript patterns
+│   ├── backend/         # .NET, handlers, extensions
+│   └── general/         # Project structure, best practices
+├── cms-paas/            # Optimizely CMS (PaaS) rules
+│   ├── content-types/   # Blocks, pages, media
+│   ├── templates/       # Templates, layouts
+│   └── general/         # CMS best practices
+├── cms-saas/            # Optimizely CMS (SaaS) rules
+│   ├── content-types/   # Cloud-specific content types
+│   ├── templates/       # Cloud templates
+│   └── general/         # Cloud best practices
+├── experimentation/     # Optimizely Experimentation rules
+│   ├── sdk/            # SDK implementation patterns
+│   ├── integrations/   # Integration patterns
+│   └── general/        # Testing best practices
+├── dxp/                # Optimizely DXP rules
+│   ├── patterns/       # DXP-specific patterns
+│   ├── integrations/   # Integration patterns
+│   └── general/        # Platform best practices
+└── shared/             # Common rules for all products
+\`\`\`
+
+## Rule Format
+
+Each rule file (\`.mdc\`) includes frontmatter with:
+
+- \`product\`: Primary Optimizely product
+- \`version\`: Rule version
+- \`category\`: Development category
+- \`applicableProducts\`: List of products where rule applies
+- \`globs\`: File patterns for rule application
+
+## Usage
+
+Set the rules path in your environment:
+
+\`\`\`bash
+export OPTIDEVDOC_RULES_PATH="${newRulesPath}"
+\`\`\`
+
+Test with:
+
+\`\`\`bash
+optidevdoc detect
+\`\`\`
+`;
+    
+    fs.writeFileSync(readmePath, readmeContent);
+    console.log('✅ Created new README.md with structure documentation');
+    
+    console.log('\n✅ Migration completed successfully!');
+    console.log('\n📚 Next Steps:');
+    console.log('   1. Review the migrated rules in: rules/');
+    console.log('   2. Verify product categorization is correct');
+    console.log('   3. Set OPTIDEVDOC_RULES_PATH environment variable:');
+    console.log(`      export OPTIDEVDOC_RULES_PATH="${newRulesPath}"`);
+    console.log('   4. Test with: optidevdoc detect');
+    console.log('\n💡 Your original rules are backed up at:', backupPath);
+    
+  } catch (error) {
+    console.error('❌ Migration failed:', error.message);
+    console.log('📚 Please see Resources/DOCUMENTATION.md for manual migration steps');
   }
 }
 
 function setupIDEConfiguration() {
   console.log(`
-🛠️  OptiDevDoc IDE Setup
+🛠️  OptiDevDoc v2.1.0 IDE Setup - Product-Aware Configuration
 
 To configure OptiDevDoc with your IDE, add the following to your MCP configuration:
 
@@ -71,7 +433,9 @@ For Cursor IDE (.cursor/mcp.json):
       "command": "optidevdoc",
       "args": ["mcp"],
       "env": {
-        "DEBUG_MCP": "false"
+        "DEBUG_MCP": "false",
+        "OPTIDEVDOC_MULTI_PRODUCT": "true",
+        "OPTIDEVDOC_VERSION": "2.1.0"
       }
     }
   }
@@ -82,61 +446,153 @@ For VS Code (settings.json):
   "mcp.servers": {
     "optidevdoc": {
       "command": "optidevdoc",
-      "args": ["mcp"]
+      "args": ["mcp"],
+      "env": {
+        "OPTIDEVDOC_MULTI_PRODUCT": "true"
+      }
     }
   }
 }
 
-Available Tools:
-✅ search_optimizely_docs     - Enhanced documentation search
-✅ find_optimizely_pattern    - Pattern search by development scenario
-✅ analyze_optimizely_bug     - Bug analysis with Optimizely solutions
+Available Tools (v2.1.0):
+✅ apply_development_rules    - Apply context-aware development rules with automatic product detection
+✅ detect_product             - Analyze project to identify Optimizely product with enhanced patterns
+✅ generate_cursor_config     - Generate IDE configuration with product-aware rules
+✅ search_optimizely_docs     - Enhanced documentation search with product filtering
+✅ find_optimizely_pattern    - Pattern search by development scenario with product isolation
+✅ analyze_optimizely_bug     - Bug analysis with product-specific solutions
 
-After configuration, restart your IDE to enable OptiDevDoc.
+🎯 v2.1.0 Product-Aware Features:
+✨ Automatic product detection based on project structure analysis
+✨ Rules isolated by Optimizely product (Commerce, CMS, DXP, etc.)
+✨ Context-sensitive guidance for your specific product
+✨ Zero cross-product rule contamination
+✨ Enhanced migration tools for existing configurations
+✨ Flexible rule sources (local, remote, documentation APIs)
+
+After configuration, restart your IDE to enable OptiDevDoc v2.1.0.
   `);
 }
 
 function startMCPClient(isEnhanced = true, options = {}) {
-  const clientPath = isEnhanced ? remoteClientPath : simpleClientPath;
+  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.6...`);
   
-  if (!fs.existsSync(clientPath)) {
-    console.error(`❌ Client not found: ${clientPath}`);
+  // Use the main compiled JS entry points instead of TypeScript files
+  const mainServerPath = path.join(__dirname, '..', 'index.js');
+  const fallbackServerPath = path.join(__dirname, '..', 'main.js');
+  
+  if (fs.existsSync(mainServerPath)) {
+    console.error('🎯 Using Enhanced Server with Product-Aware features');
+    
+    const env = { ...process.env };
+    if (options.debug) {
+      env.DEBUG_MCP = 'true';
+    }
+    env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
+    env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_MODE = isEnhanced ? 'enhanced' : 'simple';
+
+    const child = spawn('node', [mainServerPath], {
+      stdio: 'inherit',
+      env
+    });
+
+    child.on('error', (error) => {
+      console.error('❌ Failed to start Enhanced MCP client:', error);
+      if (isEnhanced) {
+        console.error('🔄 Falling back to simple mode...');
+        startMCPClient(false, options);
+      } else {
+        fallbackToRemote(options);
+      }
+    });
+
+    child.on('exit', (code) => {
+      process.exit(code || 0);
+    });
+    
+  } else if (fs.existsSync(fallbackServerPath)) {
+    console.error('📋 Using Fallback Server');
+    
+    const env = { ...process.env };
+    if (options.debug) {
+      env.DEBUG_MCP = 'true';
+    }
+    env.OPTIDEVDOC_VERSION = '2.1.0';
+
+    const child = spawn('node', [fallbackServerPath], {
+      stdio: 'inherit',
+      env
+    });
+
+    child.on('error', (error) => {
+      console.error('❌ Failed to start Fallback MCP client:', error);
+      fallbackToRemote(options);
+    });
+
+    child.on('exit', (code) => {
+      process.exit(code || 0);
+    });
+    
+  } else {
+    console.error('❌ No server files found');
+    console.error(`❌ Expected: ${mainServerPath} or ${fallbackServerPath}`);
+    fallbackToRemote(options);
+  }
+}
+
+function fallbackToRemote(options = {}) {
+  if (fs.existsSync(remoteClientPath)) {
+    console.error('🌐 Falling back to remote client...');
+    const remoteChild = spawn('node', [remoteClientPath], {
+      stdio: 'inherit',
+      env: { 
+        ...process.env,
+        DEBUG_MCP: options.debug ? 'true' : undefined
+      }
+    });
+    
+    remoteChild.on('exit', (code) => {
+      process.exit(code || 0);
+    });
+  } else {
+    console.error('❌ All fallback options exhausted');
+    console.error('❌ Please reinstall the package: npm install -g optidevdoc');
     process.exit(1);
   }
-
-  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced' : 'Simple'} OptiDevDoc MCP Client...`);
-  
-  const env = { ...process.env };
-  if (options.debug) {
-    env.DEBUG_MCP = 'true';
-  }
-
-  const child = spawn('node', [clientPath], {
-    stdio: 'inherit',
-    env
-  });
-
-  child.on('error', (error) => {
-    console.error('❌ Failed to start MCP client:', error);
-    process.exit(1);
-  });
-
-  child.on('exit', (code) => {
-    process.exit(code || 0);
-  });
 }
 
 function startServer(isEnhanced = false, options = {}) {
-  const serverScript = isEnhanced ? 'dev:enhanced' : 'dev';
   const port = options.port || 3000;
   
-  console.log(`🚀 Starting ${isEnhanced ? 'Enhanced' : 'Simple'} OptiDevDoc Server on port ${port}...`);
+      console.log(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc Server v2.1.1 on port ${port}...`);
   
-  const env = { ...process.env, PORT: port.toString() };
+  // Use direct node execution instead of npm run scripts
+  const mainServerPath = path.join(__dirname, '..', 'index.js');
+  const fallbackServerPath = path.join(__dirname, '..', 'main.js');
   
-  const child = spawn('npm', ['run', serverScript], {
+  const env = { 
+    ...process.env, 
+    PORT: port.toString(),
+    OPTIDEVDOC_SERVER_MODE: 'http'
+  };
+  
+  if (isEnhanced) {
+    env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
+    env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_MODE = 'enhanced';
+  }
+  
+  const serverPath = fs.existsSync(mainServerPath) ? mainServerPath : fallbackServerPath;
+  
+  if (!fs.existsSync(serverPath)) {
+    console.error('❌ Server files not found');
+    console.error('❌ Please reinstall the package: npm install -g optidevdoc');
+    process.exit(1);
+  }
+
+  const child = spawn('node', [serverPath], {
     stdio: 'inherit',
-    cwd: PACKAGE_ROOT,
     env
   });
 
@@ -185,6 +641,14 @@ switch (command) {
     
   case 'serve-enhanced':
     startServer(true, options);
+    break;
+    
+  case 'detect':
+    detectOptimizelyProduct(options);
+    break;
+    
+  case 'migrate':
+    migrateRulesStructure(options);
     break;
     
   case 'setup':
