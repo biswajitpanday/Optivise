@@ -3,7 +3,13 @@ services:
     name: optidevdoc
     env: node
     repo: https://github.com/biswajitpanday/OptiDevDoc.git
-    buildCommand: yarn install && yarn build
+    buildCommand: |
+      yarn install
+      node -e "const fs=require('fs'); ['data/optidevdoc.db', 'logs', 'rules', 'dist'].forEach(dir => { try { fs.mkdirSync(dir, {recursive:true}); } catch(e) {} });"
+      yarn build
+      yarn copyfiles -f rules/**/* dist/rules/
+      yarn copyfiles -f Resources/**/* dist/Resources/
+      yarn copyfiles index.js package.json dist/
     startCommand: node -r dotenv/config main.js
     plan: free
     region: oregon
@@ -79,6 +85,10 @@ services:
         sync: true
       - key: VERSION
         fromPackageJson: version
+      - key: RENDER
+        value: "true"
+      - key: IS_RENDER
+        value: "true"
         
     # Health check configuration
     healthCheckPath: /health

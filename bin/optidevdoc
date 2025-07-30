@@ -17,8 +17,18 @@ const simpleServerPath = path.join(PACKAGE_ROOT, 'src', 'deploy-server-simple.ts
 const remoteClientPath = path.join(PACKAGE_ROOT, 'optidevdoc-remote.js');
 
 function printUsage() {
+  // Get the actual version from package.json
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.1.4'; // Default fallback version
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
   console.log(`
-OptiDevDoc v2.1.1 - Product-Aware Optimizely Development Assistant
+OptiDevDoc v${version} - Product-Aware Optimizely Development Assistant
 
 USAGE:
   optidevdoc [COMMAND] [OPTIONS]
@@ -421,8 +431,18 @@ optidevdoc detect
 }
 
 function setupIDEConfiguration() {
+  // Get the actual version from package.json
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.1.4'; // Default fallback version
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
   console.log(`
-🛠️  OptiDevDoc v2.1.0 IDE Setup - Product-Aware Configuration
+🛠️  OptiDevDoc v${version} IDE Setup - Product-Aware Configuration
 
 To configure OptiDevDoc with your IDE, add the following to your MCP configuration:
 
@@ -435,7 +455,7 @@ For Cursor IDE (.cursor/mcp.json):
       "env": {
         "DEBUG_MCP": "false",
         "OPTIDEVDOC_MULTI_PRODUCT": "true",
-        "OPTIDEVDOC_VERSION": "2.1.0"
+        "OPTIDEVDOC_VERSION": "${version}"
       }
     }
   }
@@ -454,7 +474,7 @@ For VS Code (settings.json):
   }
 }
 
-Available Tools (v2.1.0):
+Available Tools (v${version}):
 ✅ apply_development_rules    - Apply context-aware development rules with automatic product detection
 ✅ detect_product             - Analyze project to identify Optimizely product with enhanced patterns
 ✅ generate_cursor_config     - Generate IDE configuration with product-aware rules
@@ -462,7 +482,7 @@ Available Tools (v2.1.0):
 ✅ find_optimizely_pattern    - Pattern search by development scenario with product isolation
 ✅ analyze_optimizely_bug     - Bug analysis with product-specific solutions
 
-🎯 v2.1.0 Product-Aware Features:
+🎯 v${version} Product-Aware Features:
 ✨ Automatic product detection based on project structure analysis
 ✨ Rules isolated by Optimizely product (Commerce, CMS, DXP, etc.)
 ✨ Context-sensitive guidance for your specific product
@@ -470,12 +490,22 @@ Available Tools (v2.1.0):
 ✨ Enhanced migration tools for existing configurations
 ✨ Flexible rule sources (local, remote, documentation APIs)
 
-After configuration, restart your IDE to enable OptiDevDoc v2.1.0.
+After configuration, restart your IDE to enable OptiDevDoc v${version}.
   `);
 }
 
 function startMCPClient(isEnhanced = true, options = {}) {
-  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v2.1.6...`);
+  // Get the actual version from package.json
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.1.4'; // Default fallback version
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  console.error(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc MCP Client v${version}...`);
   
   // Use the main compiled JS entry points instead of TypeScript files
   const mainServerPath = path.join(__dirname, '..', 'index.js');
@@ -489,7 +519,7 @@ function startMCPClient(isEnhanced = true, options = {}) {
       env.DEBUG_MCP = 'true';
     }
     env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
-    env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_VERSION = version;
     env.OPTIDEVDOC_MODE = isEnhanced ? 'enhanced' : 'simple';
 
     const child = spawn('node', [mainServerPath], {
@@ -565,7 +595,17 @@ function fallbackToRemote(options = {}) {
 function startServer(isEnhanced = false, options = {}) {
   const port = options.port || 3000;
   
-      console.log(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc Server v2.1.1 on port ${port}...`);
+  // Get the actual version from package.json
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.1.4'; // Default fallback version
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+  
+  console.log(`🚀 Starting ${isEnhanced ? 'Enhanced Product-Aware' : 'Simple'} OptiDevDoc Server v${version} on port ${port}...`);
   
   // Use direct node execution instead of npm run scripts
   const mainServerPath = path.join(__dirname, '..', 'index.js');
@@ -579,7 +619,7 @@ function startServer(isEnhanced = false, options = {}) {
   
   if (isEnhanced) {
     env.OPTIDEVDOC_MULTI_PRODUCT = 'true';
-    env.OPTIDEVDOC_VERSION = '2.1.0';
+    env.OPTIDEVDOC_VERSION = version;
     env.OPTIDEVDOC_MODE = 'enhanced';
   }
   

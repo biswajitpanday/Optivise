@@ -12,8 +12,43 @@
 
 const https = require('https');
 const readline = require('readline');
+// Load package.json for version information
 const path = require('path');
-const { APP_CONFIG } = require('./src/config/constants');
+const fs = require('fs');
+const packageJson = require('./package.json');
+
+// Load environment variables
+require('dotenv').config();
+
+// App configuration
+const APP_CONFIG = {
+  NAME: 'OptiDevDoc',
+  VERSION: packageJson.version || '3.1.4',
+  DEBUG_MODE: process.env.DEBUG_MCP === 'true',
+  PROTOCOL_VERSION: '2025-07-27',
+  REMOTE_SERVER: process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com',
+  
+  // Tool names
+  TOOLS: {
+    SEARCH: 'search_optimizely_docs',
+    PATTERN: 'find_optimizely_pattern',
+    BUG_ANALYSIS: 'analyze_optimizely_bug',
+    RULES: 'apply_development_rules',
+    CONFIG: 'generate_cursor_config'
+  },
+  
+  // Supported products
+  SUPPORTED_PRODUCTS: [
+    'configured-commerce',
+    'cms-paas',
+    'cms-saas',
+    'cmp',
+    'odp',
+    'experimentation',
+    'commerce-connect',
+    'search-navigation'
+  ]
+};
 
 // Setup readline interface for JSON-RPC communication
 const rl = readline.createInterface({
