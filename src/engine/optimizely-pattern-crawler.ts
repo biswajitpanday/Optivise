@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import * as cheerio from 'cheerio';
-import type { Logger } from '@/utils/logger.js';
+import type { Logger } from '../utils/logger.js';
 
 export interface OptimizelyPattern {
   id: string;

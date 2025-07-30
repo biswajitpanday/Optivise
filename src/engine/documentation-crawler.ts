@@ -315,6 +315,7 @@ export class DocumentationCrawler {
       }
 
       examples.push({
+        type: 'neutral', // Default type
         language,
         code: codeText,
         description: description || `${language} code example`,

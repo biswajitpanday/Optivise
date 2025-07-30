@@ -10,8 +10,8 @@
     "dev": "tsx src/deploy-server-simple.ts",
     "dev:enhanced": "tsx src/deploy-server-enhanced.ts",
     "dev:http": "tsx src/deploy-server-simple.ts",
-    "build": "echo '⚙️ Building OptiDevDoc...' && tsc && copyfiles -u 1 'src/**/*.json' dist/ && echo '✅ Build completed'",
-    "build:full": "tsc && copyfiles -u 1 'src/**/*.json' dist/",
+    "build": "echo '⚙️ Building OptiDevDoc...' && babel src --out-dir dist --extensions '.ts,.tsx' --copy-files && echo '✅ Build completed'",
+    "build:full": "babel src --out-dir dist --extensions '.ts,.tsx' --copy-files",
     "start": "node index.js",
     "test": "vitest",
     "test:watch": "vitest --watch",
@@ -54,7 +54,7 @@
   },
   "files": [
     "bin/",
-    "src/",
+    "dist/",
     "rules/",
     "Resources/",
     "index.js",
@@ -63,6 +63,7 @@
     "cursor-mcp.json",
     "render.yaml",
     "tsconfig.json",
+    "tsconfig.build.json",
     "package.json",
     "README.md",
     "scripts/"
@@ -93,6 +94,10 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@babel/cli": "^7.28.0",
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-typescript": "^7.27.1",
     "@eslint/js": "^9.15.0",
     "@types/better-sqlite3": "^7.6.13",
     "@types/compression": "^1.8.1",

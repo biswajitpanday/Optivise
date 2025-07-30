@@ -70,7 +70,7 @@ export class ErrorHandler {
         return {
           name: error.name,
           message: error.message,
-          code: 'NETWORK_ERROR',
+          code: ErrorCode.INVALID_REQUEST,
           statusCode: 503,
           context: { originalError: error.message },
           timestamp,
@@ -82,7 +82,7 @@ export class ErrorHandler {
         return {
           name: error.name,
           message: error.message,
-          code: 'NETWORK_ERROR',
+          code: ErrorCode.INVALID_REQUEST,
           statusCode: 408,
           context: { originalError: error.message },
           timestamp,
@@ -94,7 +94,7 @@ export class ErrorHandler {
         return {
           name: error.name,
           message: error.message,
-          code: 'PARSING_ERROR',
+          code: ErrorCode.INVALID_REQUEST,
           statusCode: 422,
           context: { originalError: error.message },
           timestamp,
@@ -105,7 +105,7 @@ export class ErrorHandler {
       return {
         name: error.name,
         message: error.message,
-        code: 'SEARCH_FAILED',
+        code: ErrorCode.SERVER_ERROR,
         statusCode: 500,
         context: { originalError: error.message },
         timestamp,
@@ -116,36 +116,37 @@ export class ErrorHandler {
     return {
       name: 'UnknownError',
       message: String(error),
-      code: 'SEARCH_FAILED',
+      code: ErrorCode.SERVER_ERROR,
       statusCode: 500,
       context: { originalError: String(error) },
       timestamp,
     };
   }
 
-  private mapMcpErrorCode(mcpErrorCode: ErrorCode): OptiErrorCode {
+  private mapMcpErrorCode(mcpErrorCode: ErrorCode): ErrorCode {
     switch (mcpErrorCode) {
-      case ErrorCode.InvalidRequest:
-        return OptiErrorCode.INVALID_QUERY;
-      case ErrorCode.MethodNotFound:
-        return OptiErrorCode.SEARCH_FAILED;
-      case ErrorCode.InvalidParams:
-        return OptiErrorCode.INVALID_QUERY;
-      case ErrorCode.InternalError:
-        return OptiErrorCode.SEARCH_FAILED;
+      case ErrorCode.INVALID_REQUEST:
+        return ErrorCode.INVALID_REQUEST;
+      case ErrorCode.NOT_FOUND:
+        return ErrorCode.NOT_FOUND;
+      case ErrorCode.UNAUTHORIZED:
+        return ErrorCode.UNAUTHORIZED;
+      case ErrorCode.SERVER_ERROR:
+        return ErrorCode.SERVER_ERROR;
       default:
-        return OptiErrorCode.SEARCH_FAILED;
+        return ErrorCode.SERVER_ERROR;
     }
   }
 
   private getStatusCodeFromErrorCode(errorCode: ErrorCode): number {
     switch (errorCode) {
-      case ErrorCode.InvalidRequest:
-      case ErrorCode.InvalidParams:
+      case ErrorCode.INVALID_REQUEST:
         return 400;
-      case ErrorCode.MethodNotFound:
+      case ErrorCode.NOT_FOUND:
         return 404;
-      case ErrorCode.InternalError:
+      case ErrorCode.UNAUTHORIZED:
+        return 401;
+      case ErrorCode.SERVER_ERROR:
         return 500;
       default:
         return 500;
@@ -154,16 +155,16 @@ export class ErrorHandler {
 
   private getUserFriendlyMessage(error: OptimizelyError): string {
     switch (error.code) {
-      case 'NETWORK_ERROR':
+      case ErrorCode.INVALID_REQUEST:
         return `Unable to fetch Optimizely documentation at the moment. The documentation service may be temporarily unavailable.`;
       
-      case 'INVALID_QUERY':
-        return `Invalid search query. Please provide a valid Optimizely product name or documentation topic.`;
-      
-      case 'DOCUMENT_NOT_FOUND':
+      case ErrorCode.NOT_FOUND:
         return `No documentation found for your query. Please try different search terms or check the product name.`;
       
-      case 'PARSING_ERROR':
+      case ErrorCode.UNAUTHORIZED:
+        return `Authentication error. Please check your credentials or permissions.`;
+      
+      case ErrorCode.SERVER_ERROR:
         return `Unable to process the documentation content. The documentation format may have changed.`;
       
       case 'RATE_LIMITED':

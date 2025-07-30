@@ -163,7 +163,7 @@ export class MCPServer {
             );
         }
       } catch (error) {
-        return this.errorHandler.handleToolError(error, name);
+        return this.errorHandler.handleToolError(error, name, {});
       }
     });
   }

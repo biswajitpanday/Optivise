@@ -6,6 +6,63 @@ export type DeepPartial<T> = T extends object ? {
 } : T;
 
 // Core Types for OptiDevDoc
+
+// Crawler Configuration
+export interface CrawlerConfig {
+  enabled: boolean;
+  interval_hours: number;
+  max_concurrency: number;
+  sources: CrawlerSource[];
+  retryAttempts?: number;
+  retryDelay?: number;
+  userAgent?: string;
+  respectRobotsTxt?: boolean;
+  maxConcurrency?: number;
+}
+
+// Documentation Source
+export interface DocumentationSource {
+  id: string;
+  name: string;
+  url: string;
+  product: OptimizelyProduct;
+  selectors: {
+    container: string;
+    title: string;
+    content: string;
+    navigation: string;
+    breadcrumb: string;
+    lastUpdated: string;
+  };
+  enabled: boolean;
+  priority: number;
+}
+
+// Database Configuration
+export interface DatabaseConfig {
+  type: 'sqlite' | 'postgresql' | 'memory';
+  path?: string;
+  cache_size?: number;
+  maxConnections?: number;
+  host?: string;
+  database?: string;
+}
+
+// Logging Configuration
+export interface LoggingConfig {
+  level: 'debug' | 'info' | 'warn' | 'error';
+  console: {
+    enabled: boolean;
+    colorize?: boolean;
+  };
+  file?: {
+    enabled: boolean;
+    path: string;
+    maxSize: string;
+    maxFiles: string;
+  };
+}
+
 export interface ServerConfig {
   port?: number;
   host?: string;
@@ -296,9 +353,14 @@ export interface OptimizelyError {
 // Search Types
 export interface SearchQuery {
   query: string;
+  text?: string;
+  category?: string;
   product?: OptimizelyProduct;
   maxResults?: number;
   documentId?: string;
+  options?: {
+    maxResults?: number;
+  };
 }
 
 export interface SearchResult {

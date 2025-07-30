@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as yaml from 'yaml';
 import type { Logger } from '../utils/logger.js';
 import { ProductDetectionEngine } from './product-detection-engine.js';
-import type { 
+import { 
   DevelopmentRule, 
   RuleContext, 
   RuleApplication, 
@@ -34,14 +34,14 @@ export class EnhancedRulesEngine {
   private initializeProductMaps(): void {
     // Initialize maps for all products
     const allProducts: OptimizelyProduct[] = [
-      'configured-commerce',
-      'cms-paas', 
-      'cms-saas',
-      'cmp',
-      'odp',
-      'experimentation',
-      'commerce-connect',
-      'search-navigation'
+      OptimizelyProduct.CONFIGURED_COMMERCE,
+      OptimizelyProduct.CMS_PAAS, 
+      OptimizelyProduct.CMS_SAAS,
+      OptimizelyProduct.CMP,
+      OptimizelyProduct.ODP,
+      OptimizelyProduct.EXPERIMENTATION,
+      OptimizelyProduct.COMMERCE_CONNECT,
+      OptimizelyProduct.SEARCH_NAVIGATION
     ];
 
     allProducts.forEach(product => {
@@ -81,8 +81,9 @@ export class EnhancedRulesEngine {
             await this.loadFromDocumentationAPI(source);
             break;
           
-          case 'database':
-            await this.loadFromDatabase(source);
+          // Database case is handled differently now
+          default:
+            this.logger.warn(`Unsupported rule source type: ${source.type}`);
             break;
         }
       }
@@ -163,7 +164,7 @@ export class EnhancedRulesEngine {
       const mdcFiles = await this.findMDCFiles(dirPath);
       
       for (const filePath of mdcFiles) {
-        const rule = await this.parseMDCFile(filePath, 'configured-commerce', true); // Default product for shared rules
+        const rule = await this.parseMDCFile(filePath, OptimizelyProduct.CONFIGURED_COMMERCE, true); // Default product for shared rules
         if (rule) {
           this.sharedRules.set(rule.id, rule);
         }
@@ -260,15 +261,15 @@ export class EnhancedRulesEngine {
     const pathLower = filePath.toLowerCase();
     
     if (pathLower.includes('configured-commerce') || pathLower.includes('commerce')) {
-      return 'configured-commerce';
+      return OptimizelyProduct.CONFIGURED_COMMERCE;
     }
-    if (pathLower.includes('cms-paas')) return 'cms-paas';
-    if (pathLower.includes('cms-saas')) return 'cms-saas';
-    if (pathLower.includes('cmp')) return 'cmp';
-    if (pathLower.includes('odp')) return 'odp';
-    if (pathLower.includes('experimentation')) return 'experimentation';
-    if (pathLower.includes('commerce-connect')) return 'commerce-connect';
-    if (pathLower.includes('search-navigation')) return 'search-navigation';
+    if (pathLower.includes('cms-paas')) return OptimizelyProduct.CMS_PAAS;
+    if (pathLower.includes('cms-saas')) return OptimizelyProduct.CMS_SAAS;
+    if (pathLower.includes('cmp')) return OptimizelyProduct.CMP;
+    if (pathLower.includes('odp')) return OptimizelyProduct.ODP;
+    if (pathLower.includes('experimentation')) return OptimizelyProduct.EXPERIMENTATION;
+    if (pathLower.includes('commerce-connect')) return OptimizelyProduct.COMMERCE_CONNECT;
+    if (pathLower.includes('search-navigation')) return OptimizelyProduct.SEARCH_NAVIGATION;
     
     return null;
   }
@@ -280,14 +281,14 @@ export class EnhancedRulesEngine {
     
     // Default to all products for shared rules
     return [
-      'configured-commerce',
-      'cms-paas',
-      'cms-saas',
-      'cmp',
-      'odp',
-      'experimentation',
-      'commerce-connect',
-      'search-navigation'
+      OptimizelyProduct.CONFIGURED_COMMERCE,
+      OptimizelyProduct.CMS_PAAS,
+      OptimizelyProduct.CMS_SAAS,
+      OptimizelyProduct.CMP,
+      OptimizelyProduct.ODP,
+      OptimizelyProduct.EXPERIMENTATION,
+      OptimizelyProduct.COMMERCE_CONNECT,
+      OptimizelyProduct.SEARCH_NAVIGATION
     ];
   }
 
@@ -313,8 +314,8 @@ export class EnhancedRulesEngine {
       productContext = {
         detectedProduct: context.product,
         confidence: 1.0,
-        detectionMethods: [{ method: 'user-explicit', matches: [], confidence: 1.0 }],
-        projectPath: context.projectPath
+        detectionMethods: ['user-explicit'],
+        projectPath: context.projectPath || ''
       };
     } else {
       productContext = await this.productDetection.detectProduct(context?.projectPath);
@@ -323,7 +324,7 @@ export class EnhancedRulesEngine {
     const applications: RuleApplication[] = [];
     
     // Only apply rules if confidence meets threshold
-    if (productContext.confidence >= this.config.productDetection.confidence.threshold) {
+    if (productContext.confidence >= this.config.productDetection.confidenceThreshold) {
       // Get product-specific rules
       const productRules = this.rulesCache.get(productContext.detectedProduct) || [];
       
@@ -352,7 +353,7 @@ export class EnhancedRulesEngine {
     } else {
       this.logger.warn('Product detection confidence too low for product-specific rules', {
         confidence: productContext.confidence,
-        threshold: this.config.productDetection.confidence.threshold
+        threshold: this.config.productDetection.confidenceThreshold
       });
       
       // Apply fallback rules or general rules
