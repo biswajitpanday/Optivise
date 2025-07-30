@@ -14,7 +14,7 @@ import { OptimizelyPatternTool } from '../tools/optimizely-pattern-tool.js';
 import { OptimizelyBugAnalyzer } from '../tools/optimizely-bug-analyzer.js';
 import { Logger } from '../utils/logger.js';
 import { ErrorHandler } from '../utils/error-handler.js';
-import { ConfigManager } from '../config/config-manager.js';
+import { Config } from '../config/index.js';
 import { DatabaseManager } from '../database/database-manager.js';
 import { DocumentationCrawler } from '../engine/documentation-crawler.js';
 import type { ServerConfig } from '../types/index.js';
@@ -35,15 +35,28 @@ export class EnhancedOptimizelyMCPServer {
   private isEnhancedMode = false; // Track if enhanced features are available
 
   constructor(config?: Partial<ServerConfig>) {
-    this.config = ConfigManager.getInstance().getConfig(config);
+    this.config = Config.getServerConfigObject();
     this.logger = new Logger(this.config.logging);
     this.errorHandler = new ErrorHandler(this.logger);
 
     // Initialize MCP Server
     this.server = new Server(
       {
-        name: 'optidevdoc-enhanced-mcp',
-        version: '2.1.0',
+        name: Config.getAppConfig().name,
+        version: Config.getAppConfig().version,
+      },
+      {
+        capabilities: {
+          tools: {
+            'resolve-optimizely-id': true,
+            'get-optimizely-docs': true,
+            'apply-development-rules': true,
+            'find-optimizely-pattern': true,
+            'analyze-optimizely-bug': true,
+            'detect-product': true,
+            'generate-cursor-config': true
+          }
+        }
       }
     );
 
@@ -62,7 +75,7 @@ export class EnhancedOptimizelyMCPServer {
     this.setupErrorHandling();
 
     this.logger.info('Enhanced OptiDevDoc MCP Server initialized', { 
-      version: '2.1.0',
+      version: Config.getAppConfig().version,
       enhancedMode: this.isEnhancedMode 
     });
   }

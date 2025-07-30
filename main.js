@@ -374,30 +374,45 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
+  // Set CORS headers for health endpoint
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin, Accept');
+  
+  // Get version from package.json
+  const packageVersion = version;
+  
+  // Determine features based on environment variables
+  const enhancedFeatures = process.env.OPTIDEVDOC_ENHANCED === 'true';
+  const productDetection = process.env.ENABLE_PRODUCT_DETECTION === 'true';
+  const corsEnabled = process.env.ENABLE_CORS === 'true';
+  const mcpMode = process.env.MCP_MODE || 'stdio';
+  
   const health = {
     status: 'healthy',
-    version: VERSION,
+    version: packageVersion,
     mode: IS_RENDER ? 'render' : 'local',
     features: {
-      enhanced: process.env.OPTIDEVDOC_ENHANCED === 'true',
-      productDetection: process.env.ENABLE_PRODUCT_DETECTION === 'true',
-      mcp: process.env.MCP_MODE || 'stdio',
-      cors: process.env.ENABLE_CORS === 'true'
+      enhanced: enhancedFeatures,
+      productDetection: productDetection,
+      mcp: mcpMode,
+      cors: corsEnabled
     },
     capabilities: {
       tools: {
         'search-optimizely-docs': true,
         'find-optimizely-pattern': true,
         'analyze-optimizely-bug': true,
-        ...(process.env.OPTIDEVDOC_ENHANCED === 'true' && {
+        ...(enhancedFeatures && {
           'apply-development-rules': true,
-          'detect-product': process.env.ENABLE_PRODUCT_DETECTION === 'true',
+          'detect-product': productDetection,
           'generate-cursor-config': true
         })
       }
     }
   };
 
+  console.log(`Health check response: ${JSON.stringify(health)}`);
   res.json(health);
 });
 

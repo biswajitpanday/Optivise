@@ -7,8 +7,9 @@
 
 const fs = require('fs');
 const path = require('path');
+const { version } = require('./package.json');
 
-console.log('🚀 OptiDevDoc MCP Server v2.1.5');
+console.log(`🚀 OptiDevDoc MCP Server v${version}`);
 console.log('Node.js:', process.version);
 console.log('Environment:', process.env.NODE_ENV || 'production');
 
@@ -351,7 +352,7 @@ fetch('/api/episerver/v3.0/content/123', {
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      version: '1.0.0',
+      version,
       uptime: process.uptime(),
       server: 'OptiDevDoc Standalone Server',
       documentation_count: mockDocumentation.length,
@@ -362,7 +363,7 @@ fetch('/api/episerver/v3.0/content/123', {
   app.get('/api/docs', (_req, res) => {
     res.json({
       name: 'OptiDevDoc Standalone Server',
-      version: '1.0.0',
+      version,
       description: 'HTTP API for Optimizely documentation search',
       endpoints: {
         health: { method: 'GET', path: '/health', description: 'Server health check' },
@@ -448,7 +449,7 @@ fetch('/api/episerver/v3.0/content/123', {
     res.json({
       message: 'OptiDevDoc Standalone Server',
       status: 'running',
-      version: '1.0.0',
+      version,
       endpoints: {
         health: '/health',
         api_docs: '/api/docs',

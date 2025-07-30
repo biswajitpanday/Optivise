@@ -82,6 +82,8 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': `OptiDevDoc-Enhanced-MCP-Client`,
+        'Origin': 'https://cursor.sh',
+        'Accept': 'application/json',
         ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
       },
       timeout
@@ -89,13 +91,25 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
 
     if (APP_CONFIG.DEBUG_MODE) {
       console.error(`📡 Making ${method} request to: ${url.href}`);
+      console.error(`📡 Headers: ${JSON.stringify(options.headers)}`);
       if (postData) {
         console.error('📤 Request data:', postData);
+      }
+    } else {
+      // Always log health check requests for troubleshooting
+      if (path === '/health') {
+        console.error(`📡 Making ${method} request to: ${url.href}`);
       }
     }
 
     const req = https.request(options, (res) => {
       let responseData = '';
+      
+      // Log status code for health checks even without debug mode
+      if (path === '/health') {
+        console.error(`📡 Health check response status: ${res.statusCode}`);
+        console.error(`📡 Health check response headers: ${JSON.stringify(res.headers)}`);
+      }
       
       res.on('data', (chunk) => {
         responseData += chunk;
@@ -106,10 +120,14 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
           const result = JSON.parse(responseData);
           if (APP_CONFIG.DEBUG_MODE) {
             console.error('📥 Response received:', JSON.stringify(result, null, 2).substring(0, 500) + '...');
+          } else if (path === '/health') {
+            // Always log health response for troubleshooting
+            console.error('📥 Health check response:', JSON.stringify(result, null, 2));
           }
           resolve(result);
         } catch (parseError) {
           console.error('JSON Parse Error:', parseError);
+          console.error('Raw response:', responseData);
           reject(new Error(`Failed to parse response: ${parseError.message}`));
         }
       });

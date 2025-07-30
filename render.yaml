@@ -68,7 +68,11 @@ services:
       - key: OPTIDEVDOC_RULES_PATH
         value: ./rules
       - key: OPTIDEVDOC_MODE
-        value: remote
+        value: enhanced
+      - key: OPTIDEVDOC_SERVER_MODE
+        value: http
+      - key: OPTIDEVDOC_ENHANCED
+        value: "true"
       - key: OPTIDEVDOC_DEBUG
         value: "false"
       - key: REMOTE_SERVER

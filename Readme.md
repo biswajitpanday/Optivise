@@ -1,235 +1,136 @@
 # OptiDevDoc
 
-A product-aware development assistant for Optimizely developers, providing intelligent guidance, pattern analysis, and documentation search across all Optimizely products.
+Intelligent Optimizely development assistant with product-aware rules, pattern analysis, bug resolution, and comprehensive documentation search.
 
-## ✨ Features (as of July 27, 2025)
+## Features
 
-✅ **Product-Aware Intelligence**
-- Automatic detection of Commerce vs CMS vs Experimentation
-- Perfect rule isolation with zero cross-product contamination
-- Context-aware responses for each product
+- **Product-Aware Intelligence**: Automatic detection of Commerce vs CMS vs Experimentation with perfect rule isolation
+- **Development Tools**: Documentation search, pattern analysis, bug resolution, and development rules
+- **Multi-Deployment Support**: NPM package for full features, remote server for zero setup
+- **Integration Features**: Cursor IDE integration via MCP protocol, CLI interface, HTTP API
 
-✅ **Development Tools**
-- Documentation search with product filtering
-- Pattern analysis and best practices
-- Bug resolution with product-specific solutions
-- Development rules application
-- Cursor IDE configuration generation
-- Product detection
+## Installation
 
-✅ **Multi-Deployment Support**
-- NPM package for full features
-- Remote server for zero setup
-- Standalone mode for basic features
+### NPM Package (Recommended for Developers)
 
-## 🚀 Quick Start
+Install globally to use as a CLI tool and MCP server:
 
 ```bash
-# Install globally
 npm install -g optidevdoc
+```
 
-# Start MCP server
+Or install locally in your project:
+
+```bash
+npm install --save-dev optidevdoc
+```
+
+### Remote Mode (Zero Setup for Teams)
+
+For teams that want a centralized deployment with zero local setup, use the remote mode:
+
+1. Deploy to Render.com using the included `render.yaml` configuration
+2. Configure Cursor IDE to use the remote server
+
+## Usage
+
+### NPM Mode
+
+Start the MCP server:
+
+```bash
 optidevdoc mcp
 ```
 
-## 🏗️ Architecture
+Use the CLI commands:
 
-```mermaid
-%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
-graph TD
-    A[IDE Integration] --> B[MCP Server]
-    B --> C[Product Detection]
-    B --> D[Rules Engine]
-    B --> E[Pattern Analysis]
-    
-    C --> F[Project Context]
-    D --> G[Development Rules]
-    E --> H[Code Patterns]
-    
-    F --> I[Product-Aware Response]
-    G --> I
-    H --> I
-    
-    style A fill:#1a1a1a,stroke:#6366f1
-    style B fill:#1a1a1a,stroke:#6366f1
-    style C fill:#1a1a1a,stroke:#6366f1
-    style D fill:#1a1a1a,stroke:#6366f1
-    style E fill:#1a1a1a,stroke:#6366f1
-    style F fill:#1a1a1a,stroke:#6366f1
-    style G fill:#1a1a1a,stroke:#6366f1
-    style H fill:#1a1a1a,stroke:#6366f1
-    style I fill:#1a1a1a,stroke:#6366f1
+```bash
+# Detect Optimizely product in current directory
+optidevdoc detect
+
+# Start HTTP server on port 3001
+optidevdoc serve --port 3001
+
+# Generate Cursor IDE configuration
+optidevdoc setup
+
+# Show version information
+optidevdoc version
 ```
 
-### **Cursor IDE Configuration**
+### Remote Mode
+
+Configure Cursor IDE to use the remote server by adding the following to your Cursor settings:
+
 ```json
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "optidevdoc",
-      "args": ["mcp"],
-      "env": {
-        "OPTIDEVDOC_MULTI_PRODUCT": "true"
-      }
-    }
+"modelContextProtocol.tools": [
+  {
+    "name": "optidevdoc",
+    "command": "node",
+    "args": ["path/to/optidevdoc-remote.js"]
   }
-}
+]
 ```
 
-## 🎯 **Key Features**
+## Configuration
 
-- **🎯 Product-Aware Intelligence**: Automatically detects Commerce vs CMS vs Experimentation projects
-- **🔒 Perfect Rule Isolation**: Commerce rules never interfere with CMS development
-- **⚡ Zero Configuration**: Works out-of-the-box with intelligent defaults
-- **🛠️ 6 MCP Tools**: Complete toolkit for Optimizely development
-- **🌐 Multi-Deployment**: NPM package + Remote server options
+OptiDevDoc uses a centralized configuration system that loads settings from environment variables and configuration files.
 
-## 🛠️ **Available Tools**
+### Environment Variables
 
-| Tool | Purpose | Product-Aware |
-|------|---------|---------------|
-| **`apply_development_rules`** | Context-aware development guidance | ✅ |
-| **`detect_product`** | Automatic product detection | ✅ |
-| **`generate_cursor_config`** | IDE configuration with rules | ✅ |
-| **`search_optimizely_docs`** | Enhanced documentation search | ✅ |
-| **`find_optimizely_pattern`** | Pattern analysis by scenario | ✅ |
-| **`analyze_optimizely_bug`** | Intelligent bug resolution | ✅ |
+Create a `.env` file or use environment variables to configure OptiDevDoc:
 
-## 📦 **Installation Options**
+```
+# Server Configuration
+NODE_ENV=development
+PORT=10000
+HOST=localhost
 
-### **NPM Package (Recommended)**
-```bash
-npm install -g optidevdoc
-optidevdoc mcp
+# Feature Flags
+ENABLE_PRODUCT_DETECTION=true
+ENABLE_ENHANCED_RULES=true
+ENABLE_CORS=true
+OPTIDEVDOC_ENHANCED=true
+OPTIDEVDOC_MULTI_PRODUCT=true
+OPTIDEVDOC_DEBUG=false
+
+# MCP Configuration
+MCP_MODE=stdio
+OPTIDEVDOC_MODE=enhanced
+OPTIDEVDOC_SERVER_MODE=http
 ```
 
-### **Remote Server (Zero Setup)**
-```bash
-# Download bridge client
-curl -o optidevdoc-remote.js https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js
+### Configuration Files
 
-# Configure in Cursor IDE
-{
-  "mcpServers": {
-    "optidevdoc": {
-      "command": "node",
-      "args": ["/absolute/path/to/optidevdoc-remote.js"]
-    }
-  }
-}
-```
+OptiDevDoc supports configuration files in the `config/` directory:
 
-## 🎉 **What's New in v2.1.0**
+- `config/default.env`: Default configuration for all environments
+- `config/development.env`: Development environment configuration
+- `config/production.env`: Production environment configuration
 
-### **🎯 Revolutionary Product-Aware Architecture**
-- ✅ **Automatic Product Detection** based on project structure
-- ✅ **Rule Isolation** - Commerce rules stay with Commerce projects
-- ✅ **Multi-Product Support** for Commerce, CMS, DXP, Experimentation
-- ✅ **Zero Configuration** - works out of the box
+The configuration system loads environment variables in the following order (later sources override earlier ones):
 
-### **🔧 Enhanced Developer Experience**
-- ✅ **CLI Commands**: `detect`, `migrate`, enhanced `setup`
-- ✅ **Flexible Rule Sources**: Local, remote, or API-based
-- ✅ **Smart Context Awareness** in all tool responses
-- ✅ **Migration Tools** from v2.0.x
+1. `.env` file in the project root
+2. `config/{NODE_ENV}.env` file (e.g., `config/development.env`, `config/production.env`)
+3. `config/default.env` (fallback)
 
-### **📈 Enterprise Ready**
-- ✅ **Team Standardization** - rules automatically apply by project
-- ✅ **Portable Configurations** - no more manual IDE setup
-- ✅ **Scalable Architecture** for growing organizations
+## Deployment
 
-## 🎯 **Product Detection**
+### Render.com Deployment
 
-OptiDevDoc intelligently detects which Optimizely product you're working with:
+1. Fork this repository
+2. Create a new Web Service on Render.com
+3. Select "Deploy from GitHub"
+4. Connect your forked repository
+5. Render will automatically use the `render.yaml` configuration
 
-```mermaid
-%%{init: {"theme": "dark", "themeVariables": {"darkMode": true, "primaryColor": "#6366f1", "primaryTextColor": "#fff", "primaryBorderColor": "#6366f1", "lineColor": "#F8B229", "secondaryColor": "#598234", "tertiaryColor": "#2F4858"}, "flowchart": {"htmlLabels": true, "curve": "basis"}, "sequence": {"mirrorActors": false, "bottomMarginAdj": 10, "messageAlign": "center"}, "themeCSS": ".node rect { fill: #1a1a1a !important; } .node text { fill: #fff !important; }"}}%%
-graph TD
-    A[Project Analysis] --> B{Product Detection}
-    B -->|"Extensions/"| C["Configured Commerce"]
-    B -->|"modules/ + App_Data/"| D["CMS PaaS"]
-    B -->|"modules/ + SaaS config"| E["CMS SaaS"]
-    B -->|"DXP patterns"| F["DXP"]
-    B -->|"@optimizely/sdk"| G["Experimentation"]
-    
-    C --> H["Commerce Rules"]
-    D --> I["CMS PaaS Rules"]
-    E --> J["CMS SaaS Rules"]
-    F --> K["DXP Rules"]
-    G --> L["Experimentation Rules"]
-    
-    style A fill:#1a1a1a,stroke:#6366f1
-    style B fill:#1a1a1a,stroke:#6366f1
-    style C fill:#1a1a1a,stroke:#6366f1
-    style D fill:#1a1a1a,stroke:#6366f1
-    style E fill:#1a1a1a,stroke:#6366f1
-    style F fill:#1a1a1a,stroke:#6366f1
-    style G fill:#1a1a1a,stroke:#6366f1
-    style H fill:#1a1a1a,stroke:#6366f1
-    style I fill:#1a1a1a,stroke:#6366f1
-    style J fill:#1a1a1a,stroke:#6366f1
-    style K fill:#1a1a1a,stroke:#6366f1
-    style L fill:#1a1a1a,stroke:#6366f1
-```
+### Local Development
 
-## 🔧 **CLI Commands**
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Create a `.env` file or use `config/default.env`
+4. Start the development server: `npm run dev`
 
-```bash
-optidevdoc detect                    # Auto-detect Optimizely product
-optidevdoc migrate                   # Migrate rules to product-aware structure
-optidevdoc setup                     # Generate IDE configuration
-optidevdoc mcp                       # Start enhanced MCP server
-optidevdoc serve --port 3001         # Start HTTP server
-optidevdoc version                   # Show version information
-```
+## License
 
-## 📚 **Documentation**
-
-For comprehensive documentation, see:
-- **[Complete Documentation](./Resources/DOCUMENTATION.md)** - Architecture, deployment, migration, troubleshooting
-- **[Feature List](./Resources/FeatureList.md)** - Detailed feature overview with implementation status
-- **[Task Tracking](./Resources/Task.md)** - Development status and roadmap
-
-## 🔗 **Links & Resources**
-
-- **NPM Package**: [optidevdoc@2.1.0](https://www.npmjs.com/package/optidevdoc)
-- **Live Server**: [optidevdoc.onrender.com](https://optidevdoc.onrender.com/)
-- **GitHub Repository**: [biswajitpanday/OptiDevDoc](https://github.com/biswajitpanday/OptiDevDoc)
-- **MCP Bridge**: [optidevdoc-remote.js](https://raw.githubusercontent.com/biswajitpanday/OptiDevDoc/master/optidevdoc-remote.js)
-
-## 🚨 **Quick Troubleshooting**
-
-### **"0 tools enabled" in Cursor**
-1. Check file path is absolute
-2. Verify Node.js is installed
-3. Enable debug mode: `"DEBUG_MCP": "true"`
-
-### **Wrong Product Detected**
-```bash
-# Override product detection
-$env:OPTIMIZELY_PRODUCT = "configured-commerce"
-```
-
-### **NPM Installation Issues**
-```bash
-# Clear cache and reinstall
-npm cache clean --force
-npm install -g optidevdoc
-```
-
-## 🏆 **Success Metrics**
-
-- **🎯 Product Detection**: 92% accuracy
-- **⚡ Response Time**: <100ms (NPM mode)
-- **📈 Developer Productivity**: 30% improvement
-- **🔒 Rule Isolation**: 100% separation
-
-## 📄 **License**
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-**OptiDevDoc v2.1.0** - Making Optimizely development **smarter, faster, and product-aware**! 🚀
-
-*Experience the power of intelligent, context-aware development assistance that knows exactly which Optimizely product you're working with.*
+MIT

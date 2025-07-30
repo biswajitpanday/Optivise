@@ -1,35 +1,33 @@
 #!/usr/bin/env node
 
 /**
- * OptiDevDoc Enhanced Server v2.1.5
+ * OptiDevDoc Enhanced Server
  * Production-ready server with product-aware features and graceful fallbacks
  */
 
+import express from 'express';
+import cors from 'cors';
+import compression from 'compression';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import path from 'path';
+import fs from 'fs';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { ProductDetectionEngine } from './engine/product-detection-engine.js';
+import { RulesEngine } from './engine/rules-engine.js';
+import { Config } from './config/index.js';
 import { OptimizelyPatternTool } from './tools/optimizely-pattern-tool.js';
 import { OptimizelyBugAnalyzer } from './tools/optimizely-bug-analyzer.js';
 import { GetOptimizelyDocsTool } from './tools/get-optimizely-docs.js';
 import { Logger } from './utils/logger.js';
-import { ConfigManager } from './config/config-manager.js';
-import { APP_CONFIG } from './config/constants.js';
 import type { ServerConfig } from './types/index.js';
 
 // Initialize configuration
-const config: ServerConfig = {
-  server: {
-    port: Number(process.env.PORT) || 3000,
-    host: '0.0.0.0',
-    timeout: 30000
-  },
-  logging: {
-    level: 'info',
-    console: { enabled: true }
-  }
-};
+const config: ServerConfig = Config.getServerConfigObject();
 
-const logger = new Logger(config.logging);
+const logger = new Logger(Config.getLoggingConfig());
 
 // Initialize tools
 const patternTool = new OptimizelyPatternTool(config, logger);
@@ -39,8 +37,8 @@ const docsTool = new GetOptimizelyDocsTool(config, logger);
 // Create MCP server
 const server = new Server(
   {
-    name: APP_CONFIG.NAME,
-    version: APP_CONFIG.VERSION,
+    name: Config.getAppConfig().name,
+    version: Config.getAppConfig().version,
   },
   {
     capabilities: {

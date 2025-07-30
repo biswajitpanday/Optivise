@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Logger } from '../utils/logger.js';
 import type { ServerConfig } from '../types/index.js';
 import { EnhancedRulesEngine } from '../engine/enhanced-rules-engine.js';
-import { ProductAwareConfig } from '../config/product-aware-config.js';
+import { Config } from '../config/index.js';
 import type { RuleApplication, RulesEngineConfig } from '../types/index.js';
 import { OptimizelyProduct } from '../types/index.js';
 
@@ -53,11 +53,11 @@ export class EnhancedDevelopmentRulesTool {
   private createRulesConfig(config: ServerConfig): RulesEngineConfig {
     // Try to use custom rules path or environment configuration
     if (config.customRulesPath) {
-      return ProductAwareConfig.getExternalRulesConfig(config.customRulesPath);
+      return Config.getExternalRulesConfig(config.customRulesPath);
     }
     
     // Use environment-based configuration
-    return ProductAwareConfig.createConfigFromEnvironment();
+    return Config.createConfigFromEnvironment();
   }
 
   async initialize(): Promise<void> {

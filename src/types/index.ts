@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+// Utility type for deep partial objects
+export type DeepPartial<T> = T extends object ? {
+  [P in keyof T]?: DeepPartial<T[P]>;
+} : T;
+
 // Core Types for OptiDevDoc
 export interface ServerConfig {
   port?: number;
