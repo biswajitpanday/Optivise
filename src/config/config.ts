@@ -2,7 +2,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 import { version, name, description } from '../../package.json';
-import { defaultConfig } from './default.js';
 import { OptimizelyProduct } from '../types/index.js';
 import type { ServerConfig, DeepPartial, RulesEngineConfig } from '../types/index.js';
 
@@ -253,25 +252,42 @@ class ConfigManager {
   /**
    * Merge with default server config
    */
-  private mergeWithDefaultConfig(): void {
-    // Merge with default server config
-    if (defaultConfig) {
-      this.config.server.cors = {
-        ...this.config.server.cors,
-        origin: defaultConfig.cors?.origin || this.config.server.cors.origin,
-        credentials: defaultConfig.cors?.credentials || this.config.server.cors.credentials
-      };
-      
-      // Merge crawler sources
-      if (defaultConfig.crawler?.sources) {
-        this.config.crawler.sources = defaultConfig.crawler.sources;
+    private mergeWithDefaultConfig(): void {
+    // Default crawler sources
+    this.config.crawler.sources = [
+      {
+        id: 'optimizely-configured-commerce',
+        name: 'Optimizely Configured Commerce Documentation',
+        url: 'https://docs.developers.optimizely.com/configured-commerce',
+        product: OptimizelyProduct.CONFIGURED_COMMERCE,
+        selectors: {
+          container: '.markdown-body, .content, main',
+          title: 'h1, h2.title, .title',
+          content: '.markdown-body, .content-body, .page-content',
+          navigation: '.toc, .navigation, nav',
+          breadcrumb: '.breadcrumb, .breadcrumbs',
+          lastUpdated: '.last-updated, .updated-date, time',
+        },
+        enabled: true,
+        priority: 1,
+      },
+      {
+        id: 'optimizely-cms-paas',
+        name: 'Optimizely CMS (PaaS) Documentation',
+        url: 'https://docs.developers.optimizely.com/content-management-system',
+        product: OptimizelyProduct.CMS_PAAS,
+        selectors: {
+          container: '.markdown-body, .content, main',
+          title: 'h1, h2.title, .title',
+          content: '.markdown-body, .content-body, .page-content',
+          navigation: '.toc, .navigation, nav',
+          breadcrumb: '.breadcrumb, .breadcrumbs',
+          lastUpdated: '.last-updated, .updated-date, time',
+        },
+        enabled: true,
+        priority: 2,
       }
-      
-      // Merge search configuration
-      if (defaultConfig.search) {
-        this.config.search = defaultConfig.search;
-      }
-    }
+    ];
   }
   
   /**
