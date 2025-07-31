@@ -9,7 +9,11 @@
       "Bash(mv:*)",
       "Bash(npm run build:*)",
       "Bash(npm install:*)",
-      "Bash(timeout 3s npm start)"
+      "Bash(timeout 3s npm start)",
+      "Bash(chmod:*)",
+      "Bash(npm run start:*)",
+      "Bash(node:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }

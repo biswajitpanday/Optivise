@@ -1,136 +1,380 @@
-# OptiDevDoc
+# OptiDevAssistant
 
-Intelligent Optimizely development assistant with product-aware rules, pattern analysis, bug resolution, and comprehensive documentation search.
+**Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development.**
 
-## Features
+OptiDevAssistant is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
 
-- **Product-Aware Intelligence**: Automatic detection of Commerce vs CMS vs Experimentation with perfect rule isolation
-- **Development Tools**: Documentation search, pattern analysis, bug resolution, and development rules
-- **Multi-Deployment Support**: NPM package for full features, remote server for zero setup
-- **Integration Features**: Cursor IDE integration via MCP protocol, CLI interface, HTTP API
+## 🚀 Features
 
-## Installation
+### ✨ **Intelligent Context Analysis**
+- **Relevance Scoring**: Analyzes prompts for Optimizely relevance (0-1 score)
+- **Smart Filtering**: Only responds to Optimizely-related queries (>0.7 relevance)
+- **Curated Responses**: Provides structured, actionable information with code examples and best practices
 
-### NPM Package (Recommended for Developers)
+### 🎯 **Product Detection Engine**
+- **11+ Optimizely Products**: Configured Commerce, CMS (PaaS/SaaS), CMP, DXP, Web/Feature Experimentation, Data Platform, Connect Platform, Recommendations
+- **Multi-Detection**: IDE file analysis + prompt-based detection
+- **Evidence Tracking**: Shows why products were detected with confidence scores
 
-Install globally to use as a CLI tool and MCP server:
+### 🛠️ **Modern Architecture**
+- **Single MCP Tool**: `optidev_context_analyzer` - unified, focused functionality
+- **TypeScript Native**: Modern ES2022 with native TypeScript compilation (no Babel)
+- **Fast & Efficient**: <300ms response time, <512MB memory usage
+- **Local-First**: Privacy-focused, local processing and storage
 
-```bash
-npm install -g optidevdoc
-```
+## 📦 Installation
 
-Or install locally in your project:
-
-```bash
-npm install --save-dev optidevdoc
-```
-
-### Remote Mode (Zero Setup for Teams)
-
-For teams that want a centralized deployment with zero local setup, use the remote mode:
-
-1. Deploy to Render.com using the included `render.yaml` configuration
-2. Configure Cursor IDE to use the remote server
-
-## Usage
-
-### NPM Mode
-
-Start the MCP server:
+### Global Installation (Recommended)
 
 ```bash
-optidevdoc mcp
+npm install -g optidev-assistant
 ```
 
-Use the CLI commands:
+### Local Installation
 
 ```bash
-# Detect Optimizely product in current directory
-optidevdoc detect
-
-# Start HTTP server on port 3001
-optidevdoc serve --port 3001
-
-# Generate Cursor IDE configuration
-optidevdoc setup
-
-# Show version information
-optidevdoc version
+npm install --save-dev optidev-assistant
 ```
 
-### Remote Mode
+### From Source (Development)
 
-Configure Cursor IDE to use the remote server by adding the following to your Cursor settings:
+```bash
+git clone https://github.com/biswajitpanday/OptiDevDoc.git
+cd OptiDevDoc
+npm install
+npm run build
+```
+
+## 🏃 Quick Start
+
+### 1. **Start MCP Server**
+```bash
+# Using global installation
+optidev-assistant mcp
+
+# Using npm scripts (from source)
+npm start
+npm run dev  # Build and start
+npm run dev:watch  # Development mode with tsx
+```
+
+### 2. **Test Product Detection**
+```bash
+optidev-assistant detect
+```
+
+### 3. **Generate IDE Configuration**
+```bash
+optidev-assistant setup
+```
+
+### 4. **View Available Commands**
+```bash
+optidev-assistant --help
+optidev-assistant version
+```
+
+## 🔧 IDE Integration
+
+### Cursor IDE
+
+Create `.cursor-mcp.json` or `cursor-mcp.json` in your project root:
 
 ```json
-"modelContextProtocol.tools": [
-  {
-    "name": "optidevdoc",
-    "command": "node",
-    "args": ["path/to/optidevdoc-remote.js"]
+{
+  "mcpServers": {
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"],
+      "env": {
+        "OPTIDEV_DEBUG": "false"
+      }
+    }
   }
-]
+}
 ```
 
-## Configuration
+### VS Code
 
-OptiDevDoc uses a centralized configuration system that loads settings from environment variables and configuration files.
+Add to your `settings.json`:
 
-### Environment Variables
-
-Create a `.env` file or use environment variables to configure OptiDevDoc:
-
-```
-# Server Configuration
-NODE_ENV=development
-PORT=10000
-HOST=localhost
-
-# Feature Flags
-ENABLE_PRODUCT_DETECTION=true
-ENABLE_ENHANCED_RULES=true
-ENABLE_CORS=true
-OPTIDEVDOC_ENHANCED=true
-OPTIDEVDOC_MULTI_PRODUCT=true
-OPTIDEVDOC_DEBUG=false
-
-# MCP Configuration
-MCP_MODE=stdio
-OPTIDEVDOC_MODE=enhanced
-OPTIDEVDOC_SERVER_MODE=http
+```json
+{
+  "mcp.servers": {
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"]
+    }
+  }
+}
 ```
 
-### Configuration Files
+### Global Installation Integration
 
-OptiDevDoc supports configuration files in the `config/` directory:
+If installed globally, you can use it from any project:
 
-- `config/default.env`: Default configuration for all environments
-- `config/development.env`: Development environment configuration
-- `config/production.env`: Production environment configuration
+```json
+{
+  "mcpServers": {
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"]
+    }
+  }
+}
+```
 
-The configuration system loads environment variables in the following order (later sources override earlier ones):
+## 🎯 Usage Examples
 
-1. `.env` file in the project root
-2. `config/{NODE_ENV}.env` file (e.g., `config/development.env`, `config/production.env`)
-3. `config/default.env` (fallback)
+### **Context Analysis Tool**
 
-## Deployment
+The `optidev_context_analyzer` tool provides intelligent context for Optimizely development:
 
-### Render.com Deployment
+```typescript
+// Example prompt that gets analyzed
+"How do I create a custom handler in Optimizely Commerce?"
 
-1. Fork this repository
-2. Create a new Web Service on Render.com
-3. Select "Deploy from GitHub"
-4. Connect your forked repository
-5. Render will automatically use the `render.yaml` configuration
+// Tool response includes:
+{
+  "relevance": 0.95,
+  "detectedProducts": ["configured-commerce"],
+  "curatedContext": {
+    "summary": "Code assistance for Configured Commerce development - analyzing handler chain requirements",
+    "actionableSteps": [
+      "Working with Configured Commerce",
+      "Review relevant code examples and implementation patterns",
+      "Check official documentation for API references"
+    ],
+    "bestPractices": [
+      "Follow handler chain patterns for extending commerce functionality",
+      "Use proper dependency injection in your extensions",
+      "Implement proper error handling and logging"
+    ]
+  }
+}
+```
 
-### Local Development
+### **Product Detection**
 
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Create a `.env` file or use `config/default.env`
-4. Start the development server: `npm run dev`
+OptiDevAssistant automatically detects your Optimizely products:
 
-## License
+```bash
+$ optidev-assistant detect
+🔍 Detecting Optimizely Products...
+📁 Analyzing project: /your/project/path
 
-MIT
+✅ Detection Results:
+   🛒 Configured Commerce - Extensions directory found
+   🛒 Configured Commerce - Blueprint structure found
+   ⚙️ .NET Project - C# project files found
+
+💡 Recommendations:
+   • Use Commerce-specific patterns and rules
+   • Focus on Extensions/ and FrontEnd/ directories
+```
+
+## 🏗️ Development
+
+### **Project Structure**
+
+```
+src/
+├── core/                    # Core MCP server
+├── analyzers/              # Context and prompt analysis
+├── services/               # Product detection, documentation
+├── types/                  # TypeScript definitions
+└── utils/                  # Shared utilities
+
+rules/                      # Development rules and patterns
+├── configured-commerce/    # Commerce-specific rules
+├── cms-paas/              # CMS (PaaS) rules
+├── cms-saas/              # CMS (SaaS) rules
+├── experimentation/       # Experimentation rules
+├── dxp/                   # DXP rules
+└── shared/                # Common rules
+```
+
+### **Development Commands**
+
+```bash
+# Development
+npm run dev              # Build and start MCP server
+npm run dev:watch        # Development mode with hot reload
+npm run build:watch      # Watch mode for TypeScript compilation
+
+# Building
+npm run build            # Build TypeScript to dist/
+npm run clean            # Clean dist/ directory
+
+# Quality Assurance
+npm run typecheck        # TypeScript type checking
+npm run lint             # ESLint check
+npm run lint:fix         # Auto-fix ESLint issues
+npm run format           # Prettier formatting
+
+# Testing
+npm run test             # Run Vitest test suite
+npm run test:watch       # Watch mode for tests
+npm run test:coverage    # Generate coverage report
+```
+
+### **Environment Variables**
+
+```bash
+# Debug mode
+OPTIDEV_DEBUG=true
+
+# Custom rules path
+OPTIDEVDOC_RULES_PATH=/path/to/rules
+
+# Product override (for testing)
+OPTIMIZELY_PRODUCT=configured-commerce
+```
+
+## 📚 Supported Optimizely Products
+
+| Product                    | Detection Method | Rules Support |
+|---------------------------|------------------|---------------|
+| **Configured Commerce**   | ✅ File patterns | ✅ Complete   |
+| **Commerce Connect**      | ✅ Dependencies  | ✅ Complete   |
+| **CMS (PaaS)**           | ✅ File patterns | ✅ Complete   |
+| **CMS (SaaS)**           | ✅ Dependencies  | ✅ Complete   |
+| **Content Marketing**     | ✅ File patterns | ✅ Basic      |
+| **Digital Experience**    | ✅ File patterns | ✅ Basic      |
+| **Web Experimentation**   | ✅ Dependencies  | ✅ Complete   |
+| **Feature Experimentation** | ✅ Dependencies | ✅ Complete   |
+| **Data Platform**         | ✅ File patterns | ✅ Basic      |
+| **Connect Platform**      | ✅ File patterns | ✅ Basic      |
+| **Recommendations**       | ✅ Dependencies  | ✅ Basic      |
+
+## 🚢 Deployment
+
+### **NPM Package Publishing**
+
+```bash
+# Build and publish
+npm run build
+npm run deploy
+
+# Or with version bump
+npm version patch
+npm run deploy
+```
+
+### **Local Package Testing**
+
+```bash
+# Create global symlink for testing
+npm link
+
+# Test globally
+optidev-assistant version
+optidev-assistant mcp
+
+# Remove symlink
+npm unlink -g optidev-assistant
+```
+
+## 🔍 Troubleshooting
+
+### **Common Issues**
+
+#### **"Command not found: optidev-assistant"**
+```bash
+# Verify global installation
+npm list -g optidev-assistant
+
+# Reinstall if needed
+npm uninstall -g optidev-assistant
+npm install -g optidev-assistant
+```
+
+#### **"Compiled server not found"**
+```bash
+# Build the project
+npm run build
+
+# Or install dependencies
+npm install
+npm run build
+```
+
+#### **MCP Connection Issues**
+```bash
+# Test server manually
+optidev-assistant mcp
+
+# Enable debug mode
+optidev-assistant --debug mcp
+
+# Check IDE MCP configuration
+optidev-assistant setup
+```
+
+#### **Product Detection Not Working**
+```bash
+# Test detection manually
+optidev-assistant detect
+
+# Check project structure
+ls -la  # Look for Optimizely-specific files/folders
+
+# Override product detection
+export OPTIMIZELY_PRODUCT=configured-commerce
+```
+
+### **Debug Mode**
+
+Enable verbose logging:
+
+```bash
+# CLI debug
+optidev-assistant --debug mcp
+
+# Environment variable
+export OPTIDEV_DEBUG=true
+npm start
+```
+
+## 🏛️ Architecture
+
+### **Phase 1 (Current) - MVP**
+- ✅ Single MCP tool (`optidev_context_analyzer`)
+- ✅ Basic context analysis and product detection
+- ✅ Core Optimizely product support
+- ✅ Modern TypeScript architecture
+
+### **Phase 2 (Planned) - Enhanced Features**
+- 🔄 IDE rule reading (`.cursorrules`, VS Code settings)
+- 🔄 Live Optimizely documentation integration
+- 🔄 Enhanced context curation
+- 🔄 Performance optimizations
+
+### **Phase 3 (Future) - Advanced Intelligence**
+- ⏳ Knowledge base learning system
+- ⏳ User feedback integration
+- ⏳ Pattern recognition and improvement
+- ⏳ Team collaboration features
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature-name`
+3. Make changes and test: `npm run test`
+4. Commit changes: `git commit -m "Add feature"`
+5. Push to branch: `git push origin feature-name`
+6. Create Pull Request
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/biswajitpanday/OptiDevDoc/issues)
+- **Documentation**: See `docs/` directory
+- **Development Guide**: See `CLAUDE.md`
+
+---
+
+**OptiDevAssistant v3.0.0-alpha.1** - Intelligent MCP tool for Optimizely context analysis

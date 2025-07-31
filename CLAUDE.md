@@ -163,3 +163,12 @@ interface ProductDetectionResult {
 - **Monitoring**: Performance metrics and health checks
 - **Debugging**: Source maps and breakpoint support
 - **Testing**: Comprehensive test suite with coverage reporting
+
+## Conversation Rules
+
+### Required "What's Next" Section
+- **At the end of every conversation response**, provide a "What's Next" section
+- Include immediate next steps for the current development phase
+- Suggest logical progression for feature development
+- Highlight any blockers or dependencies that need attention
+- Format as a clear, actionable list with priorities

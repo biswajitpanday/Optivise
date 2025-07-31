@@ -1,0 +1,361 @@
+#!/usr/bin/env node
+import { spawn } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const PACKAGE_ROOT = path.join(__dirname, '..');
+
+function printUsage() {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.0.0-alpha.1';
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  console.log(`
+OptiDevAssistant v${version} - Intelligent MCP Tool for Optimizely Context Analysis
+
+USAGE:
+  optidev-assistant [COMMAND] [OPTIONS]
+
+COMMANDS:
+  mcp           Start MCP server for IDE integration
+  start         Start MCP server (alias for mcp)
+  dev           Start in development mode with hot reload
+  detect        Detect Optimizely products in current directory
+  setup         Generate IDE configuration
+  version       Show version information
+
+OPTIONS:
+  --debug       Enable debug mode with verbose logging
+  --help        Show this help message
+
+EXAMPLES:
+  optidev-assistant mcp                 # Start MCP server for IDE integration
+  optidev-assistant detect              # Detect Optimizely products in current project
+  optidev-assistant setup               # Generate IDE configuration
+  optidev-assistant --debug mcp         # Start MCP server with debug logs
+
+🚀 NEW in v3.0.0: Simplified Architecture
+   • Single context analyzer tool
+   • Intelligent product detection (11+ Optimizely products)
+   • Modern TypeScript with native compilation
+   • Enhanced relevance scoring and context curation
+
+For more information, visit: https://github.com/biswajitpanday/OptiDevDoc
+  `);
+}
+
+function printVersion() {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    console.log(`OptiDevAssistant v${packageData.version}`);
+    console.log(`🎯 Intelligent MCP tool for Optimizely context analysis`);
+    console.log(`📚 Products: Commerce, CMS, Experimentation, DXP, and more`);
+    console.log(`🔧 Features: Context analysis, product detection, relevance scoring`);
+    console.log(`🎯 Focus: AI-assisted development with curated Optimizely context`);
+  } catch (error) {
+    console.log('OptiDevAssistant v3.0.0-alpha.1');
+  }
+}
+
+function detectOptimizelyProduct(options) {
+  console.log('🔍 Detecting Optimizely Products...');
+  
+  const projectPath = process.cwd();
+  console.log(`📁 Analyzing project: ${projectPath}\n`);
+  
+  const detectedFeatures = [];
+  
+  try {
+    // Check for Commerce indicators
+    if (fs.existsSync('Extensions') || fs.existsSync('InsiteCommerce.Web')) {
+      detectedFeatures.push('🛒 Configured Commerce - Extensions directory found');
+    }
+    
+    if (fs.existsSync('FrontEnd/modules/blueprints')) {
+      detectedFeatures.push('🛒 Configured Commerce - Blueprint structure found');
+    }
+    
+    // Check for CMS indicators
+    if (fs.existsSync('modules') && fs.existsSync('App_Data')) {
+      detectedFeatures.push('📝 CMS - Module structure found');
+    }
+    
+    if (fs.existsSync('Views') && fs.existsSync('Models')) {
+      detectedFeatures.push('📝 CMS - MVC structure found');
+    }
+    
+    // Check package.json for dependencies
+    if (fs.existsSync('package.json')) {
+      const packageData = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+      const allDeps = { ...packageData.dependencies, ...packageData.devDependencies };
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('insite'))) {
+        detectedFeatures.push('🛒 Configured Commerce - Insite dependencies found');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('episerver'))) {
+        detectedFeatures.push('📝 CMS - Episerver dependencies found');
+      }
+      
+      if (Object.keys(allDeps).some(dep => dep.includes('@optimizely/optimizely-sdk'))) {
+        detectedFeatures.push('🧪 Experimentation - SDK dependencies found');
+      }
+    }
+    
+    // Check for .csproj files
+    const csprojFiles = fs.readdirSync('.').filter(file => file.endsWith('.csproj'));
+    if (csprojFiles.length > 0) {
+      detectedFeatures.push('⚙️ .NET Project - C# project files found');
+    }
+    
+    // Check for web.config
+    if (fs.existsSync('web.config') || fs.existsSync('Web.config')) {
+      detectedFeatures.push('🌐 ASP.NET - Web configuration found');
+    }
+    
+    if (detectedFeatures.length > 0) {
+      console.log('✅ Detection Results:');
+      detectedFeatures.forEach(feature => console.log(`   ${feature}`));
+      console.log('\n💡 Recommendations:');
+      
+      if (detectedFeatures.some(f => f.includes('Configured Commerce'))) {
+        console.log('   • Use Commerce-specific patterns and rules');
+        console.log('   • Focus on Extensions/ and FrontEnd/ directories');
+      }
+      
+      if (detectedFeatures.some(f => f.includes('CMS'))) {
+        console.log('   • Use CMS-specific content development patterns');
+        console.log('   • Focus on content blocks and templates');
+      }
+      
+      if (detectedFeatures.some(f => f.includes('Experimentation'))) {
+        console.log('   • Use Experimentation SDK patterns');
+        console.log('   • Focus on A/B testing implementation');
+      }
+      
+    } else {
+      console.log('❓ No clear Optimizely product indicators found');
+      console.log('   This might be a general project or a different Optimizely product');
+    }
+    
+    console.log('\n🚀 Next Steps:');
+    console.log('   • Run "optidev-assistant setup" to configure your IDE');
+    console.log('   • Use "optidev-assistant mcp" to start the MCP server');
+    console.log('   • Try context analysis with intelligent product detection');
+    
+  } catch (error) {
+    console.error('❌ Error during detection:', error.message);
+  }
+}
+
+function setupIDEConfiguration() {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.0.0-alpha.1';
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  console.log(`
+🛠️  OptiDevAssistant v${version} IDE Setup
+
+To configure OptiDevAssistant with your IDE, add the following to your MCP configuration:
+
+For Cursor IDE (.cursor-mcp.json or cursor-mcp.json):
+{
+  "mcpServers": {
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"],
+      "env": {
+        "OPTIDEV_DEBUG": "false"
+      }
+    }
+  }
+}
+
+For VS Code (settings.json):
+{
+  "mcp.servers": {
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"]
+    }
+  }
+}
+
+Available Tool:
+✅ optidev_context_analyzer - Analyzes prompts for Optimizely context and provides curated information
+
+🎯 v${version} Features:
+✨ Intelligent context analysis with relevance scoring (0-1)
+✨ Automatic product detection for 11+ Optimizely products
+✨ Curated responses with actionable steps and best practices
+✨ Only responds to Optimizely-related queries (>0.7 relevance)
+✨ Modern TypeScript architecture with fast response times
+
+After configuration, restart your IDE to enable OptiDevAssistant v${version}.
+  `);
+}
+
+async function startMCPServer(options = {}) {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '3.0.0-alpha.1';
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  console.error(`🚀 Starting OptiDevAssistant MCP Server v${version}...`);
+  
+  // Check for the compiled server
+  const serverPath = path.join(PACKAGE_ROOT, 'dist', 'index.js');
+  
+  if (!fs.existsSync(serverPath)) {
+    console.error('❌ Compiled server not found. Building...');
+    
+    // Try to build the project
+    const buildChild = spawn('npm', ['run', 'build'], {
+      stdio: 'pipe',
+      cwd: PACKAGE_ROOT,
+      shell: process.platform === 'win32'
+    });
+
+    buildChild.on('close', (code) => {
+      if (code === 0) {
+        console.error('✅ Build successful. Starting server...');
+        startServer(serverPath, options);
+      } else {
+        console.error('❌ Build failed. Please run "npm run build" manually.');
+        process.exit(1);
+      }
+    });
+
+    buildChild.on('error', (error) => {
+      console.error('❌ Build process failed:', error.message);
+      console.error('💡 Please run "npm run build" manually from the package directory.');
+      process.exit(1);
+    });
+
+    return;
+  }
+
+  startServer(serverPath, options);
+}
+
+function startDevServer(options = {}) {
+  console.error('🚀 Starting OptiDevAssistant in development mode...');
+  
+  const devServerPath = path.join(PACKAGE_ROOT, 'src', 'index.ts');
+  
+  if (!fs.existsSync(devServerPath)) {
+    console.error('❌ Development server not found at:', devServerPath);
+    console.error('💡 Please ensure you are in the correct directory.');
+    process.exit(1);
+  }
+
+  const env = { ...process.env };
+  if (options.debug) {
+    env.OPTIDEV_DEBUG = 'true';
+  }
+
+  const child = spawn('npx', ['tsx', devServerPath], {
+    stdio: 'inherit',
+    cwd: PACKAGE_ROOT,
+    env,
+    shell: process.platform === 'win32'
+  });
+
+  child.on('error', (error) => {
+    console.error('❌ Failed to start development server:', error.message);
+    console.error('💡 Make sure tsx is installed: npm install -g tsx');
+    process.exit(1);
+  });
+
+  child.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+}
+
+function startServer(serverPath, options = {}) {
+  const env = { ...process.env };
+  if (options.debug) {
+    env.OPTIDEV_DEBUG = 'true';
+  }
+
+  const child = spawn('node', [serverPath], {
+    stdio: 'inherit',
+    env
+  });
+
+  child.on('error', (error) => {
+    console.error('❌ Failed to start MCP server:', error.message);
+    process.exit(1);
+  });
+
+  child.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+}
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const options = {};
+
+// Extract options
+for (let i = args.length - 1; i >= 0; i--) {
+  if (args[i] === '--debug') {
+    options.debug = true;
+    args.splice(i, 1);
+  } else if (args[i] === '--help') {
+    printUsage();
+    process.exit(0);
+  }
+}
+
+const command = args[0];
+
+switch (command) {
+  case 'mcp':
+  case 'start':
+    await startMCPServer(options);
+    break;
+    
+  case 'dev':
+    startDevServer(options);
+    break;
+    
+  case 'detect':
+    detectOptimizelyProduct(options);
+    break;
+    
+  case 'setup':
+    setupIDEConfiguration();
+    break;
+    
+  case 'version':
+    printVersion();
+    break;
+    
+  default:
+    if (!command) {
+      printUsage();
+    } else {
+      console.error(`❌ Unknown command: ${command}`);
+      console.error('Run "optidev-assistant --help" for usage information.');
+      process.exit(1);
+    }
+}

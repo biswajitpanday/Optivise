@@ -1,16 +1,11 @@
 {
   "mcpServers": {
-    "optidevdoc-remote": {
-      "command": "node",
-      "args": [
-        "optidevdoc-remote.js"
-      ],
+    "optidev-assistant": {
+      "command": "optidev-assistant",
+      "args": ["mcp"],
       "env": {
-        "DEBUG_MCP": "true",
-        "OPTIDEVDOC_ENHANCED": "true",
-        "OPTIDEVDOC_MULTI_PRODUCT": "true",
-        "REMOTE_SERVER": "https://optidevdoc.onrender.com"
+        "OPTIDEV_DEBUG": "false"
       }
     }
   }
-} 
+}
