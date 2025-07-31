@@ -121,7 +121,7 @@ export class ContextAnalysisEngine {
       curatedContext: {
         relevance: promptAnalysis.relevance,
         productContext: [],
-        summary: 'This query does not appear to be related to Optimizely development. OptiDevAssistant specializes in providing context for Optimizely-specific questions.',
+        summary: 'This query does not appear to be related to Optimizely development. Optivise specializes in providing context for Optimizely-specific questions.',
         actionableSteps: [],
         codeExamples: [],
         documentation: [],

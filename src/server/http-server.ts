@@ -95,13 +95,14 @@ export class OptiviseHTTPServer {
   async start(): Promise<void> {
     await this.initialize();
     
-    this.server.listen(this.port, () => {
+    this.server.listen(this.port, '0.0.0.0', () => {
       this.logger.info(`Optivise HTTP Server started on port ${this.port}`);
       this.logger.info('Available endpoints:');
       this.logger.info('  GET  / - Test interface (browser)');
       this.logger.info('  GET  /health - Health check');
       this.logger.info('  POST /analyze - Context analysis');
       this.logger.info(`Open http://localhost:${this.port} in your browser to test`);
+      this.logger.info(`Server is listening on all interfaces (0.0.0.0:${this.port})`);
     });
   }
 

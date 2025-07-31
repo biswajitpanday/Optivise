@@ -1,6 +1,6 @@
 /**
  * Optimizely Product Types and Interfaces
- * Core type definitions for OptiDevAssistant v3.0.0
+ * Core type definitions for Optivise v3.0.0
  */
 
 export type OptimizelyProduct = 

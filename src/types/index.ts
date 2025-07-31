@@ -1,6 +1,6 @@
 /**
  * Main Type Definitions Export
- * Central export for all OptiDevAssistant v3.0.0 types
+ * Central export for all Optivise v3.0.0 types
  */
 
 // Optimizely-specific types

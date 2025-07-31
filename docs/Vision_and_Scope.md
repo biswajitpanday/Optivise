@@ -1,10 +1,10 @@
-# OptiDevAssistant - Vision and Scope Document
+# Optivise - Vision and Scope Document
 
 ## Project Vision
-OptiDevAssistant transforms how Optimizely developers interact with AI by serving as an intelligent intermediary that provides curated, contextual information about Optimizely products to Large Language Models. Instead of generic AI responses, developers receive precise, up-to-date, and actionable guidance tailored to their specific Optimizely product context.
+Optivise transforms how Optimizely developers interact with AI by serving as an intelligent intermediary that provides curated, contextual information about Optimizely products to Large Language Models. Instead of generic AI responses, developers receive precise, up-to-date, and actionable guidance tailored to their specific Optimizely product context.
 
 ## Project Overview
-OptiDevAssistant is an MCP (Model Context Protocol) tool that analyzes developer prompts for Optimizely relevance and provides curated context to LLMs. The tool intelligently detects which Optimizely products are being used, reads existing IDE rules, and delivers focused information that enhances AI interactions without overwhelming the system with irrelevant data.
+Optivise is an MCP (Model Context Protocol) tool that analyzes developer prompts for Optimizely relevance and provides curated context to LLMs. The tool intelligently detects which Optimizely products are being used, reads existing IDE rules, and delivers focused information that enhances AI interactions without overwhelming the system with irrelevant data.
 
 ## Strategic Objectives
 

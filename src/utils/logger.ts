@@ -1,6 +1,6 @@
 /**
  * Logger Utility
- * Simple structured logging for OptiDevAssistant
+ * Simple structured logging for Optivise
  */
 
 import type { Logger } from '../types/index.js';

@@ -1,10 +1,10 @@
-# OptiDevAssistant - Software Requirements Specification (SRS)
+# Optivise - Software Requirements Specification (SRS)
 
 ## System Overview
 
 ### Architecture Overview
 
-OptiDevAssistant is an intelligent MCP (Model Context Protocol) tool that provides curated, contextual information about Optimizely products to LLMs based on developer prompts. The system automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the LLM with irrelevant information.
+Optivise is an intelligent MCP (Model Context Protocol) tool that provides curated, contextual information about Optimizely products to LLMs based on developer prompts. The system automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the LLM with irrelevant information.
 
 ### Core Components
 
@@ -256,7 +256,7 @@ interface CuratedResponse {
 
 ### 1. MCP Protocol Interface
 ```typescript
-interface OptiDevAssistantTool {
+interface OptiviseTool {
   name: 'optidev_context_analyzer';
   description: 'Analyzes prompts for Optimizely context and provides curated information';
   parameters: {

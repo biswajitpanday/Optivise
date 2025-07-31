@@ -5,7 +5,7 @@
  * Main entry point for the Optix MCP server with HTTP server support
  */
 
-import { OptiDevAssistantMCPServer } from './core/mcp-server.js';
+import { OptiviseMCPServer } from './core/mcp-server.js';
 import { OptiviseHTTPServer } from './server/http-server.js';
 import { createLogger } from './utils/logger.js';
 import { getVersionInfo } from './config/version.js';
@@ -39,7 +39,7 @@ async function main() {
       });
     } else {
       // Start MCP server for local/IDE usage
-      const server = new OptiDevAssistantMCPServer({
+      const server = new OptiviseMCPServer({
         logging: {
           level: process.env.LOG_LEVEL as any || 'info'
         },
@@ -55,7 +55,7 @@ async function main() {
       await server.initialize();
       await server.start();
       
-      logger.info('OptiDevAssistant MCP server started successfully');
+      logger.info('Optivise MCP server started successfully');
 
       // Graceful shutdown for MCP server
       process.on('SIGINT', async () => {
@@ -72,7 +72,7 @@ async function main() {
     }
 
   } catch (error) {
-    logger.error('Failed to start OptiDevAssistant', error as Error);
+    logger.error('Failed to start Optivise', error as Error);
     process.exit(1);
   }
 }

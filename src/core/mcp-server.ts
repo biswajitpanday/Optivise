@@ -1,5 +1,5 @@
 /**
- * OptiDevAssistant MCP Server
+ * Optivise MCP Server
  * Core MCP server implementation with single context analyzer tool
  */
 
@@ -25,7 +25,7 @@ import type {
 import { ContextAnalysisEngine } from '../analyzers/context-analysis-engine.js';
 import { createLogger } from '../utils/logger.js';
 
-export class OptiDevAssistantMCPServer {
+export class OptiviseMCPServer {
   private readonly server: Server;
   private readonly logger: Logger;
   private readonly contextAnalyzer: ContextAnalysisEngine;
@@ -86,7 +86,7 @@ export class OptiDevAssistantMCPServer {
     );
 
     this.setupHandlers();
-    this.logger.info('OptiDevAssistant MCP Server initialized', { version: config.version });
+    this.logger.info('Optivise MCP Server initialized', { version: config.version });
   }
 
   private setupHandlers(): void {
@@ -193,7 +193,7 @@ export class OptiDevAssistantMCPServer {
       await this.contextAnalyzer.initialize();
       
       this.isInitialized = true;
-      this.logger.info('OptiDevAssistant MCP Server initialization completed');
+      this.logger.info('Optivise MCP Server initialization completed');
     } catch (error) {
       this.logger.error('Failed to initialize MCP Server', error as Error);
       throw error;
@@ -208,13 +208,13 @@ export class OptiDevAssistantMCPServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     
-    this.logger.info('OptiDevAssistant MCP Server started and connected');
+    this.logger.info('Optivise MCP Server started and connected');
   }
 
   async stop(): Promise<void> {
     try {
       await this.server.close();
-      this.logger.info('OptiDevAssistant MCP Server stopped');
+      this.logger.info('Optivise MCP Server stopped');
     } catch (error) {
       this.logger.error('Error stopping MCP Server', error as Error);
       throw error;

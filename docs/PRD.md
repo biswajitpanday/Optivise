@@ -1,7 +1,7 @@
-# OptiDevAssistant - Product Requirements Document (PRD)
+# Optivise - Product Requirements Document (PRD)
 
 ## Product Vision
-OptiDevAssistant is an intelligent MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs, providing precise, curated information about Optimizely products without overwhelming the AI with irrelevant data.
+Optivise is an intelligent MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs, providing precise, curated information about Optimizely products without overwhelming the AI with irrelevant data.
 
 ## User Personas
 

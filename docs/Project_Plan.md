@@ -1,8 +1,8 @@
-# OptiDevAssistant - Project Plan
+# Optivise - Project Plan
 
 ## Project Overview
 
-OptiDevAssistant represents a complete architectural reimagining focused on intelligent AI context curation for Optimizely developers. This project transitions from the complex multi-tool approach to a streamlined, single-purpose MCP tool that provides curated, contextual information to LLMs for enhanced AI-assisted development.
+Optivise represents a complete architectural reimagining focused on intelligent AI context curation for Optimizely developers. This project transitions from the complex multi-tool approach to a streamlined, single-purpose MCP tool that provides curated, contextual information to LLMs for enhanced AI-assisted development.
 
 ## Project Transformation
 
