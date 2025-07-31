@@ -1,81 +1,104 @@
-import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
-import type { LoggingConfig } from '../types/index.js';
+/**
+ * Logger Utility
+ * Simple structured logging for OptiDevAssistant
+ */
 
-export class Logger {
-  private logger: winston.Logger;
+import type { Logger } from '../types/index.js';
 
-  constructor(config?: LoggingConfig) {
-    const logConfig = config || {
-      level: 'info',
-      console: { enabled: true, colorize: true },
-      file: { enabled: false, path: './logs', maxSize: '10m', maxFiles: '5' },
-    };
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-    const transports: winston.transport[] = [];
+class SimpleLogger implements Logger {
+  private level: LogLevel;
+  private levelValues: Record<LogLevel, number> = {
+    debug: 0,
+    info: 1,
+    warn: 2,
+    error: 3
+  };
 
-    // Console transport
-    if (logConfig.console.enabled) {
-      transports.push(
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.errors({ stack: true }),
-            logConfig.console.colorize
-              ? winston.format.colorize()
-              : winston.format.uncolorize(),
-            winston.format.printf(({ timestamp, level, message, ...meta }) => {
-              const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
-              return `${timestamp} [${level}]: ${message}${metaStr}`;
-            })
-          ),
-        })
-      );
-    }
-
-    // File transport with rotation
-    if (logConfig.file?.enabled) {
-      transports.push(
-        new DailyRotateFile({
-          dirname: logConfig.file.path,
-          filename: 'optidevdoc-%DATE%.log',
-          datePattern: 'YYYY-MM-DD',
-          maxSize: logConfig.file.maxSize,
-          maxFiles: logConfig.file.maxFiles,
-          format: winston.format.combine(
-            winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-            winston.format.errors({ stack: true }),
-            winston.format.json()
-          ),
-        })
-      );
-    }
-
-    this.logger = winston.createLogger({
-      level: logConfig.level,
-      transports,
-      exitOnError: false,
-    });
-  }
-
-  info(message: string, meta?: Record<string, unknown>): void {
-    this.logger.info(message, meta);
-  }
-
-  error(message: string, meta?: Record<string, unknown>): void {
-    this.logger.error(message, meta);
-  }
-
-  warn(message: string, meta?: Record<string, unknown>): void {
-    this.logger.warn(message, meta);
+  constructor(level: LogLevel = 'info') {
+    this.level = level;
   }
 
   debug(message: string, meta?: Record<string, unknown>): void {
-    this.logger.debug(message, meta);
+    this.log('debug', message, meta);
   }
 
-  // For MCP server integration
-  log(level: string, message: string, meta?: Record<string, unknown>): void {
-    this.logger.log(level, message, meta);
+  info(message: string, meta?: Record<string, unknown>): void {
+    this.log('info', message, meta);
   }
-} 
+
+  warn(message: string, meta?: Record<string, unknown>): void {
+    this.log('warn', message, meta);
+  }
+
+  error(message: string, error?: Error, meta?: Record<string, unknown>): void {
+    const errorMeta = error ? {
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      },
+      ...meta
+    } : meta;
+    
+    this.log('error', message, errorMeta);
+  }
+
+  private log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
+    if (this.levelValues[level] < this.levelValues[this.level]) {
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const logEntry = {
+      timestamp,
+      level: level.toUpperCase(),
+      message,
+      ...(meta && Object.keys(meta).length > 0 ? { meta } : {})
+    };
+
+    // Simple console output for Phase 1
+    // In future phases, this could write to files, send to monitoring systems, etc.
+    const output = this.formatLogEntry(logEntry);
+    
+    switch (level) {
+      case 'error':
+        console.error(output);
+        break;
+      case 'warn':
+        console.warn(output);
+        break;
+      case 'debug':
+        console.debug(output);
+        break;
+      default:
+        console.log(output);
+    }
+  }
+
+  private formatLogEntry(entry: Record<string, unknown>): string {
+    const { timestamp, level, message, meta } = entry;
+    
+    let output = `[${timestamp}] ${level}: ${message}`;
+    
+    if (meta && typeof meta === 'object' && Object.keys(meta).length > 0) {
+      output += ` ${JSON.stringify(meta)}`;
+    }
+    
+    return output;
+  }
+
+  setLevel(level: LogLevel): void {
+    this.level = level;
+  }
+
+  getLevel(): LogLevel {
+    return this.level;
+  }
+}
+
+export { SimpleLogger };
+export function createLogger(level: LogLevel = 'info'): Logger {
+  return new SimpleLogger(level);
+}
