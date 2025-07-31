@@ -23,18 +23,18 @@ require('dotenv').config();
 // App configuration
 const APP_CONFIG = {
   NAME: 'OptiDevDoc',
-  VERSION: packageJson.version || '3.1.4',
+  VERSION: packageJson.version || '3.1.5',
   DEBUG_MODE: process.env.DEBUG_MCP === 'true',
   PROTOCOL_VERSION: '2025-07-27',
   REMOTE_SERVER: process.env.REMOTE_SERVER || 'https://optidevdoc.onrender.com',
   
   // Tool names
   TOOLS: {
-    SEARCH: 'search_optimizely_docs',
-    PATTERN: 'find_optimizely_pattern',
-    BUG_ANALYSIS: 'analyze_optimizely_bug',
-    RULES: 'apply_development_rules',
-    CONFIG: 'generate_cursor_config'
+    SEARCH: 'search-optimizely-docs',
+    PATTERN: 'find-optimizely-pattern',
+    BUG_ANALYSIS: 'analyze-optimizely-bug',
+    RULES: 'apply-development-rules',
+    CONFIG: 'generate-cursor-config'
   },
   
   // Supported products
@@ -57,13 +57,16 @@ const rl = readline.createInterface({
   terminal: false
 });
 
-// Suppress startup messages in production mode
+// In debug mode, show all messages
+// In production mode, show important startup messages and errors
 if (!APP_CONFIG.DEBUG_MODE) {
   const originalConsoleError = console.error;
   console.error = (...args) => {
-    // Only show critical errors, suppress routine messages
+    // Show critical errors and important status messages
     if (args[0] && typeof args[0] === 'string' && 
-        (args[0].includes('🚀') || args[0].includes('📡') || args[0].includes('✅'))) {
+        (args[0].includes('❌') || args[0].includes('🚀') || 
+         args[0].includes('📡') || args[0].includes('✅') ||
+         args[0].includes('Error') || args[0].includes('error'))) {
       originalConsoleError(...args);
     }
   };
@@ -109,20 +112,25 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
     const url = new URL(path, APP_CONFIG.REMOTE_SERVER);
     const postData = data ? JSON.stringify(data) : null;
     
+    // Log the full URL for debugging
+    if (APP_CONFIG.DEBUG_MODE || path === '/health') {
+      console.error(`📡 Full URL: ${url.toString()}`);
+    }
+    
     const options = {
-      hostname: url.hostname,
-      port: url.port || 443,
-      path: url.pathname,
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': `OptiDevDoc-Enhanced-MCP-Client`,
-        'Origin': 'https://cursor.sh',
-        'Accept': 'application/json',
-        ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
-      },
-      timeout
-    };
+    hostname: url.hostname,
+    port: url.port || (url.protocol === 'https:' ? 443 : 80),
+    path: url.pathname,
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': `OptiDevDoc-Enhanced-MCP-Client/${APP_CONFIG.VERSION}`,
+      'Origin': 'https://cursor.sh',
+      'Accept': 'application/json',
+      ...(postData && { 'Content-Length': Buffer.byteLength(postData) })
+    },
+    timeout
+  };
 
     if (APP_CONFIG.DEBUG_MODE) {
       console.error(`📡 Making ${method} request to: ${url.href}`);
@@ -137,7 +145,10 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       }
     }
 
-    const req = https.request(options, (res) => {
+    // Choose the appropriate request module based on protocol
+    const requestModule = url.protocol === 'https:' ? https : require('http');
+    
+    const req = requestModule.request(options, (res) => {
       let responseData = '';
       
       // Log status code for health checks even without debug mode
@@ -152,6 +163,13 @@ function makeRequest(path, method = 'POST', data = null, timeout = 15000) {
       
       res.on('end', () => {
         try {
+          // Check if response is empty
+          if (!responseData || responseData.trim() === '') {
+            console.error('Empty response received');
+            resolve({});
+            return;
+          }
+          
           const result = JSON.parse(responseData);
           if (APP_CONFIG.DEBUG_MODE) {
             console.error('📥 Response received:', JSON.stringify(result, null, 2).substring(0, 500) + '...');
@@ -208,6 +226,16 @@ function formatContent(content, type = 'search') {
 // Handle incoming JSON-RPC requests
 rl.on('line', async (line) => {
   try {
+    // Skip empty lines
+    if (!line || !line.trim()) {
+      return;
+    }
+    
+    // Log raw input in debug mode
+    if (APP_CONFIG.DEBUG_MODE) {
+      console.error('📥 Raw input:', line);
+    }
+    
     const request = JSON.parse(line.trim());
     
     if (APP_CONFIG.DEBUG_MODE) {
@@ -216,22 +244,26 @@ rl.on('line', async (line) => {
 
     switch (request.method) {
       case 'initialize':
-        // Get server capabilities first
-        try {
-          const health = await makeRequest('/health', 'GET');
-          const capabilities = {
-            tools: {
-              [APP_CONFIG.TOOLS.SEARCH]: true,
-              [APP_CONFIG.TOOLS.PATTERN]: true,
-              [APP_CONFIG.TOOLS.BUG_ANALYSIS]: true,
-              [APP_CONFIG.TOOLS.RULES]: health.features?.enhanced || false,
-              'detect-product': health.features?.productDetection || false,
-              [APP_CONFIG.TOOLS.CONFIG]: health.features?.enhanced || false
-            },
-            logging: {},
-            prompts: {},
-            resources: {}
-          };
+            // Get server capabilities first
+    try {
+      console.error('🔍 Checking server health and capabilities...');
+      const health = await makeRequest('/health', 'GET');
+      console.error('✅ Server health check completed');
+      
+      // Always enable tools in debug mode for testing
+      const capabilities = {
+        tools: {
+          [APP_CONFIG.TOOLS.SEARCH]: true,
+          [APP_CONFIG.TOOLS.PATTERN]: true,
+          [APP_CONFIG.TOOLS.BUG_ANALYSIS]: true,
+          [APP_CONFIG.TOOLS.RULES]: APP_CONFIG.DEBUG_MODE || health.features?.enhanced || false,
+          'detect-product': APP_CONFIG.DEBUG_MODE || health.features?.productDetection || false,
+          [APP_CONFIG.TOOLS.CONFIG]: APP_CONFIG.DEBUG_MODE || health.features?.enhanced || false
+        },
+        logging: {},
+        prompts: {},
+        resources: {}
+      };
 
           sendResponse({
             jsonrpc: '2.0',
@@ -462,7 +494,7 @@ rl.on('line', async (line) => {
 
           switch (toolName) {
             case APP_CONFIG.TOOLS.RULES:
-              result = await makeRequest('/api/apply-rules', 'POST', toolArgs);
+              result = await makeRequest('/api/rules', 'POST', toolArgs);
               contentType = 'rules';
               break;
 
@@ -482,7 +514,7 @@ rl.on('line', async (line) => {
               break;
 
             case APP_CONFIG.TOOLS.BUG_ANALYSIS:
-              result = await makeRequest('/api/analyze-bug', 'POST', toolArgs);
+              result = await makeRequest('/api/bugs', 'POST', toolArgs);
               contentType = 'bug';
               break;
 
