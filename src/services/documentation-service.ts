@@ -22,8 +22,8 @@ interface DocumentationEndpoint {
 }
 
 export class DocumentationService {
-  private logger: Logger;
-  private cache: Map<string, CacheEntry<DocumentationContent>> = new Map();
+  private readonly logger: Logger;
+  private readonly cache: Map<string, CacheEntry<DocumentationContent>> = new Map();
   private isInitialized = false;
   private readonly cacheTTL = 24 * 60 * 60 * 1000; // 24 hours
 

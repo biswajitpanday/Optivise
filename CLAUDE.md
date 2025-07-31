@@ -4,9 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**OptiDevAssistant** is an intelligent MCP (Model Context Protocol) tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It analyzes developer prompts for Optimizely relevance and provides curated, contextual information to enhance AI-assisted development. The tool automatically detects Optimizely product contexts and delivers precise, up-to-date guidance without overwhelming the AI with irrelevant data.
+**Optivise** is an intelligent MCP (Model Context Protocol) tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It analyzes developer prompts for Optimizely relevance and provides curated, contextual information to enhance AI-assisted development. The tool automatically detects Optimizely product contexts and delivers precise, up-to-date guidance without overwhelming the AI with irrelevant data.
 
-**Current Status**: v3.0.0 Architectural Rewrite (from legacy v2.x multi-tool approach)
+**Current Status**: v4.0.0 Architectural Rewrite (from legacy v2.x multi-tool approach)
 
 ## Development Commands
 
@@ -172,3 +172,10 @@ interface ProductDetectionResult {
 - Suggest logical progression for feature development
 - Highlight any blockers or dependencies that need attention
 - Format as a clear, actionable list with priorities
+
+### Documentation Update Rule
+- **Always update README.md and docs/ directory** after making significant changes
+- Keep documentation in sync with code changes and new features
+- Update version information, installation instructions, and usage examples
+- Ensure all new commands and features are properly documented
+- Update troubleshooting sections with new solutions found

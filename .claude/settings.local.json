@@ -17,7 +17,11 @@
       "Bash(npm run deploy:*)",
       "Bash(OPTIX_MODE=server timeout 3s npm start)",
       "Bash(npm run lint)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(npm run lint:*)",
+      "Bash(curl:*)",
+      "Bash(npm run test:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

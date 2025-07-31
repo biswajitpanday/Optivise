@@ -9,7 +9,7 @@ type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 class SimpleLogger implements Logger {
   private level: LogLevel;
-  private levelValues: Record<LogLevel, number> = {
+  private readonly levelValues: Record<LogLevel, number> = {
     debug: 0,
     info: 1,
     warn: 2,

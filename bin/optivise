@@ -10,7 +10,7 @@ const PACKAGE_ROOT = path.join(__dirname, '..');
 
 function printUsage() {
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');
-  let version = '3.0.0-alpha.1';
+  let version = '4.0.0';
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     version = packageData.version;
@@ -19,10 +19,10 @@ function printUsage() {
   }
 
   console.log(`
-Optix v${version} - Intelligent MCP Tool for Optimizely Context Analysis
+Optivise v${version} - Intelligent MCP Tool for Optimizely Context Analysis
 
 USAGE:
-  optix [COMMAND] [OPTIONS]
+  optivise [COMMAND] [OPTIONS]
 
 COMMANDS:
   mcp           Start MCP server for IDE integration
@@ -37,10 +37,10 @@ OPTIONS:
   --help        Show this help message
 
 EXAMPLES:
-  optix mcp                 # Start MCP server for IDE integration
-  optix detect              # Detect Optimizely products in current project
-  optix setup               # Generate IDE configuration
-  optix --debug mcp         # Start MCP server with debug logs
+  optivise mcp              # Start MCP server for IDE integration
+  optivise detect           # Detect Optimizely products in current project
+  optivise setup            # Generate IDE configuration
+  optivise --debug mcp      # Start MCP server with debug logs
 
 🚀 NEW in v3.0.0: Simplified Architecture
    • Single context analyzer tool
@@ -56,13 +56,13 @@ function printVersion() {
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    console.log(`Optix v${packageData.version}`);
+    console.log(`Optivise v${packageData.version}`);
     console.log(`🎯 Intelligent MCP tool for Optimizely context analysis`);
     console.log(`📚 Products: Commerce, CMS, Experimentation, DXP, and more`);
     console.log(`🔧 Features: Context analysis, product detection, relevance scoring`);
     console.log(`🎯 Focus: AI-assisted development with curated Optimizely context`);
   } catch (error) {
-    console.log('Optix v3.0.0-alpha.1');
+    console.log('Optivise v4.0.0');
   }
 }
 
@@ -148,8 +148,8 @@ function detectOptimizelyProduct(options) {
     }
     
     console.log('\n🚀 Next Steps:');
-    console.log('   • Run "optix setup" to configure your IDE');
-    console.log('   • Use "optix mcp" to start the MCP server');
+    console.log('   • Run "optivise setup" to configure your IDE');
+    console.log('   • Use "optivise mcp" to start the MCP server');
     console.log('   • Try context analysis with intelligent product detection');
     
   } catch (error) {
@@ -159,7 +159,7 @@ function detectOptimizelyProduct(options) {
 
 function setupIDEConfiguration() {
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');
-  let version = '3.0.0-alpha.1';
+  let version = '4.0.0';
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     version = packageData.version;
@@ -168,15 +168,15 @@ function setupIDEConfiguration() {
   }
 
   console.log(`
-🛠️  Optix v${version} IDE Setup
+🛠️  Optivise v${version} IDE Setup
 
-To configure Optix with your IDE, add the following to your MCP configuration:
+To configure Optivise with your IDE, add the following to your MCP configuration:
 
 For Cursor IDE (.cursor-mcp.json or cursor-mcp.json):
 {
   "mcpServers": {
-    "optix": {
-      "command": "optix",
+    "optivise": {
+      "command": "optivise",
       "args": ["mcp"],
       "env": {
         "OPTIDEV_DEBUG": "false"
@@ -188,8 +188,8 @@ For Cursor IDE (.cursor-mcp.json or cursor-mcp.json):
 For VS Code (settings.json):
 {
   "mcp.servers": {
-    "optix": {
-      "command": "optix",
+    "optivise": {
+      "command": "optivise",
       "args": ["mcp"]
     }
   }
@@ -205,13 +205,13 @@ Available Tool:
 ✨ Only responds to Optimizely-related queries (>0.7 relevance)
 ✨ Modern TypeScript architecture with fast response times
 
-After configuration, restart your IDE to enable Optix v${version}.
+After configuration, restart your IDE to enable Optivise v${version}.
   `);
 }
 
 async function startMCPServer(options = {}) {
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');
-  let version = '3.0.0-alpha.1';
+  let version = '4.0.0';
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     version = packageData.version;
@@ -219,7 +219,7 @@ async function startMCPServer(options = {}) {
     console.error('Warning: Could not read package.json version, using default');
   }
 
-  console.error(`🚀 Starting Optix MCP Server v${version}...`);
+  console.error(`🚀 Starting Optivise MCP Server v${version}...`);
   
   // Check for the compiled server
   const serverPath = path.join(PACKAGE_ROOT, 'dist', 'index.js');
@@ -257,7 +257,7 @@ async function startMCPServer(options = {}) {
 }
 
 function startDevServer(options = {}) {
-  console.error('🚀 Starting Optix in development mode...');
+  console.error('🚀 Starting Optivise in development mode...');
   
   const devServerPath = path.join(PACKAGE_ROOT, 'src', 'index.ts');
   
@@ -331,7 +331,7 @@ const command = args[0];
 switch (command) {
   case 'mcp':
   case 'start':
-    await startMCPServer(options);
+    startMCPServer(options);
     break;
     
   case 'dev':

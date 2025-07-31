@@ -6,21 +6,23 @@
  */
 
 import { OptiDevAssistantMCPServer } from './core/mcp-server.js';
-import { OptixHTTPServer } from './server/http-server.js';
+import { OptiviseHTTPServer } from './server/http-server.js';
 import { createLogger } from './utils/logger.js';
+import { getVersionInfo } from './config/version.js';
 
 async function main() {
   const logger = createLogger(process.env.LOG_LEVEL as any || 'info');
   
   try {
-    logger.info('Starting OptiDevAssistant v3.0.0');
+    const versionInfo = getVersionInfo();
+    logger.info(`Starting ${versionInfo.fullName}`);
 
     // Check if we should start HTTP server (for Render deployment)
-    const isHTTPMode = process.env.OPTIX_MODE === 'server' || process.env.NODE_ENV === 'production';
+    const isHTTPMode = process.env.OPTIVISE_MODE === 'server' || process.env.NODE_ENV === 'production';
     
     if (isHTTPMode) {
       // Start HTTP server for Render deployment
-      const httpServer = new OptixHTTPServer(parseInt(process.env.PORT || '3000'));
+      const httpServer = new OptiviseHTTPServer(parseInt(process.env.PORT || '3000'));
       await httpServer.start();
       
       // Graceful shutdown for HTTP server

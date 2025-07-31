@@ -26,9 +26,9 @@ import { ContextAnalysisEngine } from '../analyzers/context-analysis-engine.js';
 import { createLogger } from '../utils/logger.js';
 
 export class OptiDevAssistantMCPServer {
-  private server: Server;
-  private logger: Logger;
-  private contextAnalyzer: ContextAnalysisEngine;
+  private readonly server: Server;
+  private readonly logger: Logger;
+  private readonly contextAnalyzer: ContextAnalysisEngine;
   private isInitialized = false;
 
   constructor(options: MCPServerOptions = {}) {
@@ -40,7 +40,7 @@ export class OptiDevAssistantMCPServer {
     // Create MCP server configuration
     const config: MCPServerConfig = {
       name: 'optidev-assistant',
-      version: '3.0.0-alpha.1',
+      version: '4.0.0',
       description: 'Intelligent MCP tool for Optimizely context analysis',
       capabilities: {
         tools: true,
@@ -224,7 +224,7 @@ export class OptiDevAssistantMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '3.0.0-alpha.1',
+      version: '4.0.0',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

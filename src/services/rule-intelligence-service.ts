@@ -15,7 +15,7 @@ import type {
 } from '../types/index.js';
 
 export class RuleIntelligenceService {
-  private logger: Logger;
+  private readonly logger: Logger;
   private isInitialized = false;
 
   // Common IDE rule file patterns

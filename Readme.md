@@ -1,8 +1,8 @@
-# Optix
+# Optivise
 
 **Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development.**
 
-Optix is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
+Optivise is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
 
 ## 🚀 Features
 
@@ -27,13 +27,13 @@ Optix is a focused, single-purpose MCP tool that serves as a context-aware inter
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g optix
+npm install -g optivise
 ```
 
 ### Local Installation
 
 ```bash
-npm install --save-dev optix
+npm install --save-dev optivise
 ```
 
 ### From Source (Development)
@@ -50,7 +50,7 @@ npm run build
 ### 1. **Start MCP Server**
 ```bash
 # Using global installation
-optix mcp
+optivise mcp
 
 # Using npm scripts (from source)
 npm start
@@ -60,19 +60,37 @@ npm run dev:watch  # Development mode with tsx
 
 ### 2. **Test Product Detection**
 ```bash
-optix detect
+optivise detect
 ```
 
 ### 3. **Generate IDE Configuration**
 ```bash
-optix setup
+optivise setup
 ```
 
 ### 4. **View Available Commands**
 ```bash
-optix --help
-optix version
+optivise --help
+optivise version
 ```
+
+## 🧪 Browser Testing
+
+For development and testing purposes, you can run Optivise as an HTTP server:
+
+```bash
+# Start HTTP server
+npm run dev:server
+
+# Open in browser
+open http://localhost:3000
+```
+
+The browser interface provides:
+- ✅ **Test Interface** - Interactive prompt testing with real-time results
+- ✅ **Health Check** - Server status and version information  
+- ✅ **Context Analysis** - Live testing of relevance scoring and product detection
+- ✅ **Formatted Results** - Visual display of actionable steps and best practices
 
 ## 🔧 IDE Integration
 
@@ -83,8 +101,8 @@ Create `.cursor-mcp.json` or `cursor-mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
-    "optix": {
-      "command": "optix",
+    "optivise": {
+      "command": "optivise",
       "args": ["mcp"],
       "env": {
         "OPTIDEV_DEBUG": "false"
@@ -101,8 +119,8 @@ Add to your `settings.json`:
 ```json
 {
   "mcp.servers": {
-    "optix": {
-      "command": "optix",
+    "optivise": {
+      "command": "optivise",
       "args": ["mcp"]
     }
   }
@@ -116,8 +134,8 @@ If installed globally, you can use it from any project:
 ```json
 {
   "mcpServers": {
-    "optix": {
-      "command": "optix",
+    "optivise": {
+      "command": "optivise",
       "args": ["mcp"]
     }
   }
@@ -156,10 +174,10 @@ The `optidev_context_analyzer` tool provides intelligent context for Optimizely 
 
 ### **Product Detection**
 
-Optix automatically detects your Optimizely products:
+Optivise automatically detects your Optimizely products:
 
 ```bash
-$ optix detect
+$ optivise detect
 🔍 Detecting Optimizely Products...
 📁 Analyzing project: /your/project/path
 
@@ -199,6 +217,7 @@ rules/                      # Development rules and patterns
 ```bash
 # Development
 npm run dev              # Build and start MCP server
+npm run dev:server       # Build and start HTTP server on port 3000 (browser testing)
 npm run dev:watch        # Development mode with hot reload
 npm run build:watch      # Watch mode for TypeScript compilation
 
@@ -252,18 +271,23 @@ OPTIMIZELY_PRODUCT=configured-commerce
 ### **NPM Package Publishing**
 
 ```bash
-# Build and publish
+# Build and publish stable version
 npm run build
 npm run deploy
+
+# Publish beta version (for testing)
+npm run deploy:beta
 
 # Or with version bump
 npm version patch
 npm run deploy
 ```
 
+**Note for v4.0.0+**: The deploy command now includes `--access public` for proper NPM publishing.
+
 ### **Render.com Deployment**
 
-Optix supports cloud deployment on Render.com:
+Optivise supports cloud deployment on Render.com:
 
 #### **1. Automatic Deployment**
 ```bash
@@ -321,25 +345,25 @@ curl -X POST https://your-app.onrender.com/analyze \
 npm link
 
 # Test globally
-optix version
-optix mcp
+optivise version
+optivise mcp
 
 # Remove symlink
-npm unlink -g optix
+npm unlink -g optivise
 ```
 
 ## 🔍 Troubleshooting
 
 ### **Common Issues**
 
-#### **"Command not found: optix"**
+#### **"Command not found: optivise"**
 ```bash
 # Verify global installation
-npm list -g optix
+npm list -g optivise
 
 # Reinstall if needed
-npm uninstall -g optix
-npm install -g optix
+npm uninstall -g optivise
+npm install -g optivise
 ```
 
 #### **"Compiled server not found"**
@@ -352,22 +376,45 @@ npm install
 npm run build
 ```
 
+#### **ESLint Configuration Issues**
+```bash
+# If you see ESLint v9 configuration errors
+# The project uses the new flat config format (eslint.config.js)
+# Make sure you have the latest ESLint version
+npm install --save-dev eslint@^9.15.0
+
+# Run lint to check
+npm run lint
+```
+
+#### **HTTP Server Testing**
+```bash
+# Start HTTP server for browser testing
+npm run dev:server
+
+# Test health endpoint
+curl http://localhost:3000/health
+
+# Open browser interface
+open http://localhost:3000
+```
+
 #### **MCP Connection Issues**
 ```bash
 # Test server manually
-optix mcp
+optivise mcp
 
 # Enable debug mode
-optix --debug mcp
+optivise --debug mcp
 
 # Check IDE MCP configuration
-optix setup
+optivise setup
 ```
 
 #### **Product Detection Not Working**
 ```bash
 # Test detection manually
-optix detect
+optivise detect
 
 # Check project structure
 ls -la  # Look for Optimizely-specific files/folders
@@ -382,7 +429,7 @@ Enable verbose logging:
 
 ```bash
 # CLI debug
-optix --debug mcp
+optivise --debug mcp
 
 # Environment variable
 export OPTIDEV_DEBUG=true
@@ -430,4 +477,11 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Optix v3.0.0-alpha.1** - Intelligent MCP tool for Optimizely context analysis
+**Optivise v4.0.0** - Intelligent MCP tool for Optimizely context analysis
+
+### ✨ New in v4.0.0:
+- **Cross-platform support** - Windows, macOS, and Linux compatibility
+- **Centralized version management** - Single source of truth for version info
+- **Enhanced HTTP server** - Browser testing interface with real-time analysis
+- **Improved ESLint configuration** - Modern v9 flat config with sensible defaults
+- **Streamlined deployment** - Fixed NPM publishing with proper access controls

@@ -6,13 +6,14 @@
 import { createServer } from 'http';
 import { ContextAnalysisEngine } from '../analyzers/context-analysis-engine.js';
 import { createLogger } from '../utils/logger.js';
+import { getVersion } from '../config/version.js';
 import type { ContextAnalysisRequest, Logger } from '../types/index.js';
 
-export class OptixHTTPServer {
+export class OptiviseHTTPServer {
   private server: any;
-  private contextAnalyzer: ContextAnalysisEngine;
-  private logger: Logger;
-  private port: number;
+  private readonly contextAnalyzer: ContextAnalysisEngine;
+  private readonly logger: Logger;
+  private readonly port: number;
 
   constructor(port = 3000) {
     this.port = port;
@@ -35,12 +36,18 @@ export class OptixHTTPServer {
         return;
       }
 
+      if (req.method === 'GET' && req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(this.getTestPage());
+        return;
+      }
+
       if (req.method === 'GET' && req.url === '/health') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           status: 'healthy',
-          service: 'optix',
-          version: '3.0.0-alpha.1',
+          service: 'optivise',
+          version: getVersion(),
           timestamp: new Date().toISOString()
         }));
         return;
@@ -89,19 +96,159 @@ export class OptixHTTPServer {
     await this.initialize();
     
     this.server.listen(this.port, () => {
-      this.logger.info(`Optix HTTP Server started on port ${this.port}`);
+      this.logger.info(`Optivise HTTP Server started on port ${this.port}`);
       this.logger.info('Available endpoints:');
+      this.logger.info('  GET  / - Test interface (browser)');
       this.logger.info('  GET  /health - Health check');
       this.logger.info('  POST /analyze - Context analysis');
+      this.logger.info(`Open http://localhost:${this.port} in your browser to test`);
     });
   }
 
   async stop(): Promise<void> {
     return new Promise((resolve) => {
       this.server.close(() => {
-        this.logger.info('Optix HTTP Server stopped');
+        this.logger.info('Optivise HTTP Server stopped');
         resolve();
       });
     });
+  }
+
+  private getTestPage(): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optivise Context Analyzer - Test Interface</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .container { background: #f5f5f5; padding: 20px; border-radius: 8px; }
+        textarea { width: 100%; height: 100px; margin: 10px 0; }
+        button { padding: 10px 15px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a87; }
+        .result { margin-top: 20px; padding: 15px; background: white; border-radius: 4px; border-left: 4px solid #007cba; }
+        .error { border-left-color: #dc3545; background: #f8d7da; }
+        .loading { color: #666; }
+        .relevance { font-weight: bold; color: #007cba; }
+        .products { margin: 10px 0; }
+        .product { display: inline-block; background: #e9ecef; padding: 5px 10px; margin: 2px; border-radius: 4px; font-size: 12px; }
+        .steps { margin: 10px 0; }
+        .step { margin: 5px 0; padding: 5px; background: #f8f9fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Optivise Context Analyzer - Test Interface</h1>
+        <p>Test the Optivise context analysis engine with your Optimizely-related prompts.</p>
+        
+        <div>
+            <label for="prompt">Enter your prompt:</label>
+            <textarea id="prompt" placeholder="How do I create a custom handler in Optimizely Commerce?"></textarea>
+            <button onclick="analyzePrompt()">Analyze Context</button>
+            <button onclick="checkHealth()">Health Check</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function analyzePrompt() {
+            const prompt = document.getElementById('prompt').value.trim();
+            const resultDiv = document.getElementById('result');
+            
+            if (!prompt) {
+                resultDiv.innerHTML = '<div class="result error">Please enter a prompt to analyze.</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<div class="result loading">Analyzing prompt...</div>';
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Analysis failed');
+                }
+                
+                let html = \`
+                    <div class="result">
+                        <h3>Analysis Results</h3>
+                        <div class="relevance">Relevance Score: \${data.relevance || 'N/A'}</div>
+                        
+                        \${data.detectedProducts?.length ? \`
+                            <div class="products">
+                                <strong>Detected Products:</strong><br>
+                                \${data.detectedProducts.map(p => \`<span class="product">\${p}</span>\`).join('')}
+                            </div>
+                        \` : ''}
+                        
+                        \${data.curatedContext?.summary ? \`
+                            <h4>Summary:</h4>
+                            <p>\${data.curatedContext.summary}</p>
+                        \` : ''}
+                        
+                        \${data.curatedContext?.actionableSteps?.length ? \`
+                            <h4>Actionable Steps:</h4>
+                            <div class="steps">
+                                \${data.curatedContext.actionableSteps.map(step => \`<div class="step">\${step}</div>\`).join('')}
+                            </div>
+                        \` : ''}
+                        
+                        \${data.curatedContext?.bestPractices?.length ? \`
+                            <h4>Best Practices:</h4>
+                            <div class="steps">
+                                \${data.curatedContext.bestPractices.map(practice => \`<div class="step">\${practice}</div>\`).join('')}
+                            </div>
+                        \` : ''}
+                        
+                        <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                            Processing Time: \${data.processingTime || 'N/A'}ms
+                        </div>
+                    </div>
+                \`;
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="result error">Error: \${error.message}</div>\`;
+            }
+        }
+        
+        async function checkHealth() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result loading">Checking server health...</div>';
+            
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = \`
+                    <div class="result">
+                        <h3>Server Health Check</h3>
+                        <p><strong>Status:</strong> \${data.status}</p>
+                        <p><strong>Service:</strong> \${data.service}</p>
+                        <p><strong>Version:</strong> \${data.version}</p>
+                        <p><strong>Timestamp:</strong> \${data.timestamp}</p>
+                    </div>
+                \`;
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="result error">Health check failed: \${error.message}</div>\`;
+            }
+        }
+        
+        // Add example prompt
+        document.getElementById('prompt').value = "How do I create a custom handler in Optimizely Commerce?";
+    </script>
+</body>
+</html>
+    `;
   }
 }

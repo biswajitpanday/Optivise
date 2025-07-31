@@ -1,16 +1,17 @@
 {
-  "name": "optix",
-  "version": "3.0.0-alpha.1",
-  "description": "Optix - Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development",
+  "name": "optivise",
+  "version": "4.0.0",
+  "description": "Optivise - Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "optix": "bin/optix"
+    "optivise": "bin/optivise"
   },
   "scripts": {
     "dev": "npm run build && node dist/index.js",
     "dev:watch": "tsx src/index.ts",
+    "dev:server": "npm run build && npx cross-env OPTIVISE_MODE=server PORT=3000 node dist/index.js",
     "build": "npm run clean && tsc && npm run copy-assets",
     "build:watch": "tsc --watch",
     "clean": "rimraf dist",
@@ -26,8 +27,9 @@
     "format": "prettier --write src/**/*.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run typecheck && npm run lint",
-    "deploy": "npm publish",
-    "deploy:render": "echo 'Render deployment not implemented in v3.0.0-alpha.1'"
+    "deploy": "npm publish --access public",
+    "deploy:beta": "npm publish --tag beta --access public",
+    "deploy:render": "echo 'Render deployment will be updated for Optivise v4.0.0'"
   },
   "keywords": [
     "optimizely",
@@ -74,13 +76,15 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
     "@vitest/ui": "^2.1.4",
     "copyfiles": "^2.4.1",
+    "cross-env": "^10.0.0",
     "eslint": "^9.15.0",
     "prettier": "^3.3.3",
     "rimraf": "^5.0.10",
     "vitest": "^2.1.4"
   },
-  "bundledDependencies": [],
-  "bundleDependencies": []
+  "bundledDependencies": []
 }

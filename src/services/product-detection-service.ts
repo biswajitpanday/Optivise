@@ -14,7 +14,7 @@ import type {
 } from '../types/index.js';
 
 export class ProductDetectionService {
-  private logger: Logger;
+  private readonly logger: Logger;
   private isInitialized = false;
 
   // Detection patterns for different products

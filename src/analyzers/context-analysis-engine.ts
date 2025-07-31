@@ -20,11 +20,11 @@ import { RuleIntelligenceService } from '../services/rule-intelligence-service.j
 import { DocumentationService } from '../services/documentation-service.js';
 
 export class ContextAnalysisEngine {
-  private promptAnalyzer: PromptAnalyzer;
-  private productDetectionService: ProductDetectionService;
-  private ruleIntelligenceService: RuleIntelligenceService;
-  private documentationService: DocumentationService;
-  private logger: Logger;
+  private readonly promptAnalyzer: PromptAnalyzer;
+  private readonly productDetectionService: ProductDetectionService;
+  private readonly ruleIntelligenceService: RuleIntelligenceService;
+  private readonly documentationService: DocumentationService;
+  private readonly logger: Logger;
   private isInitialized = false;
 
   constructor(logger: Logger) {

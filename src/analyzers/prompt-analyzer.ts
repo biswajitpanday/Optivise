@@ -11,7 +11,7 @@ import type {
 } from '../types/index.js';
 
 export class PromptAnalyzer {
-  private logger: Logger;
+  private readonly logger: Logger;
   private isInitialized = false;
 
   // Optimizely-specific keywords and patterns
