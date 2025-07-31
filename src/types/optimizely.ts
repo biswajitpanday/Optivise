@@ -47,13 +47,6 @@ export interface ProjectContext {
   detectedProducts: OptimizelyProduct[];
   confidence: number;
   lastDetection: Date;
-  ideRules?: IDERule[];
+  ideRules?: any[];
 }
 
-export interface IDERule {
-  source: '.cursorrules' | '.cursor-rules' | 'vscode-settings' | 'workspace';
-  content: string;
-  optimizelyRelevance: number;
-  suggestions?: string[];
-  conflicts?: string[];
-}

@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "optidev-assistant": {
-      "command": "optidev-assistant",
+    "optix": {
+      "command": "optix",
       "args": ["mcp"],
       "env": {
         "OPTIDEV_DEBUG": "false"

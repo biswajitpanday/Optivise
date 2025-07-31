@@ -1,0 +1,17 @@
+// Optimizely Development Rules
+// This file contains development rules for Optimizely projects
+
+## Commerce Development
+- Follow handler chain patterns
+- Use dependency injection
+- Implement proper error handling
+
+## TypeScript Configuration
+- Use strict type checking
+- Enable source maps
+- Configure proper module resolution
+
+## Code Quality
+- Follow ESLint rules
+- Use Prettier for formatting
+- Implement comprehensive testing

@@ -9,8 +9,7 @@ export type {
   ProductInfo,
   DetectionEvidence,
   ProductDetectionResult,
-  ProjectContext,
-  IDERule
+  ProjectContext
 } from './optimizely.js';
 
 // Context analysis and curation types
@@ -74,6 +73,7 @@ export * from './optimizely.js';
 export * from './context.js';
 export * from './knowledge.js';
 export * from './mcp.js';
+export * from './rules.js';
 
 // Constants
 export const DEFAULT_RELEVANCE_THRESHOLD = 0.7;

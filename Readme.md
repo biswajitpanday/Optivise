@@ -1,8 +1,8 @@
-# OptiDevAssistant
+# Optix
 
 **Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development.**
 
-OptiDevAssistant is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
+Optix is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
 
 ## 🚀 Features
 
@@ -27,13 +27,13 @@ OptiDevAssistant is a focused, single-purpose MCP tool that serves as a context-
 ### Global Installation (Recommended)
 
 ```bash
-npm install -g optidev-assistant
+npm install -g optix
 ```
 
 ### Local Installation
 
 ```bash
-npm install --save-dev optidev-assistant
+npm install --save-dev optix
 ```
 
 ### From Source (Development)
@@ -50,7 +50,7 @@ npm run build
 ### 1. **Start MCP Server**
 ```bash
 # Using global installation
-optidev-assistant mcp
+optix mcp
 
 # Using npm scripts (from source)
 npm start
@@ -60,18 +60,18 @@ npm run dev:watch  # Development mode with tsx
 
 ### 2. **Test Product Detection**
 ```bash
-optidev-assistant detect
+optix detect
 ```
 
 ### 3. **Generate IDE Configuration**
 ```bash
-optidev-assistant setup
+optix setup
 ```
 
 ### 4. **View Available Commands**
 ```bash
-optidev-assistant --help
-optidev-assistant version
+optix --help
+optix version
 ```
 
 ## 🔧 IDE Integration
@@ -83,8 +83,8 @@ Create `.cursor-mcp.json` or `cursor-mcp.json` in your project root:
 ```json
 {
   "mcpServers": {
-    "optidev-assistant": {
-      "command": "optidev-assistant",
+    "optix": {
+      "command": "optix",
       "args": ["mcp"],
       "env": {
         "OPTIDEV_DEBUG": "false"
@@ -101,8 +101,8 @@ Add to your `settings.json`:
 ```json
 {
   "mcp.servers": {
-    "optidev-assistant": {
-      "command": "optidev-assistant",
+    "optix": {
+      "command": "optix",
       "args": ["mcp"]
     }
   }
@@ -116,8 +116,8 @@ If installed globally, you can use it from any project:
 ```json
 {
   "mcpServers": {
-    "optidev-assistant": {
-      "command": "optidev-assistant",
+    "optix": {
+      "command": "optix",
       "args": ["mcp"]
     }
   }
@@ -156,10 +156,10 @@ The `optidev_context_analyzer` tool provides intelligent context for Optimizely 
 
 ### **Product Detection**
 
-OptiDevAssistant automatically detects your Optimizely products:
+Optix automatically detects your Optimizely products:
 
 ```bash
-$ optidev-assistant detect
+$ optix detect
 🔍 Detecting Optimizely Products...
 📁 Analyzing project: /your/project/path
 
@@ -261,6 +261,59 @@ npm version patch
 npm run deploy
 ```
 
+### **Render.com Deployment**
+
+Optix supports cloud deployment on Render.com:
+
+#### **1. Automatic Deployment**
+```bash
+# Fork the repository
+# Connect to Render.com
+# Render will automatically use render.yaml configuration
+```
+
+#### **2. Manual Setup**
+1. Create a new Web Service on Render.com
+2. Connect your GitHub repository
+3. Use these settings:
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Environment Variables**:
+     ```
+     NODE_ENV=production
+     OPTIX_MODE=server
+     OPTIDEV_DEBUG=false
+     ```
+
+#### **3. HTTP API Usage**
+
+Once deployed, use the HTTP API:
+
+```bash
+# Health check
+curl https://your-app.onrender.com/health
+
+# Context analysis
+curl -X POST https://your-app.onrender.com/analyze \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "How do I create a Commerce extension?"}'
+```
+
+#### **4. Response Format**
+```typescript
+{
+  "relevance": 0.95,
+  "detectedProducts": ["configured-commerce"],
+  "curatedContext": {
+    "summary": "Code assistance for Configured Commerce development",
+    "actionableSteps": [...],
+    "bestPractices": [...]
+  },
+  "processingTime": 245,
+  "timestamp": "2025-07-31T10:00:00.000Z"
+}
+```
+
 ### **Local Package Testing**
 
 ```bash
@@ -268,25 +321,25 @@ npm run deploy
 npm link
 
 # Test globally
-optidev-assistant version
-optidev-assistant mcp
+optix version
+optix mcp
 
 # Remove symlink
-npm unlink -g optidev-assistant
+npm unlink -g optix
 ```
 
 ## 🔍 Troubleshooting
 
 ### **Common Issues**
 
-#### **"Command not found: optidev-assistant"**
+#### **"Command not found: optix"**
 ```bash
 # Verify global installation
-npm list -g optidev-assistant
+npm list -g optix
 
 # Reinstall if needed
-npm uninstall -g optidev-assistant
-npm install -g optidev-assistant
+npm uninstall -g optix
+npm install -g optix
 ```
 
 #### **"Compiled server not found"**
@@ -302,19 +355,19 @@ npm run build
 #### **MCP Connection Issues**
 ```bash
 # Test server manually
-optidev-assistant mcp
+optix mcp
 
 # Enable debug mode
-optidev-assistant --debug mcp
+optix --debug mcp
 
 # Check IDE MCP configuration
-optidev-assistant setup
+optix setup
 ```
 
 #### **Product Detection Not Working**
 ```bash
 # Test detection manually
-optidev-assistant detect
+optix detect
 
 # Check project structure
 ls -la  # Look for Optimizely-specific files/folders
@@ -329,7 +382,7 @@ Enable verbose logging:
 
 ```bash
 # CLI debug
-optidev-assistant --debug mcp
+optix --debug mcp
 
 # Environment variable
 export OPTIDEV_DEBUG=true
@@ -377,4 +430,4 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**OptiDevAssistant v3.0.0-alpha.1** - Intelligent MCP tool for Optimizely context analysis
+**Optix v3.0.0-alpha.1** - Intelligent MCP tool for Optimizely context analysis
