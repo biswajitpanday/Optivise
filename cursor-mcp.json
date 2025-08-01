@@ -1,11 +1,10 @@
 {
   "mcpServers": {
     "optivise": {
-      "command": "node",
-      "args": ["/mnt/c/D/RND/MCPs/Optivise/dist/index.js"],
-      "cwd": "/mnt/c/D/RND/MCPs/Optivise",
+      "command": "optivise",
+      "args": ["mcp"],
       "env": {
-        "OPTIDEV_DEBUG": "true"
+        "OPTIDEV_DEBUG": "false"
       }
     }
   }

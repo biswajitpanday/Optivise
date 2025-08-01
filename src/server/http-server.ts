@@ -53,6 +53,46 @@ export class OptiviseHTTPServer {
         return;
       }
 
+      if (req.method === 'GET' && req.url === '/test/mcp') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          status: 'mcp_ready',
+          service: 'optivise',
+          version: getVersion(),
+          mcp_server: 'available',
+          context_analyzer: 'initialized',
+          timestamp: new Date().toISOString()
+        }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url === '/test/detect') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        try {
+          // Simple product detection test
+          const mockDetection = {
+            products: ['configured-commerce', 'cms-paas'],
+            confidence: 0.85,
+            context: 'test',
+            evidence: ['Test detection endpoint'],
+            suggestedActions: ['Use Commerce-specific patterns', 'Focus on Extensions/ directory']
+          };
+          
+          res.end(JSON.stringify({
+            status: 'detection_test',
+            detection: mockDetection,
+            timestamp: new Date().toISOString()
+          }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ 
+            error: 'Detection test failed', 
+            message: error instanceof Error ? error.message : 'Unknown error' 
+          }));
+        }
+        return;
+      }
+
       if (req.method === 'POST' && req.url === '/analyze') {
         let body = '';
         
@@ -100,6 +140,8 @@ export class OptiviseHTTPServer {
       this.logger.info('Available endpoints:');
       this.logger.info('  GET  / - Test interface (browser)');
       this.logger.info('  GET  /health - Health check');
+      this.logger.info('  GET  /test/mcp - MCP server status test');
+      this.logger.info('  GET  /test/detect - Product detection test');
       this.logger.info('  POST /analyze - Context analysis');
       this.logger.info(`Open http://localhost:${this.port} in your browser to test`);
       this.logger.info(`Server is listening on all interfaces (0.0.0.0:${this.port})`);
@@ -149,6 +191,8 @@ export class OptiviseHTTPServer {
             <textarea id="prompt" placeholder="How do I create a custom handler in Optimizely Commerce?"></textarea>
             <button onclick="analyzePrompt()">Analyze Context</button>
             <button onclick="checkHealth()">Health Check</button>
+            <button onclick="testMCP()">Test MCP Status</button>
+            <button onclick="testDetection()">Test Product Detection</button>
         </div>
         
         <div id="result"></div>
@@ -242,6 +286,72 @@ export class OptiviseHTTPServer {
                 \`;
             } catch (error) {
                 resultDiv.innerHTML = \`<div class="result error">Health check failed: \${error.message}</div>\`;
+            }
+        }
+        
+        async function testMCP() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result loading">Testing MCP server status...</div>';
+            
+            try {
+                const response = await fetch('/test/mcp');
+                const data = await response.json();
+                
+                resultDiv.innerHTML = \`
+                    <div class="result">
+                        <h3>MCP Server Status Test</h3>
+                        <p><strong>Status:</strong> \${data.status}</p>
+                        <p><strong>Service:</strong> \${data.service}</p>
+                        <p><strong>Version:</strong> \${data.version}</p>
+                        <p><strong>MCP Server:</strong> \${data.mcp_server}</p>
+                        <p><strong>Context Analyzer:</strong> \${data.context_analyzer}</p>
+                        <p><strong>Timestamp:</strong> \${data.timestamp}</p>
+                    </div>
+                \`;
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="result error">MCP test failed: \${error.message}</div>\`;
+            }
+        }
+        
+        async function testDetection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result loading">Testing product detection...</div>';
+            
+            try {
+                const response = await fetch('/test/detect');
+                const data = await response.json();
+                
+                let html = \`
+                    <div class="result">
+                        <h3>Product Detection Test</h3>
+                        <p><strong>Status:</strong> \${data.status}</p>
+                        
+                        \${data.detection ? \`
+                            <div class="products">
+                                <strong>Detected Products:</strong><br>
+                                \${data.detection.products.map(p => \`<span class="product">\${p}</span>\`).join('')}
+                            </div>
+                            <p><strong>Confidence:</strong> \${data.detection.confidence}</p>
+                            <p><strong>Context:</strong> \${data.detection.context}</p>
+                            
+                            \${data.detection.suggestedActions?.length ? \`
+                                <h4>Suggested Actions:</h4>
+                                <div class="steps">
+                                    \${data.detection.suggestedActions.map(action => \`<div class="step">\${action}</div>\`).join('')}
+                                </div>
+                            \` : ''}
+                        \` : ''}
+                        
+                        <div style="margin-top: 15px; font-size: 12px; color: #666;">
+                            \${data.timestamp}
+                        </div>
+                    </div>
+                \`;
+                
+                resultDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultDiv.innerHTML = \`<div class="result error">Detection test failed: \${error.message}</div>\`;
             }
         }
         

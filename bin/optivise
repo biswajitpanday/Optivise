@@ -27,7 +27,9 @@ USAGE:
 COMMANDS:
   mcp           Start MCP server for IDE integration
   start         Start MCP server (alias for mcp)
+  server        Start HTTP server for browser testing (port 3000)
   dev           Start in development mode with hot reload
+  test          Test MCP connectivity and configuration
   detect        Detect Optimizely products in current directory
   setup         Generate IDE configuration
   version       Show version information
@@ -38,6 +40,8 @@ OPTIONS:
 
 EXAMPLES:
   optivise mcp              # Start MCP server for IDE integration
+  optivise server           # Start HTTP server for browser testing
+  optivise test             # Test MCP connectivity and configuration
   optivise detect           # Detect Optimizely products in current project
   optivise setup            # Generate IDE configuration
   optivise --debug mcp      # Start MCP server with debug logs
@@ -311,6 +315,203 @@ function startServer(serverPath, options = {}) {
   });
 }
 
+async function startHTTPServer(options = {}) {
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '4.0.0';
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  console.error(`🌐 Starting Optivise HTTP Server v${version}...`);
+  console.error('📝 This server provides browser-based testing for the MCP context analyzer');
+  
+  // Check for the compiled server
+  const serverPath = path.join(PACKAGE_ROOT, 'dist', 'index.js');
+  
+  if (!fs.existsSync(serverPath)) {
+    console.error('❌ Compiled server not found. Building...');
+    
+    // Try to build the project
+    const buildChild = spawn('npm', ['run', 'build'], {
+      stdio: 'pipe',
+      cwd: PACKAGE_ROOT,
+      shell: process.platform === 'win32'
+    });
+
+    buildChild.on('close', (code) => {
+      if (code === 0) {
+        console.error('✅ Build successful. Starting HTTP server...');
+        startHTTPServerProcess(serverPath, options);
+      } else {
+        console.error('❌ Build failed. Please run "npm run build" manually.');
+        process.exit(1);
+      }
+    });
+
+    buildChild.on('error', (error) => {
+      console.error('❌ Build process failed:', error.message);
+      console.error('💡 Please run "npm run build" manually from the package directory.');
+      process.exit(1);
+    });
+
+    return;
+  }
+
+  startHTTPServerProcess(serverPath, options);
+}
+
+function startHTTPServerProcess(serverPath, options = {}) {
+  const env = { 
+    ...process.env,
+    OPTIVISE_MODE: 'server',
+    PORT: '3000'
+  };
+  
+  if (options.debug) {
+    env.OPTIDEV_DEBUG = 'true';
+  }
+
+  const child = spawn('node', [serverPath], {
+    stdio: 'inherit',
+    env
+  });
+
+  child.on('error', (error) => {
+    console.error('❌ Failed to start HTTP server:', error.message);
+    process.exit(1);
+  });
+
+  child.on('exit', (code) => {
+    process.exit(code || 0);
+  });
+}
+
+async function testMCPConnection(options = {}) {
+  console.log('🧪 Testing Optivise MCP Configuration...\n');
+  
+  const packagePath = path.join(PACKAGE_ROOT, 'package.json');
+  let version = '4.0.0';
+  try {
+    const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    version = packageData.version;
+  } catch (error) {
+    console.error('Warning: Could not read package.json version, using default');
+  }
+
+  // Test 1: Check if server can start
+  console.log('📋 Test 1: Server Startup Test');
+  const serverPath = path.join(PACKAGE_ROOT, 'dist', 'index.js');
+  
+  if (!fs.existsSync(serverPath)) {
+    console.log('❌ Compiled server not found - need to build first');
+    console.log('💡 Run: npm run build');
+    return;
+  } else {
+    console.log('✅ Compiled server found');
+  }
+
+  // Test 2: Quick server connectivity test
+  console.log('\n📋 Test 2: MCP Server Quick Start Test');
+  try {
+    const testChild = spawn('node', [serverPath], {
+      stdio: 'pipe',
+      timeout: 5000 // 5 second timeout
+    });
+
+    let output = '';
+    testChild.stdout?.on('data', (data) => {
+      output += data.toString();
+    });
+
+    testChild.stderr?.on('data', (data) => {
+      output += data.toString();
+    });
+
+    setTimeout(() => {
+      testChild.kill('SIGTERM');
+      
+      if (output.includes('Optivise MCP server started successfully')) {
+        console.log('✅ MCP server starts successfully');
+      } else if (output.includes('Starting Optivise')) {
+        console.log('✅ MCP server initialization working');
+      } else {
+        console.log('⚠️  MCP server may have issues - check logs');
+        if (options.debug) {
+          console.log('Debug output:', output);
+        }
+      }
+    }, 3000);
+
+  } catch (error) {
+    console.log('❌ MCP server test failed:', error.message);
+  }
+
+  // Test 3: Configuration validation
+  console.log('\n📋 Test 3: Configuration Files');
+  
+  const cursorConfigs = [
+    '.cursor-mcp.json',
+    'cursor-mcp.json',
+    '.cursor/mcp.json'
+  ];
+  
+  let foundConfig = false;
+  for (const config of cursorConfigs) {
+    if (fs.existsSync(config)) {
+      console.log(`✅ Found MCP config: ${config}`);
+      try {
+        const configData = JSON.parse(fs.readFileSync(config, 'utf8'));
+        if (configData.mcpServers?.optivise) {
+          console.log('✅ Optivise configuration found');
+          foundConfig = true;
+        } else {
+          console.log('⚠️  Optivise not configured in MCP settings');
+        }
+      } catch (e) {
+        console.log('❌ Invalid JSON in config file');
+      }
+      break;
+    }
+  }
+  
+  if (!foundConfig) {
+    console.log('⚠️  No MCP configuration found');
+    console.log('💡 Run: optivise setup');
+  }
+
+  // Test 4: Global installation check
+  console.log('\n📋 Test 4: Global Installation Check');
+  try {
+    const which = process.platform === 'win32' ? 'where' : 'which';
+    const checkChild = spawn(which, ['optivise'], { stdio: 'pipe' });
+    
+    checkChild.on('close', (code) => {
+      if (code === 0) {
+        console.log('✅ Optivise globally accessible');
+      } else {
+        console.log('⚠️  Optivise may not be globally installed');
+        console.log('💡 Run: npm install -g optivise');
+      }
+    });
+
+    checkChild.on('error', () => {
+      console.log('⚠️  Could not verify global installation');
+    });
+
+  } catch (error) {
+    console.log('⚠️  Could not check global installation');
+  }
+
+  console.log(`\n🎯 Optivise v${version} Test Summary:`);
+  console.log('   • If all tests pass, your MCP server should work with IDEs');
+  console.log('   • For browser testing, run: optivise server');
+  console.log('   • For IDE setup, run: optivise setup');
+  console.log('   • For debugging, add --debug flag to any command');
+}
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const options = {};
@@ -334,8 +535,16 @@ switch (command) {
     startMCPServer(options);
     break;
     
+  case 'server':
+    startHTTPServer(options);
+    break;
+    
   case 'dev':
     startDevServer(options);
+    break;
+    
+  case 'test':
+    testMCPConnection(options);
     break;
     
   case 'detect':
@@ -355,7 +564,7 @@ switch (command) {
       printUsage();
     } else {
       console.error(`❌ Unknown command: ${command}`);
-      console.error('Run "optidev-assistant --help" for usage information.');
+      console.error('Run "optivise --help" for usage information.');
       process.exit(1);
     }
 }

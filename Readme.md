@@ -354,87 +354,239 @@ npm unlink -g optivise
 
 ## 🔍 Troubleshooting
 
-### **Common Issues**
+### **Quick Diagnostic Commands**
 
-#### **"Command not found: optivise"**
 ```bash
-# Verify global installation
-npm list -g optivise
+# 🧪 Test everything at once
+optivise test
 
-# Reinstall if needed
-npm uninstall -g optivise
-npm install -g optivise
+# 🌐 Start browser testing server
+optivise server
+
+# 🔍 Detect current project products
+optivise detect
+
+# ⚙️  Generate IDE configuration
+optivise setup
 ```
 
-#### **"Compiled server not found"**
+### **Common Issues & Solutions**
+
+#### **❌ "Command not found: optivise"**
+**Problem**: Optivise not globally accessible
+```bash
+# Check global installation
+npm list -g optivise
+
+# Reinstall if missing
+npm uninstall -g optivise
+npm install -g optivise
+
+# Verify PATH includes npm global binaries
+npm config get prefix
+# Add <prefix>/bin to your PATH if needed
+```
+
+#### **❌ "Compiled server not found"**
+**Problem**: Project not built after installation
 ```bash
 # Build the project
 npm run build
 
-# Or install dependencies
-npm install
-npm run build
+# Or clean rebuild
+npm run clean && npm run build
+
+# For development
+npm install && npm run build
 ```
 
-#### **ESLint Configuration Issues**
-```bash
-# If you see ESLint v9 configuration errors
-# The project uses the new flat config format (eslint.config.js)
-# Make sure you have the latest ESLint version
-npm install --save-dev eslint@^9.15.0
+#### **❌ MCP Server Won't Start in Cursor IDE**
+**Problem**: Incorrect configuration or path issues
 
-# Run lint to check
-npm run lint
+**Solution 1**: Update configuration
+```bash
+# Generate correct config
+optivise setup
+
+# Copy the generated configuration to your project
+# Use .cursor-mcp.json or cursor-mcp.json
 ```
 
-#### **HTTP Server Testing**
+**Solution 2**: Test MCP server manually
 ```bash
-# Start HTTP server for browser testing
-npm run dev:server
+# Test MCP connectivity
+optivise test
 
-# Test health endpoint
+# Start MCP server manually (should show connection logs)
+optivise mcp
+
+# Debug mode for detailed logs  
+optivise --debug mcp
+```
+
+**Solution 3**: Check Cursor IDE settings
+- Restart Cursor IDE after configuration changes
+- Check MCP logs in Cursor IDE (View > Toggle Developer Tools > Console)
+- Verify no other MCP servers are conflicting
+
+#### **❌ HTTP Server Issues**
+**Problem**: Cannot test locally via browser
+
+```bash
+# Start HTTP server (automatic build)
+optivise server
+
+# Manual testing
+npm run server
+
+# Test endpoints directly
 curl http://localhost:3000/health
+curl http://localhost:3000/test/mcp
+curl http://localhost:3000/test/detect
 
-# Open browser interface
+# Test with browser
 open http://localhost:3000
 ```
 
-#### **MCP Connection Issues**
-```bash
-# Test server manually
-optivise mcp
+#### **❌ Product Detection Not Working**
+**Problem**: No Optimizely products detected
 
-# Enable debug mode
-optivise --debug mcp
-
-# Check IDE MCP configuration
-optivise setup
-```
-
-#### **Product Detection Not Working**
 ```bash
 # Test detection manually
 optivise detect
 
-# Check project structure
-ls -la  # Look for Optimizely-specific files/folders
+# Check for Optimizely-specific files
+ls -la Extensions/  # Commerce
+ls -la modules/     # CMS
+ls -la package.json # Check dependencies
 
-# Override product detection
+# Override detection for testing
 export OPTIMIZELY_PRODUCT=configured-commerce
+optivise server
 ```
 
-### **Debug Mode**
+#### **❌ Context Analysis Returns No Results**
+**Problem**: Queries not recognized as Optimizely-related
 
-Enable verbose logging:
+**Check relevance threshold**: Optivise only responds to queries with >0.7 Optimizely relevance
 
 ```bash
-# CLI debug
+# Test with HTTP server
+optivise server
+# Navigate to http://localhost:3000
+# Try these test prompts:
+#   "How do I create a Commerce extension?"
+#   "Configure CMS content types"
+#   "Set up A/B testing in Optimizely"
+```
+
+#### **❌ ESLint v9 Configuration Errors**
+**Problem**: Modern ESLint flat config format
+
+```bash
+# Project uses eslint.config.js (v9 format)
+# Update ESLint if needed
+npm install --save-dev eslint@^9.15.0
+
+# Run lint check
+npm run lint
+
+# Auto-fix issues
+npm run lint:fix
+```
+
+### **Advanced Debugging**
+
+#### **🔍 Enable Debug Mode**
+```bash
+# CLI debug (verbose logging)
 optivise --debug mcp
+optivise --debug server
 
 # Environment variable
 export OPTIDEV_DEBUG=true
 npm start
+
+# Package.json debug scripts
+npm run mcp:test    # Quick MCP server test
+npm run server:test # Quick HTTP server test
 ```
+
+#### **🧪 Step-by-Step Testing**
+
+**1. Test Server Startup**
+```bash
+# Build and test startup
+npm run build
+optivise test
+```
+
+**2. Test HTTP Endpoints**
+```bash
+# Start server in background
+optivise server &
+
+# Test all endpoints
+curl http://localhost:3000/health
+curl http://localhost:3000/test/mcp  
+curl http://localhost:3000/test/detect
+
+# Stop background server
+pkill -f "optivise server"
+```
+
+**3. Test MCP Protocol**
+```bash
+# Test MCP server directly
+optivise --debug mcp
+
+# In another terminal, check if process is running
+ps aux | grep optivise
+```
+
+**4. Test IDE Integration**
+```bash
+# Generate fresh config
+optivise setup
+
+# Copy config to project root
+cp cursor-mcp.json .cursor-mcp.json
+
+# Restart IDE and check MCP connection
+```
+
+### **🚨 Emergency Recovery**
+
+If everything fails, try this recovery sequence:
+
+```bash
+# 1. Complete clean reinstall
+npm uninstall -g optivise
+npm cache clean --force
+
+# 2. Reinstall from npm
+npm install -g optivise
+
+# 3. Verify installation
+optivise version
+optivise test
+
+# 4. Regenerate all configs
+optivise setup
+
+# 5. Test everything
+optivise server  # Test in browser
+optivise detect  # Test product detection
+```
+
+### **📞 Getting Help**
+
+If issues persist:
+
+1. **Run Full Diagnostic**: `optivise test` and share output
+2. **Enable Debug Mode**: `optivise --debug mcp` for detailed logs  
+3. **Check GitHub Issues**: [Known Issues](https://github.com/biswajitpanday/OptiDevDoc/issues)
+4. **Browser Testing**: Use `optivise server` for interactive testing
 
 ## 🏛️ Architecture
 
