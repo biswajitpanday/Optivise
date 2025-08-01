@@ -5,27 +5,20 @@
 
 import type { ContextAnalysisRequest, ContextAnalysisResponse } from './context.js';
 
+export type MCPToolName = 
+  | 'optidev_context_analyzer'
+  | 'optidev_implementation_guide'
+  | 'optidev_debug_helper'
+  | 'optidev_code_analyzer'
+  | 'optidev_project_helper';
+
 export interface MCPToolDefinition {
-  name: 'optidev_context_analyzer';
-  description: 'Analyzes prompts for Optimizely context and provides curated information';
+  name: MCPToolName;
+  description: string;
   parameters: {
     type: 'object';
-    properties: {
-      prompt: {
-        type: 'string';
-        description: 'User prompt to analyze for Optimizely context';
-      };
-      projectPath?: {
-        type: 'string';
-        description: 'Optional project path for IDE context';
-      };
-      ideRules?: {
-        type: 'array';
-        items: { type: 'string' };
-        description: 'Optional IDE rules for context enhancement';
-      };
-    };
-    required: ['prompt'];
+    properties: Record<string, any>;
+    required: string[];
   };
 }
 
@@ -52,6 +45,7 @@ export interface MCPServerConfig {
     tools: boolean;
     logging?: boolean;
     monitoring?: boolean;
+    aiIntegration?: boolean;
   };
   tools: MCPToolDefinition[];
 }

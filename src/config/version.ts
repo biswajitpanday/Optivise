@@ -25,12 +25,12 @@ export function getVersion(): string {
   try {
     const packagePath = join(PACKAGE_ROOT, 'package.json');
     const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
-    const version = packageData.version || '4.0.0';
+    const version = packageData.version || '5.0.0';
     cachedVersion = version;
     return version;
   } catch (error) {
     console.warn('Warning: Could not read package.json version, using fallback');
-    const fallbackVersion = '4.0.0';
+    const fallbackVersion = '5.0.0';
     cachedVersion = fallbackVersion;
     return fallbackVersion;
   }
@@ -45,12 +45,16 @@ export function getVersionInfo() {
     version,
     name: 'Optivise',
     fullName: `Optivise v${version}`,
-    description: 'Intelligent MCP tool for Optimizely context analysis',
+    description: 'The Ultimate Optimizely Development Assistant with AI-powered features',
     features: [
-      'Context analysis with relevance scoring',
-      'Automatic product detection (11+ Optimizely products)', 
-      'Curated responses with actionable steps',
-      'Modern TypeScript architecture'
+      'Zero-config AI setup with automatic API key detection',
+      'Five specialized MCP tools for comprehensive development support',
+      'Real-time coding assistance with error prevention',
+      'AI-powered documentation search with vector database',
+      'Jira ticket implementation guidance',
+      'Intelligent bug fixing assistance',
+      'Local learning system with privacy-first approach',
+      'Daily Optimizely.com documentation sync'
     ]
   };
 }

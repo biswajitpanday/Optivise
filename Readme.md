@@ -1,43 +1,65 @@
-# Optivise
+# Optivise v5.0.0
 
-**Intelligent MCP tool that provides curated Optimizely context to LLMs for enhanced AI-assisted development.**
+**The Ultimate Optimizely Development Assistant - AI-Powered MCP Tool with Zero-Config Setup**
 
-Optivise is a focused, single-purpose MCP tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It automatically detects Optimizely product contexts and delivers precise, relevant guidance without overwhelming the AI with irrelevant information.
+Optivise is the most advanced MCP tool for Optimizely developers, providing real-time coding assistance, intelligent bug fixing, Jira ticket implementation guidance, and comprehensive development support. With automatic API key detection and AI-powered features, it transforms your IDE into an Optimizely expertise center.
 
-## 🚀 Features
+## 🚀 Revolutionary Features
 
-### ✨ **Intelligent Context Analysis**
-- **Relevance Scoring**: Analyzes prompts for Optimizely relevance (0-1 score)
-- **Smart Filtering**: Only responds to Optimizely-related queries (>0.7 relevance)
-- **Curated Responses**: Provides structured, actionable information with code examples and best practices
+### 🤖 **AI-Powered Development Assistant**
+- **Zero-Config AI Setup**: Automatically detects and uses your existing IDE AI keys (Cursor, VSCode)
+- **Real-Time Coding Assistance**: Live error prevention, optimization suggestions, and best practice enforcement
+- **Intelligent Auto-completion**: Context-aware Optimizely API suggestions and code snippets
+- **Vector-Based Search**: Semantic similarity search across 10,000+ Optimizely documentation pages
 
-### 🎯 **Product Detection Engine**
-- **11+ Optimizely Products**: Configured Commerce, CMS (PaaS/SaaS), CMP, DXP, Web/Feature Experimentation, Data Platform, Connect Platform, Recommendations
-- **Multi-Detection**: IDE file analysis + prompt-based detection
-- **Evidence Tracking**: Shows why products were detected with confidence scores
+### 🎯 **Advanced Development Support**
+- **Jira Ticket Implementation**: Paste any Jira ticket → Get complete implementation guidance
+- **Bug Fixing Intelligence**: Describe any bug → Receive step-by-step debugging assistance
+- **Product Auto-Detection**: Automatically identifies your Optimizely products from code context
+- **Multi-Scenario Expertise**: Handles complex multi-product implementations and integrations
 
-### 🛠️ **Modern Architecture**
-- **Single MCP Tool**: `optidev_context_analyzer` - unified, focused functionality
-- **TypeScript Native**: Modern ES2022 with native TypeScript compilation (no Babel)
-- **Fast & Efficient**: <300ms response time, <512MB memory usage
-- **Local-First**: Privacy-focused, local processing and storage
+### 🛠️ **Five Specialized MCP Tools**
+- **`optidev_context_analyzer`**: Enhanced context analysis with AI-powered relevance scoring
+- **`optidev_implementation_guide`**: Jira ticket parsing and implementation planning
+- **`optidev_debug_helper`**: Bug analysis and resolution assistance
+- **`optidev_code_analyzer`**: Real-time code analysis and optimization
+- **`optidev_project_helper`**: Project setup, migration, and best practices
 
-## 📦 Installation
+### ⚡ **Cutting-Edge Technology**
+- **Automatic API Key Integration**: Uses your existing Cursor/VSCode AI subscriptions
+- **ChromaDB Vector Database**: Intelligent documentation storage and retrieval
+- **Daily Documentation Sync**: Always up-to-date with latest Optimizely content
+- **Local Learning System**: Improves over time while maintaining privacy
 
-### Global Installation (Recommended)
+## 📦 Zero-Config Installation
+
+### 🚀 **One Command Setup** (Recommended)
 
 ```bash
+# Install globally for universal IDE access
 npm install -g optivise
+
+# That's it! Optivise will automatically:
+# ✅ Detect your IDE (Cursor, VSCode, etc.)
+# ✅ Find your existing AI API keys (with permission)
+# ✅ Set up AI-powered features instantly
+# ✅ Start providing intelligent assistance
 ```
 
-### Local Installation
+### 🎯 **Instant AI Setup**
+No manual API key configuration needed! Optivise intelligently detects and uses your existing IDE AI setup:
+- **Cursor IDE**: Uses your existing Claude/GPT subscriptions
+- **VS Code**: Integrates with GitHub Copilot and other AI extensions
+- **Secure & Transparent**: Always asks permission before accessing any keys
 
+### 📥 **Alternative Installation Methods**
+
+#### Local Project Installation
 ```bash
 npm install --save-dev optivise
 ```
 
-### From Source (Development)
-
+#### From Source (Development)
 ```bash
 git clone https://github.com/biswajitpanday/OptiDevDoc.git
 cd OptiDevDoc
@@ -45,33 +67,52 @@ npm install
 npm run build
 ```
 
-## 🏃 Quick Start
+## 🏃 Quick Start (30 seconds to AI-powered development!)
 
-### 1. **Start MCP Server**
+### 1. **Automatic Setup** ✨
 ```bash
-# Using global installation
-optivise mcp
+# Install and setup automatically
+npm install -g optivise
 
-# Using npm scripts (from source)
-npm start
-npm run dev  # Build and start
-npm run dev:watch  # Development mode with tsx
+# Optivise detects your IDE and asks for permission to use existing AI keys
+# ✅ Permission granted? You're ready for AI-powered Optimizely development!
+# ❌ No AI keys found? No problem - basic features work without AI
 ```
 
-### 2. **Test Product Detection**
+### 2. **Start Development Assistant**
 ```bash
+# Start with full AI features (auto-detected keys)
+optivise mcp
+
+# Or start in basic mode (no AI dependencies)
+optivise mcp --basic
+
+# Development mode with hot reload
+npm run dev
+```
+
+### 3. **Test Your Setup**
+```bash
+# Verify everything works
+optivise test
+
+# Test AI features specifically
+optivise test --ai
+
+# Detect your Optimizely products
 optivise detect
 ```
 
-### 3. **Generate IDE Configuration**
+### 4. **Explore Advanced Features**
 ```bash
-optivise setup
-```
+# Manual documentation sync
+optivise sync-docs
 
-### 4. **View Available Commands**
-```bash
+# View comprehensive help
 optivise --help
-optivise version
+
+# Check current version and capabilities
+optivise version --features
 ```
 
 ## 🧪 Browser Testing
@@ -142,33 +183,138 @@ If installed globally, you can use it from any project:
 }
 ```
 
-## 🎯 Usage Examples
+## 🎯 Real-World Usage Examples
 
-### **Context Analysis Tool**
+### 🎫 **Jira Ticket Implementation**
 
-The `optidev_context_analyzer` tool provides intelligent context for Optimizely development:
+Paste any Jira ticket and get complete implementation guidance:
 
 ```typescript
-// Example prompt that gets analyzed
-"How do I create a custom handler in Optimizely Commerce?"
+// User pastes Jira ticket content
+"Epic: User Preferences Center - Allow users to manage email marketing preferences"
 
-// Tool response includes:
+// optidev_implementation_guide responds with:
 {
-  "relevance": 0.95,
-  "detectedProducts": ["configured-commerce"],
-  "curatedContext": {
-    "summary": "Code assistance for Configured Commerce development - analyzing handler chain requirements",
-    "actionableSteps": [
-      "Working with Configured Commerce",
-      "Review relevant code examples and implementation patterns",
-      "Check official documentation for API references"
-    ],
-    "bestPractices": [
-      "Follow handler chain patterns for extending commerce functionality",
-      "Use proper dependency injection in your extensions",
-      "Implement proper error handling and logging"
+  "detectedProducts": ["content-marketing-platform", "cms"],
+  "implementationPlan": {
+    "approach": "CMP preference center with CMS integration",
+    "architecture": "Headless CMS + React preference center",
+    "estimatedEffort": "2-3 sprints",
+    "keyComponents": [
+      "User preference API endpoints",
+      "React preference center UI",
+      "Email integration with CMP",
+      "Data persistence layer"
     ]
+  },
+  "codeTemplates": [
+    "PreferenceCenter.tsx boilerplate",
+    "API controller templates", 
+    "Database migration scripts"
+  ],
+  "testingStrategy": "Unit tests + Integration tests + User acceptance criteria"
+}
+```
+
+### 🐛 **Intelligent Bug Fixing**
+
+Describe any bug and receive step-by-step debugging assistance:
+
+```typescript
+// User describes a bug
+"Commerce pricing engine not calculating tax correctly for international orders"
+
+// optidev_debug_helper analyzes and responds:
+{
+  "detectedProducts": ["configured-commerce"],
+  "bugAnalysis": {
+    "category": "tax_calculation_error",
+    "likelyCauses": [
+      "Incorrect tax provider configuration",
+      "Missing international tax rules",
+      "Currency conversion timing issues"
+    ],
+    "confidence": 0.92
+  },
+  "debuggingSteps": [
+    "Check tax provider configuration in Commerce Manager",
+    "Verify international tax rules are configured",
+    "Review order processing logs for currency conversion",
+    "Test with specific international addresses"
+  ],
+  "solutions": [
+    "Configure Avalara for international tax calculation",
+    "Implement custom tax calculator for specific regions",
+    "Add currency conversion validation"
+  ],
+  "preventionTips": [
+    "Always test with international addresses",
+    "Monitor tax calculation logs",
+    "Set up alerts for tax calculation failures"
+  ]
+}
+```
+
+### 🔍 **Automatic Product Detection**
+
+Ask questions without specifying products - Optivise figures it out:
+
+```typescript
+// User asks without mentioning specific products
+"How do I customize the checkout flow to include gift wrapping options?"
+
+// System automatically detects context and responds:
+{
+  "detectedProducts": ["configured-commerce"],
+  "confidence": 0.96,
+  "detectionEvidence": [
+    "checkout flow - commerce indicator",
+    "gift wrapping - e-commerce feature",
+    "Project analysis found Commerce dependencies"
+  ],
+  "contextualResponse": {
+    "solution": "Commerce checkout customization with gift service extension",
+    "implementation": "Custom checkout step + gift service integration",
+    "codeExamples": ["CheckoutGiftStep.cs", "GiftWrapService.cs"]
   }
+}
+```
+
+### 💰 **Feature Possibility Queries**
+
+Get definitive answers about Optimizely capabilities:
+
+```typescript
+// User asks about specific feature possibility
+"Is it possible to increase tax by 3% more in Configured Commerce pricing?"
+
+// optidev_context_analyzer provides comprehensive answer:
+{
+  "answer": "YES",
+  "confidence": 0.98,
+  "explanation": "Commerce supports custom tax calculators and pricing adjustments",
+  "implementationOptions": [
+    {
+      "method": "Custom Tax Calculator",
+      "complexity": "Medium",
+      "description": "Implement ITaxCalculator interface with percentage adjustment",
+      "codeExample": "CustomTaxCalculator.cs implementation"
+    },
+    {
+      "method": "Promotion Engine",
+      "complexity": "Low", 
+      "description": "Use promotion system to add tax adjustment",
+      "codeExample": "TaxAdjustmentPromotion configuration"
+    }
+  ],
+  "limitations": [
+    "May require compliance review for tax regulations",
+    "Should validate against local tax laws"
+  ],
+  "documentationLinks": [
+    "https://docs.optimizely.com/commerce/tax-calculation",
+    "https://docs.optimizely.com/commerce/promotions"
+  ]
 }
 ```
 
@@ -629,11 +775,14 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Optivise v4.0.0** - Intelligent MCP tool for Optimizely context analysis
+**Optivise v5.0.0** - The Ultimate Optimizely Development Assistant
 
-### ✨ New in v4.0.0:
-- **Cross-platform support** - Windows, macOS, and Linux compatibility
-- **Centralized version management** - Single source of truth for version info
-- **Enhanced HTTP server** - Browser testing interface with real-time analysis
-- **Improved ESLint configuration** - Modern v9 flat config with sensible defaults
-- **Streamlined deployment** - Fixed NPM publishing with proper access controls
+### 🚀 Revolutionary in v5.0.0:
+- **🤖 Zero-Config AI Setup** - Automatically uses your existing IDE AI keys (Cursor, VSCode)
+- **🎯 Five Specialized MCP Tools** - Complete development assistance suite
+- **⚡ Real-Time Coding Assistant** - Live error prevention and optimization
+- **📚 AI-Powered Documentation** - Vector search across 10,000+ Optimizely pages
+- **🔧 Jira Integration** - Complete ticket implementation guidance
+- **🐛 Intelligent Bug Fixing** - Step-by-step debugging assistance
+- **🧠 Learning System** - Improves over time while maintaining privacy
+- **🔒 Privacy-First AI** - Local processing with secure API key handling
