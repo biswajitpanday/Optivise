@@ -611,8 +611,9 @@ export class OptiviseMCPServer {
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,
-        productDetection: this.contextAnalyzer.isProductDetectionEnabled(),
+        productDetection: true,
         aiIntegration: this.aiEnabled,
+        aiEnhancedAnalysis: this.contextAnalyzer.isAIEnabled(),
         vectorSearch: this.aiEnabled && chromaDBService.isAvailable(),
         documentationSync: documentationSyncService.getSyncStatus().autoSyncEnabled,
         multipleTools: true,
