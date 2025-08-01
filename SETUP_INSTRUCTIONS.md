@@ -1,7 +1,7 @@
-# Optivise v5.0.0 - Complete Setup Instructions
+# Optivise - Complete Setup Instructions
 ## 🚀 From Zero to Production in Minutes
 
-This guide provides step-by-step instructions to get Optivise v5.0.0 running on your system, from basic installation to advanced production deployment.
+This guide provides step-by-step instructions to get Optivise running on your system, from basic installation to advanced production deployment.
 
 ---
 
@@ -56,7 +56,7 @@ optivise --health-check
 
 **Expected output:**
 ```
-✅ Optivise v5.0.0 installed successfully
+✅ Optivise installed successfully
 ✅ All core services operational
 ✅ MCP server ready
 ℹ️  AI services available (configure OpenAI/ChromaDB for enhanced features)
@@ -452,13 +452,13 @@ CMD ["optivise", "mcp", "--production"]
 
 ```bash
 # Build and run Docker container
-docker build -t optivise:v5.0.0 .
+docker build -t optivise:latest .
 docker run -d \
   --name optivise-prod \
   -p 3000:3000 \
   -e NODE_ENV=production \
   -e OPENAI_API_KEY=$OPENAI_API_KEY \
-  optivise:v5.0.0
+  optivise:latest
 ```
 
 #### Option C: Cloud Deployment (Render, AWS, etc.)
@@ -690,7 +690,7 @@ export OPTIVISE_PERFORMANCE_MODE="fast"
 
 ## 🎉 You're All Set!
 
-Congratulations! You now have Optivise v5.0.0 fully configured and ready to transform your Optimizely development experience.
+Congratulations! You now have Optivise fully configured and ready to transform your Optimizely development experience.
 
 ### Quick Reference
 
@@ -708,4 +708,4 @@ Congratulations! You now have Optivise v5.0.0 fully configured and ready to tran
 4. **Monitor Performance**: Use built-in monitoring and analytics
 5. **Join the Community**: Connect with other Optivise users
 
-**Happy coding with Optivise v5.0.0!** 🚀
+**Happy coding with Optivise!** 🚀

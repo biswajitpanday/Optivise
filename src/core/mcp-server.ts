@@ -1,5 +1,5 @@
 /**
- * Optivise MCP Server v5.0.0
+ * Optivise MCP Server
  * Enhanced MCP server with AI-powered features and multiple specialized tools
  */
 
@@ -59,7 +59,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.0.0',
+      version: '5.0.1',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -499,7 +499,7 @@ export class OptiviseMCPServer {
     }
 
     try {
-      this.logger.info('Initializing Optivise v5.0.0 with AI features...');
+      this.logger.info('Initializing Optivise with AI features...');
 
       // 1. Initialize the context analyzer
       await this.contextAnalyzer.initialize();
@@ -514,7 +514,7 @@ export class OptiviseMCPServer {
       documentationSyncService.startAutoSync();
       
       this.isInitialized = true;
-      this.logger.info('Optivise MCP Server v5.0.0 initialization completed', {
+      this.logger.info('Optivise MCP Server initialization completed', {
         aiEnabled: this.aiEnabled,
         features: {
           contextAnalysis: true,
@@ -607,7 +607,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.0.0',
+      version: '5.0.1',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

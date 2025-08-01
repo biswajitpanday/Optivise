@@ -1,7 +1,7 @@
-# Optivise v5.0.0 - Complete User Guide
+# Optivise - Complete User Guide
 ## 🚀 Ultimate Optimizely Development Assistant
 
-Welcome to Optivise v5.0.0 - your comprehensive AI-powered development assistant for Optimizely projects. This guide will help you get started and make the most of all the advanced features.
+Welcome to Optivise - your comprehensive AI-powered development assistant for Optimizely projects. This guide will help you get started and make the most of all the advanced features.
 
 ## 📋 Table of Contents
 
@@ -18,7 +18,7 @@ Welcome to Optivise v5.0.0 - your comprehensive AI-powered development assistant
 
 ## 🚀 Quick Start
 
-### What is Optivise v5.0.0?
+### What is Optivise?
 
 Optivise is a comprehensive MCP (Model Context Protocol) tool that provides 5 specialized development assistants specifically designed for Optimizely development. It transforms your IDE experience with AI-powered capabilities, real-time collaboration, and enterprise-grade features.
 
@@ -276,7 +276,7 @@ And get relevant results about GDPR compliance, data encryption, and customer ma
 
 ### Real-Time Team Collaboration
 
-Optivise v5.0.0 includes enterprise-grade collaboration features:
+Optivise includes enterprise-grade collaboration features:
 
 ### Creating a Workspace
 
@@ -682,6 +682,6 @@ As you become more comfortable with Optivise, explore these advanced scenarios:
 
 ---
 
-**Welcome to the future of Optimizely development with Optivise v5.0.0!** 🚀
+**Welcome to the future of Optimizely development with Optivise!** 🚀
 
 *Need help? Check our [troubleshooting section](#troubleshooting) or reach out to the community.*

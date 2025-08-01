@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Optivise** is an intelligent MCP (Model Context Protocol) tool that serves as a context-aware intermediary between Optimizely developers and LLMs. It analyzes developer prompts for Optimizely relevance and provides curated, contextual information to enhance AI-assisted development. The tool automatically detects Optimizely product contexts and delivers precise, up-to-date guidance without overwhelming the AI with irrelevant data.
 
-**Current Status**: v5.0.0 Ultimate Development Assistant (AI-powered with automatic setup)
+**Current Status**: Ultimate Development Assistant (AI-powered with automatic setup)
 
 ## Development Commands
 
@@ -51,7 +51,7 @@ npm run deploy       # Deploy to NPM registry
 npm run deploy:render # Deploy to Render.com (optional)
 ```
 
-## Advanced Architecture (v5.0.0)
+## Advanced Architecture
 
 ### Core Components
 - **Multi-Tool MCP Suite**: Five specialized tools for comprehensive development assistance
@@ -104,7 +104,7 @@ interface ProductDetectionResult {
 5. **Real-Time Enhancement**: Live coding assistance and error prevention
 6. **Continuous Learning**: Pattern recognition and knowledge base evolution
 
-## AI Integration & Dependencies (v5.0.0)
+## AI Integration & Dependencies
 
 ### Core AI Services
 - **OpenAI Integration**: Embeddings (text-embedding-ada-002) for semantic search
@@ -156,7 +156,7 @@ interface ProductDetectionResult {
 
 ## Important Implementation Notes
 
-### Enhanced Capabilities (v5.0.0)
+### Enhanced Capabilities
 
 #### Real-Time Development Assistant
 - **Jira Ticket Implementation**: Parse tickets and provide implementation guidance

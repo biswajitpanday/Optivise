@@ -1,6 +1,6 @@
 {
   "mcpServers": {
-    "optivise": {
+    "optivise-2": {
       "command": "optivise",
       "args": ["mcp"],
       "env": {

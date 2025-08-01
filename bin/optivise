@@ -46,7 +46,7 @@ EXAMPLES:
   optivise setup            # Generate IDE configuration
   optivise --debug mcp      # Start MCP server with debug logs
 
-🚀 NEW in v5.0.0: Complete Development Assistant
+🚀 NEW: Complete Development Assistant
    • 5 specialized MCP tools for every development scenario
    • AI-powered features with OpenAI and ChromaDB integration
    • Real-time collaboration and team workspaces
@@ -69,7 +69,7 @@ function printVersion() {
     console.log(`🔒 Enterprise Security: Encryption, access control, audit logging, GDPR compliance`);
     console.log(`📊 Production Ready: Monitoring, analytics, auto-scaling, deployment features`);
   } catch (error) {
-    console.log('Optivise v5.0.0');
+    console.log(`Optivise v${packageData.version || 'latest'}`);
   }
 }
 
