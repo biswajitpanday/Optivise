@@ -166,7 +166,7 @@ export class ImplementationGuideTool {
   private extractSummary(content: string): string {
     // Try to find ticket title/summary patterns
     const titleMatch = content.match(/(?:title|summary|epic):\s*(.+)/i);
-    if (titleMatch && titleMatch[1]) {
+    if (titleMatch?.[1]) {
       return titleMatch[1].trim();
     }
 
@@ -219,7 +219,7 @@ export class ImplementationGuideTool {
 
     // Look for "acceptance criteria" section
     const acMatch = content.match(/acceptance\s+criteria[:\s]*((?:.|\n)*?)(?:\n\s*\n|\n\s*[A-Z]|$)/i);
-    if (acMatch && acMatch[1]) {
+    if (acMatch?.[1]) {
       const acContent = acMatch[1];
       const bulletMatches = acContent.match(/^[\s]*[-*•]\s*(.+)$/gm);
       if (bulletMatches) {

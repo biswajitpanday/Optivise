@@ -158,7 +158,7 @@ export class ProjectHelperTool {
       const detectedProducts = await this.detectProducts(request.projectDetails);
 
       // 2. Provide assistance based on request type
-      let response: Partial<ProjectHelperResponse> = {};
+      const response: Partial<ProjectHelperResponse> = {};
 
       switch (request.requestType) {
         case 'setup':
@@ -546,7 +546,7 @@ export default optimizely;`.trim(),
 
     for (const pattern of versionPatterns) {
       const match = projectDetails.match(pattern);
-      if (match && match[1]) {
+      if (match?.[1]) {
         return match[1];
       }
     }

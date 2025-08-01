@@ -364,7 +364,7 @@ export class CollaborationService extends EventEmitter {
     tags?: string[];
   }): boolean {
     const workspace = this.workspaces.get(workspaceId);
-    if (!workspace || !workspace.collaborators.includes(userId)) {
+    if (!workspace?.collaborators.includes(userId)) {
       return false;
     }
 
@@ -401,7 +401,7 @@ export class CollaborationService extends EventEmitter {
     confidence: number;
   }): boolean {
     const workspace = this.workspaces.get(workspaceId);
-    if (!workspace || !workspace.collaborators.includes(userId)) {
+    if (!workspace?.collaborators.includes(userId)) {
       return false;
     }
 
@@ -642,7 +642,7 @@ export class CollaborationService extends EventEmitter {
     const workspace = this.workspaces.get(workspaceId);
     const session = this.activeSessions.get(workspaceId);
 
-    if (!workspace || !workspace.settings.allowEditing) {
+    if (!workspace?.settings.allowEditing) {
       return false;
     }
 

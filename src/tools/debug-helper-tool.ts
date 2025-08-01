@@ -291,7 +291,7 @@ export class DebugHelperTool {
     };
 
     const productCauses = causeMap[product as keyof typeof causeMap];
-    if (productCauses && productCauses[category]) {
+    if (productCauses?.[category]) {
       return productCauses[category];
     }
 

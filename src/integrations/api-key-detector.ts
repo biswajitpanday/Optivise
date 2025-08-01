@@ -5,9 +5,10 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { homedir } from 'os';
 import { platform } from 'os';
+import fetch from 'node-fetch';
 
 export interface APIKeySource {
   source: 'cursor' | 'vscode' | 'jetbrains' | 'environment' | 'manual';
@@ -233,7 +234,7 @@ export class APIKeyDetector {
           
           // Simple XML parsing for API keys (basic implementation)
           const openAIMatch = configContent.match(/<option name="openai\.api\.key" value="([^"]+)"/);
-          if (openAIMatch && openAIMatch[1]) {
+          if (openAIMatch?.[1]) {
             sources.push({
               source: 'jetbrains',
               type: 'openai',
@@ -244,7 +245,7 @@ export class APIKeyDetector {
           }
 
           const claudeMatch = configContent.match(/<option name="claude\.api\.key" value="([^"]+)"/);
-          if (claudeMatch && claudeMatch[1]) {
+          if (claudeMatch?.[1]) {
             sources.push({
               source: 'jetbrains',
               type: 'anthropic',

@@ -244,7 +244,7 @@ export class DocumentationSyncService {
 
     try {
       // Handle different sitemap structures
-      if (sitemapData.urlset && sitemapData.urlset.url) {
+      if (sitemapData.urlset?.url) {
         const urlEntries = Array.isArray(sitemapData.urlset.url) 
           ? sitemapData.urlset.url 
           : [sitemapData.urlset.url];
@@ -256,7 +256,7 @@ export class DocumentationSyncService {
         }
       }
 
-      if (sitemapData.sitemapindex && sitemapData.sitemapindex.sitemap) {
+      if (sitemapData.sitemapindex?.sitemap) {
         const sitemapEntries = Array.isArray(sitemapData.sitemapindex.sitemap)
           ? sitemapData.sitemapindex.sitemap
           : [sitemapData.sitemapindex.sitemap];

@@ -464,7 +464,7 @@ export class SecurityService extends EventEmitter {
                    data: Record<string, any>): { allowed: boolean; requirements: string[]; modifications?: Record<string, any> } {
     const rule = this.privacyRules.get(ruleId);
     
-    if (!rule || !rule.enabled) {
+    if (!rule?.enabled) {
       return { allowed: true, requirements: [] };
     }
 
