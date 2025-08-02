@@ -11,6 +11,7 @@ import { createLogger } from './utils/logger.js';
 import { getVersionInfo } from './config/version.js';
 
 async function main() {
+  console.log('Starting Optivise main function...');
   const logger = createLogger(process.env.LOG_LEVEL as any || 'info');
   
   try {
@@ -53,9 +54,14 @@ async function main() {
       
       // Initialize and start the server
       await server.initialize();
-      await server.start();
-      
-      logger.info('Optivise MCP server started successfully');
+      logger.debug('About to start MCP server...');
+      try {
+        await server.start();
+        logger.info('Optivise MCP server started successfully');
+      } catch (error) {
+        logger.error('Failed to start MCP server', error as Error);
+        process.exit(1);
+      }
 
       // Graceful shutdown for MCP server
       process.on('SIGINT', async () => {

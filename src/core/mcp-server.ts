@@ -59,7 +59,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.0.1',
+      version: '5.0.4',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -196,7 +196,7 @@ export class OptiviseMCPServer {
       },
       {
         capabilities: {
-          tools: config.capabilities.tools ? {} : undefined,
+          tools: {}, // Always enable tools
         },
       }
     );
@@ -592,6 +592,9 @@ export class OptiviseMCPServer {
     await this.server.connect(transport);
     
     this.logger.info('Optivise MCP Server started and connected');
+    
+    // Keep the process alive
+    process.stdin.resume();
   }
 
   async stop(): Promise<void> {
@@ -607,7 +610,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.0.1',
+      version: '5.0.4',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

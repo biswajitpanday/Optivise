@@ -46,7 +46,10 @@ class SimpleLogger implements Logger {
   }
 
   private log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
-    if (this.levelValues[level] < this.levelValues[this.level]) {
+    // Always log debug messages when OPTIDEV_DEBUG is set
+    if (process.env.OPTIDEV_DEBUG === 'true') {
+      // Continue with logging regardless of level
+    } else if (this.levelValues[level] < this.levelValues[this.level]) {
       return;
     }
 

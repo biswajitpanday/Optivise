@@ -1,4 +1,4 @@
-# Optivise v5.x.x ✅ **PRODUCTION READY**
+# Optivise ✅ **PRODUCTION READY**
 
 **🚀 The Ultimate Optimizely Development Assistant - Fully Implemented with 5 Specialized MCP Tools**
 
