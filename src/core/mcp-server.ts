@@ -59,7 +59,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.0.4',
+      version: '5.0.5',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -610,7 +610,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.0.4',
+      version: '5.0.5',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,
