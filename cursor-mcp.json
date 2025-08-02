@@ -1,13 +1,14 @@
 {
   "mcpServers": {
-    "optivise": {
-      "command": "node",
-      "args": ["./mcp-wrapper.cjs"],
-      "env": {
-        "OPTIDEV_DEBUG": "false",
-        "LOG_LEVEL": "error",
-        "NODE_OPTIONS": "--no-warnings"
+      "optivise": {
+          "command": "npx",
+          "args": [
+              "optivise-mcp"
+          ],
+          "env": {
+              "OPTIDEV_DEBUG": "true",
+              "LOG_LEVEL": "error"
+          }
       }
-    }
   }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Optivise v5.0.6 Entry Point
+ * Optivise v5.1.1 Entry Point
  * Main entry point for the Optivise MCP server with HTTP server support
  */
 
@@ -11,15 +11,22 @@ import { createLogger } from './utils/logger.js';
 import { getVersionInfo } from './config/version.js';
 
 async function main() {
-  // Don't log to stdout in MCP mode as it interferes with the protocol
-  const logger = createLogger(process.env.LOG_LEVEL as any || 'info');
+  // Check if we should start HTTP server (for Render deployment)
+  const isHTTPMode = process.env.OPTIVISE_MODE === 'server' || process.env.NODE_ENV === 'production';
+  
+  // Only create logger after determining mode to avoid MCP protocol interference
+  const logger = createLogger(isHTTPMode ? (process.env.LOG_LEVEL as any || 'info') : 'error');
   
   try {
-    const versionInfo = getVersionInfo();
-    logger.info(`Starting ${versionInfo.fullName}`);
-
-    // Check if we should start HTTP server (for Render deployment)
-    const isHTTPMode = process.env.OPTIVISE_MODE === 'server' || process.env.NODE_ENV === 'production';
+    if (isHTTPMode) {
+      const versionInfo = getVersionInfo();
+      logger.info(`Starting ${versionInfo.fullName}`);
+    } else {
+      // In MCP mode, add basic startup verification
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        console.error('🚀 Starting Optivise MCP server...');
+      }
+    }
     
     if (isHTTPMode) {
       // Start HTTP server for Render deployment
@@ -42,7 +49,7 @@ async function main() {
       // Start MCP server for local/IDE usage
       const server = new OptiviseMCPServer({
         logging: {
-          level: process.env.LOG_LEVEL as any || 'info'
+          level: process.env.LOG_LEVEL as any || 'error' // Minimal logging for MCP mode
         },
         features: {
           productDetection: process.env.ENABLE_PRODUCT_DETECTION !== 'false',
@@ -53,12 +60,25 @@ async function main() {
       });
       
       // Initialize and start the server
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        console.error('🔧 Initializing MCP server...');
+      }
       await server.initialize();
-      logger.debug('About to start MCP server...');
+      
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        console.error('🚀 Starting MCP server...');
+      }
+      
       try {
         await server.start();
-        logger.info('Optivise MCP server started successfully');
+        // Only log startup success in debug mode to avoid MCP interference
+        if (process.env.OPTIDEV_DEBUG === 'true') {
+          console.error('✅ Optivise MCP server started successfully');
+        }
       } catch (error) {
+        if (process.env.OPTIDEV_DEBUG === 'true') {
+          console.error('❌ Failed to start MCP server:', error);
+        }
         logger.error('Failed to start MCP server', error as Error);
         process.exit(1);
       }
@@ -83,10 +103,36 @@ async function main() {
   }
 }
 
-// Only run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    console.error('Unhandled error:', error);
+// Debug: Always output something to verify the module is loading
+console.error('🔧 Optivise module loaded - about to start main');
+
+async function simplifiedMain() {
+  console.error('🔧 In simplified main function');
+  
+  try {
+    console.error('🔧 Creating MCP server...');
+    const server = new OptiviseMCPServer({
+      logging: { level: 'error' },
+      features: {
+        productDetection: true,
+        ruleIntelligence: false,
+        documentationFetch: false,
+        knowledgeLearning: false
+      }
+    });
+    
+    console.error('🔧 Starting MCP server...');
+    await server.start();
+    console.error('✅ MCP server started successfully');
+    
+  } catch (error) {
+    console.error('❌ Error in simplified main:', error);
     process.exit(1);
-  });
+  }
 }
+
+// Run simplified version
+simplifiedMain().catch((error) => {
+  console.error('❌ Unhandled error:', error);
+  process.exit(1);
+});
