@@ -25,10 +25,10 @@ export class ProductDetectionService {
     content: string[];
   }> = {
     'configured-commerce': {
-      files: ['*Handler.cs', '*Pipeline.cs', '*.Blueprint.tsx', 'Startup.cs'],
-      directories: ['Extensions/', 'FrontEnd/modules/blueprints/', 'src/Extensions/'],
-      dependencies: ['insite-*', 'InsiteCommerce*', '@insite/*'],
-      content: ['HandlerChainManager', 'IPipelineAssemblyOptions', 'IHandlerFactory']
+      files: ['*Handler.cs', '*Pipeline.cs', '*.Blueprint.tsx', 'Startup.cs', 'ISC.*', 'InsiteCommerce.Web.*', '*.ascx', '*.aspx'],
+      directories: ['Extensions/', 'FrontEnd/', 'src/Extensions/', 'InsiteCommerce.Web/', 'modules/blueprints/', 'Themes/', 'wwwroot/', 'Content/', 'Scripts/'],
+      dependencies: ['insite*', 'InsiteCommerce*', '@insite/*', 'optimizely.commerce*'],
+      content: ['HandlerChainManager', 'IPipelineAssemblyOptions', 'IHandlerFactory', 'insite', 'commerce', 'blueprint', 'configured commerce', 'ISC', 'InsiteCommerce', 'HandlerFactory', 'PipelineAssembly']
     },
     'commerce-connect': {
       files: ['*Connector.cs', '*Sync.cs', 'Commerce.Connect.*'],

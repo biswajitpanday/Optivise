@@ -116,3 +116,4 @@ security-scan-results/
 # PromptHistories (as requested)
 PromptHistories/ 
 .cursor/
+/global_node_modules/

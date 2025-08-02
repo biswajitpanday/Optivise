@@ -33,7 +33,12 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "Bash(timeout:*)",
-      "Bash(npm pack:*)"
+      "Bash(npm pack:*)",
+      "Bash(LOG_LEVEL=error timeout 3s node dist/index.js)",
+      "Bash(OPTIDEV_DEBUG=true timeout 3s node dist/index.js)",
+      "Bash(env OPTIDEV_DEBUG=true timeout 2s node dist/index.js)",
+      "Bash(env OPTIDEV_DEBUG=true timeout 3s node dist/index.js)",
+      "Bash(env OPTIDEV_DEBUG=true timeout 3s node minimal-mcp-test.js)"
     ],
     "deny": []
   }

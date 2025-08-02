@@ -46,6 +46,12 @@ class SimpleLogger implements Logger {
   }
 
   private log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
+    // Silent mode for MCP - no output unless debug is explicitly enabled
+    if (process.env.OPTIDEV_DEBUG !== 'true' && process.env.OPTIVISE_MODE !== 'server') {
+      // In MCP mode, completely silent unless debug is enabled
+      return;
+    }
+    
     // Always log debug messages when OPTIDEV_DEBUG is set
     if (process.env.OPTIDEV_DEBUG === 'true') {
       // Continue with logging regardless of level

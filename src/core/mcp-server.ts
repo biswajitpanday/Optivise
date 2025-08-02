@@ -59,7 +59,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.0.6',
+      version: '5.0.8',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -202,7 +202,9 @@ export class OptiviseMCPServer {
     );
 
     this.setupHandlers();
-    this.logger.info('Optivise MCP Server initialized', { version: config.version });
+    if (process.env.OPTIDEV_DEBUG === 'true') {
+      this.logger.info('Optivise MCP Server initialized', { version: config.version });
+    }
   }
 
   private setupHandlers(): void {
@@ -511,15 +513,17 @@ export class OptiviseMCPServer {
       // documentationSyncService.startAutoSync();
       
       this.isInitialized = true;
-      this.logger.info('Optivise MCP Server initialization completed', {
-        aiEnabled: this.aiEnabled,
-        features: {
-          contextAnalysis: true,
-          vectorSearch: this.aiEnabled,
-          documentationSync: true,
-          multipleTools: true
-        }
-      });
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        this.logger.info('Optivise MCP Server initialization completed', {
+          aiEnabled: this.aiEnabled,
+          features: {
+            contextAnalysis: true,
+            vectorSearch: this.aiEnabled,
+            documentationSync: true,
+            multipleTools: true
+          }
+        });
+      }
 
       // 4. Initialize AI services asynchronously (non-blocking)
       this.initializeAIServicesAsync();
@@ -561,31 +565,41 @@ export class OptiviseMCPServer {
       const openAIInitialized = await openAIClient.initialize();
       
       if (openAIInitialized) {
-        this.logger.info('OpenAI client initialized successfully');
+        if (process.env.OPTIDEV_DEBUG === 'true') {
+          this.logger.info('OpenAI client initialized successfully');
+        }
         
         // Initialize ChromaDB if OpenAI is available
         const chromaInitialized = await chromaDBService.initialize();
         
         if (chromaInitialized) {
-          this.logger.info('ChromaDB service initialized successfully');
+          if (process.env.OPTIDEV_DEBUG === 'true') {
+            this.logger.info('ChromaDB service initialized successfully');
+          }
           this.aiEnabled = true;
         } else {
-          this.logger.warn('ChromaDB initialization failed - vector search disabled');
+          if (process.env.OPTIDEV_DEBUG === 'true') {
+            this.logger.warn('ChromaDB initialization failed - vector search disabled');
+          }
         }
       } else {
-        this.logger.warn('OpenAI client initialization failed - AI features disabled');
-        this.logger.info('Basic features will work without AI. To enable AI features:');
-        this.logger.info('1. Set OPENAI_API_KEY environment variable, or');
-        this.logger.info('2. Configure API key in your IDE (Cursor, VSCode)');
+        if (process.env.OPTIDEV_DEBUG === 'true') {
+          this.logger.warn('OpenAI client initialization failed - AI features disabled');
+          this.logger.info('Basic features will work without AI. To enable AI features:');
+          this.logger.info('1. Set OPENAI_API_KEY environment variable, or');
+          this.logger.info('2. Configure API key in your IDE (Cursor, VSCode)');
+        }
       }
 
-      // Log API key detection results
-      const detection = await this.keyDetector.detectAPIKeys();
-      this.logger.info('API Key Detection Results', {
-        hasOpenAI: detection.hasOpenAI,
-        hasAnthropic: detection.hasAnthropic,
-        foundSources: detection.found.map(s => ({ source: s.source, type: s.type, valid: s.isValid }))
-      });
+      // Log API key detection results only in debug mode
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        const detection = await this.keyDetector.detectAPIKeys();
+        this.logger.info('API Key Detection Results', {
+          hasOpenAI: detection.hasOpenAI,
+          hasAnthropic: detection.hasAnthropic,
+          foundSources: detection.found.map(s => ({ source: s.source, type: s.type, valid: s.isValid }))
+        });
+      }
 
     } catch (error) {
       this.logger.error('AI services initialization failed', error as Error);
@@ -605,7 +619,9 @@ export class OptiviseMCPServer {
     this.logger.debug('Connecting to transport...');
     await this.server.connect(transport);
     
-    this.logger.info('Optivise MCP Server started and connected');
+    if (process.env.OPTIDEV_DEBUG === 'true') {
+      this.logger.info('Optivise MCP Server started and connected');
+    }
     
     // The MCP SDK handles stdin, no need to resume it manually
   }
@@ -623,7 +639,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.0.6',
+      version: '5.0.8',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

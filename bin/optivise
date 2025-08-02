@@ -183,23 +183,29 @@ For Cursor IDE (.cursor-mcp.json or cursor-mcp.json):
 {
   "mcpServers": {
     "optivise": {
-      "command": "optivise-mcp",
-      "args": [],
-      "env": {
-        "OPTIDEV_DEBUG": "false"
-      }
+      "command": "optivise-mcp"
     }
   }
 }
 
-Alternative configuration (if the above doesn't work):
+Alternative configurations:
 {
   "mcpServers": {
     "optivise": {
       "command": "npx",
-      "args": ["optivise-mcp"],
+      "args": ["optivise-mcp"]
+    }
+  }
+}
+
+For debugging, add env vars:
+{
+  "mcpServers": {
+    "optivise": {
+      "command": "optivise-mcp",
       "env": {
-        "OPTIDEV_DEBUG": "false"
+        "OPTIDEV_DEBUG": "true",
+        "LOG_LEVEL": "debug"
       }
     }
   }
