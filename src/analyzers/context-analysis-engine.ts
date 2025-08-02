@@ -18,6 +18,8 @@ import { PromptAnalyzer } from './prompt-analyzer.js';
 import { ProductDetectionService } from '../services/product-detection-service.js';
 import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
 import { DocumentationService } from '../services/documentation-service.js';
+import { chromaDBService } from '../integrations/chromadb-client.js';
+import { openAIClient } from '../integrations/openai-client.js';
 
 export class ContextAnalysisEngine {
   private readonly promptAnalyzer: PromptAnalyzer;
@@ -26,6 +28,7 @@ export class ContextAnalysisEngine {
   private readonly documentationService: DocumentationService;
   private readonly logger: Logger;
   private isInitialized = false;
+  private aiEnabled = false;
 
   constructor(logger: Logger) {
     this.logger = logger;
@@ -51,11 +54,66 @@ export class ContextAnalysisEngine {
       ]);
 
       this.isInitialized = true;
-      this.logger.info('Context Analysis Engine initialized successfully');
+      this.logger.info('Context Analysis Engine initialized successfully', {
+        aiEnabled: this.aiEnabled
+      });
+
+      // Initialize AI services asynchronously (non-blocking)
+      this.initializeAIServicesAsync();
+
     } catch (error) {
       this.logger.error('Failed to initialize Context Analysis Engine', error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Initialize AI services asynchronously without blocking the main initialization
+   */
+  private initializeAIServicesAsync(): void {
+    this.initializeAIServices().catch((error) => {
+      this.logger.warn('AI services not available - running in basic mode', {
+        openAI: false,
+        chromaDB: false
+      });
+    });
+  }
+
+  /**
+   * Initialize AI services (OpenAI and ChromaDB) if available
+   */
+  private async initializeAIServices(): Promise<void> {
+    try {
+      // Initialize OpenAI client
+      const openAIInitialized = await openAIClient.initialize();
+      
+      // Initialize ChromaDB
+      const chromaInitialized = await chromaDBService.initialize();
+      
+      this.aiEnabled = openAIInitialized && chromaInitialized;
+      
+      if (this.aiEnabled) {
+        this.logger.info('AI services initialized successfully', {
+          openAI: openAIInitialized,
+          chromaDB: chromaInitialized
+        });
+      } else {
+        this.logger.warn('AI services not available - running in basic mode', {
+          openAI: openAIInitialized,
+          chromaDB: chromaInitialized
+        });
+      }
+    } catch (error) {
+      this.logger.warn('Failed to initialize AI services, continuing without AI features', { error: error as Error });
+      this.aiEnabled = false;
+    }
+  }
+
+  /**
+   * Check if AI features are available
+   */
+  isAIEnabled(): boolean {
+    return this.aiEnabled;
   }
 
   async analyze(request: ContextAnalysisRequest): Promise<ContextAnalysisResponse> {
@@ -101,7 +159,7 @@ export class ContextAnalysisEngine {
       return response;
 
     } catch (error) {
-      this.logger.error('Context analysis failed');
+      this.logger.error('Context analysis failed', error as Error);
       throw error;
     }
   }
@@ -169,10 +227,15 @@ export class ContextAnalysisEngine {
     try {
       if (products.length === 0) return [];
       
-      // For Phase 2, fetch documentation for detected products
+      // Use AI-powered vector search if available
+      if (this.aiEnabled && intent) {
+        return await this.fetchAIEnhancedDocumentation(products, intent);
+      }
+      
+      // Fallback to basic documentation service
       const documentation = await this.documentationService.fetchDocumentation(products);
       
-      this.logger.debug('Documentation fetched', {
+      this.logger.debug('Documentation fetched (basic mode)', {
         products,
         documentsRetrieved: documentation.length
       });
@@ -184,21 +247,85 @@ export class ContextAnalysisEngine {
     }
   }
 
+  /**
+   * Fetch documentation using AI-powered vector search
+   */
+  private async fetchAIEnhancedDocumentation(products: OptimizelyProduct[], query: string) {
+    try {
+      const results = [];
+      
+      // Search across all relevant product collections
+      for (const product of products.slice(0, 2)) { // Limit to top 2 products
+        const searchResults = await chromaDBService.searchDocuments(query, {
+          product,
+          limit: 5,
+          threshold: 0.7
+        });
+        
+        results.push(...searchResults.map(result => ({
+          title: result.metadata.title || 'Documentation',
+          content: result.content,
+          url: result.metadata.url || '#',
+          product: result.metadata.product,
+          relevance: result.similarity,
+          contentType: result.metadata.contentType
+        })));
+      }
+      
+      // Also search general platform documentation
+      const platformResults = await chromaDBService.searchDocuments(query, {
+        product: 'platform',
+        limit: 3,
+        threshold: 0.6
+      });
+      
+      results.push(...platformResults.map(result => ({
+        title: result.metadata.title || 'Platform Documentation',
+        content: result.content,
+        url: result.metadata.url || '#',
+        product: 'platform',
+        relevance: result.similarity,
+        contentType: result.metadata.contentType
+      })));
+      
+      // Sort by relevance and deduplicate
+      const uniqueResults = results
+        .sort((a, b) => b.relevance - a.relevance)
+        .filter((result, index, array) => 
+          array.findIndex(r => r.url === result.url) === index
+        )
+        .slice(0, 10); // Limit to top 10 results
+      
+      this.logger.debug('AI-enhanced documentation fetched', {
+        products,
+        query,
+        documentsRetrieved: uniqueResults.length,
+        avgRelevance: uniqueResults.reduce((sum, r) => sum + r.relevance, 0) / uniqueResults.length
+      });
+      
+      return uniqueResults;
+    } catch (error) {
+      this.logger.error('AI-enhanced documentation fetch failed', error as Error);
+      // Fallback to basic documentation service
+      return await this.documentationService.fetchDocumentation(products);
+    }
+  }
+
   private async curateContext(
     promptAnalysis: PromptAnalysisResult,
     detectedProducts: OptimizelyProduct[],
     ruleAnalysis?: any,
     documentation?: any[]
   ): Promise<CuratedResponse> {
-    // Phase 2 implementation with rule intelligence and documentation service
+    // Enhanced Phase 3 implementation with AI-powered curation
     const context: CuratedResponse = {
       relevance: promptAnalysis.relevance,
       productContext: detectedProducts,
-      summary: this.generateSummary(promptAnalysis, detectedProducts, ruleAnalysis),
-      actionableSteps: this.generateActionableSteps(promptAnalysis, detectedProducts, ruleAnalysis),
+      summary: await this.generateEnhancedSummary(promptAnalysis, detectedProducts, ruleAnalysis, documentation),
+      actionableSteps: await this.generateEnhancedActionableSteps(promptAnalysis, detectedProducts, ruleAnalysis, documentation),
       codeExamples: this.extractCodeExamples(documentation || []),
       documentation: this.formatDocumentationLinks(documentation || []),
-      bestPractices: this.generateBestPractices(detectedProducts, ruleAnalysis)
+      bestPractices: await this.generateEnhancedBestPractices(detectedProducts, ruleAnalysis, documentation)
     };
 
     return context;
@@ -232,6 +359,136 @@ export class ContextAnalysisEngine {
         return `Configuration help ${productContext}${ruleContext} - assisting with setup and configuration tasks.`;
       default:
         return `Development assistance ${productContext}${ruleContext} - providing contextual guidance and support.`;
+    }
+  }
+
+  /**
+   * Generate enhanced summary using AI when available
+   */
+  private async generateEnhancedSummary(
+    promptAnalysis: PromptAnalysisResult,
+    detectedProducts: OptimizelyProduct[],
+    ruleAnalysis?: any,
+    documentation?: any[]
+  ): Promise<string> {
+    if (!this.aiEnabled || !documentation?.length) {
+      return this.generateSummary(promptAnalysis, detectedProducts, ruleAnalysis);
+    }
+
+    try {
+      // Use AI to create a more contextual summary based on retrieved documentation
+      const relevantContent = documentation
+        .filter(doc => doc.relevance > 0.7)
+        .slice(0, 3)
+        .map(doc => doc.content.substring(0, 200))
+        .join(' ');
+
+      if (relevantContent.length < 50) {
+        return this.generateSummary(promptAnalysis, detectedProducts, ruleAnalysis);
+      }
+
+      const productNames = detectedProducts.map(p => this.getProductDisplayName(p));
+      const productContext = productNames.length > 0 
+        ? `for ${productNames.join(', ')} development`
+        : 'for Optimizely development';
+
+      // Enhanced summary with AI-retrieved context
+      return `AI-enhanced analysis ${productContext} - Found ${documentation.length} relevant documentation sources with average relevance of ${(documentation.reduce((sum, doc) => sum + (doc.relevance || 0), 0) / documentation.length).toFixed(2)}. Context includes: ${relevantContent.split(' ').slice(0, 20).join(' ')}...`;
+
+    } catch (error) {
+      this.logger.warn('Failed to generate AI-enhanced summary, falling back to basic', { error: error as Error });
+      return this.generateSummary(promptAnalysis, detectedProducts, ruleAnalysis);
+    }
+  }
+
+  /**
+   * Generate enhanced actionable steps using AI-retrieved documentation
+   */
+  private async generateEnhancedActionableSteps(
+    promptAnalysis: PromptAnalysisResult,
+    detectedProducts: OptimizelyProduct[],
+    ruleAnalysis?: any,
+    documentation?: any[]
+  ): Promise<string[]> {
+    const basicSteps = this.generateActionableSteps(promptAnalysis, detectedProducts, ruleAnalysis);
+
+    if (!this.aiEnabled || !documentation?.length) {
+      return basicSteps;
+    }
+
+    try {
+      const enhancedSteps = [...basicSteps];
+
+      // Add AI-powered contextual steps based on documentation
+      const highRelevanceDocs = documentation.filter(doc => doc.relevance > 0.75);
+      
+      if (highRelevanceDocs.length > 0) {
+        enhancedSteps.unshift(`🤖 AI-Suggested: Review ${highRelevanceDocs.length} highly relevant documentation sources (avg relevance: ${(highRelevanceDocs.reduce((sum, doc) => sum + doc.relevance, 0) / highRelevanceDocs.length).toFixed(2)})`);
+      }
+
+      // Add specific documentation links as actionable steps
+      const topDocs = documentation.slice(0, 2);
+      topDocs.forEach(doc => {
+        if (doc.url && doc.url !== '#') {
+          enhancedSteps.push(`📖 Review: ${doc.title} (relevance: ${doc.relevance.toFixed(2)})`);
+        }
+      });
+
+      return enhancedSteps.slice(0, 8); // Limit to 8 steps
+
+    } catch (error) {
+      this.logger.warn('Failed to generate AI-enhanced steps, using basic', { error: error as Error });
+      return basicSteps;
+    }
+  }
+
+  /**
+   * Generate enhanced best practices using AI-retrieved documentation
+   */
+  private async generateEnhancedBestPractices(
+    detectedProducts: OptimizelyProduct[],
+    ruleAnalysis?: any,
+    documentation?: any[]
+  ): Promise<string[]> {
+    const basicPractices = this.generateBestPractices(detectedProducts, ruleAnalysis);
+
+    if (!this.aiEnabled || !documentation?.length) {
+      return basicPractices;
+    }
+
+    try {
+      const enhancedPractices = [...basicPractices];
+
+      // Extract best practices from AI-retrieved documentation
+      const practiceKeywords = ['best practice', 'recommended', 'should', 'avoid', 'pattern', 'guideline'];
+      
+      documentation.forEach(doc => {
+        if (doc.relevance > 0.6 && doc.contentType === 'documentation') {
+          const content = doc.content.toLowerCase();
+          const hasPracticeContent = practiceKeywords.some(keyword => content.includes(keyword));
+          
+          if (hasPracticeContent) {
+            // Extract sentences that contain best practice keywords
+            const sentences = doc.content.split(/[.!?]/);
+            const practiceSentences = sentences.filter((sentence: string) => 
+              practiceKeywords.some(keyword => sentence.toLowerCase().includes(keyword))
+            );
+            
+            if (practiceSentences.length > 0) {
+              const cleanSentence = practiceSentences[0].trim().replace(/^[^A-Z]*/, '');
+              if (cleanSentence.length > 20 && cleanSentence.length < 150) {
+                enhancedPractices.push(`🤖 AI-Found: ${cleanSentence}`);
+              }
+            }
+          }
+        }
+      });
+
+      return [...new Set(enhancedPractices)].slice(0, 10); // Deduplicate and limit
+
+    } catch (error) {
+      this.logger.warn('Failed to generate AI-enhanced best practices, using basic', { error: error as Error });
+      return basicPractices;
     }
   }
 

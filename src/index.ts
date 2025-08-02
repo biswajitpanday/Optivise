@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Optix v3.0.0 Entry Point
- * Main entry point for the Optix MCP server with HTTP server support
+ * Optivise v5.0.6 Entry Point
+ * Main entry point for the Optivise MCP server with HTTP server support
  */
 
 import { OptiviseMCPServer } from './core/mcp-server.js';
@@ -11,6 +11,7 @@ import { createLogger } from './utils/logger.js';
 import { getVersionInfo } from './config/version.js';
 
 async function main() {
+  // Don't log to stdout in MCP mode as it interferes with the protocol
   const logger = createLogger(process.env.LOG_LEVEL as any || 'info');
   
   try {
@@ -53,9 +54,14 @@ async function main() {
       
       // Initialize and start the server
       await server.initialize();
-      await server.start();
-      
-      logger.info('Optivise MCP server started successfully');
+      logger.debug('About to start MCP server...');
+      try {
+        await server.start();
+        logger.info('Optivise MCP server started successfully');
+      } catch (error) {
+        logger.error('Failed to start MCP server', error as Error);
+        process.exit(1);
+      }
 
       // Graceful shutdown for MCP server
       process.on('SIGINT', async () => {

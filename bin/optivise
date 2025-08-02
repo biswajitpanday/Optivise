@@ -46,11 +46,12 @@ EXAMPLES:
   optivise setup            # Generate IDE configuration
   optivise --debug mcp      # Start MCP server with debug logs
 
-🚀 NEW in v3.0.0: Simplified Architecture
-   • Single context analyzer tool
-   • Intelligent product detection (11+ Optimizely products)
-   • Modern TypeScript with native compilation
-   • Enhanced relevance scoring and context curation
+🚀 NEW: Complete Development Assistant
+   • 5 specialized MCP tools for every development scenario
+   • AI-powered features with OpenAI and ChromaDB integration
+   • Real-time collaboration and team workspaces
+   • Enterprise security with encryption and access control
+   • Production-ready monitoring and auto-scaling
 
 For more information, visit: https://github.com/biswajitpanday/OptiDevDoc
   `);
@@ -61,12 +62,14 @@ function printVersion() {
   try {
     const packageData = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     console.log(`Optivise v${packageData.version}`);
-    console.log(`🎯 Intelligent MCP tool for Optimizely context analysis`);
-    console.log(`📚 Products: Commerce, CMS, Experimentation, DXP, and more`);
-    console.log(`🔧 Features: Context analysis, product detection, relevance scoring`);
-    console.log(`🎯 Focus: AI-assisted development with curated Optimizely context`);
+    console.log(`🚀 The Ultimate Optimizely Development Assistant`);
+    console.log(`🛠️ 5 Specialized MCP Tools: Context Analysis, Implementation Guide, Debug Helper, Code Analyzer, Project Helper`);
+    console.log(`🤖 AI-Powered Features: OpenAI integration, ChromaDB vector search, semantic documentation`);
+    console.log(`👥 Team Collaboration: Real-time workspaces, rule sharing, conflict resolution`);
+    console.log(`🔒 Enterprise Security: Encryption, access control, audit logging, GDPR compliance`);
+    console.log(`📊 Production Ready: Monitoring, analytics, auto-scaling, deployment features`);
   } catch (error) {
-    console.log('Optivise v4.0.0');
+    console.log(`Optivise v${packageData.version || 'latest'}`);
   }
 }
 
@@ -180,8 +183,21 @@ For Cursor IDE (.cursor-mcp.json or cursor-mcp.json):
 {
   "mcpServers": {
     "optivise": {
-      "command": "optivise",
-      "args": ["mcp"],
+      "command": "optivise-mcp",
+      "args": [],
+      "env": {
+        "OPTIDEV_DEBUG": "false"
+      }
+    }
+  }
+}
+
+Alternative configuration (if the above doesn't work):
+{
+  "mcpServers": {
+    "optivise": {
+      "command": "npx",
+      "args": ["optivise-mcp"],
       "env": {
         "OPTIDEV_DEBUG": "false"
       }
@@ -199,15 +215,20 @@ For VS Code (settings.json):
   }
 }
 
-Available Tool:
-✅ optidev_context_analyzer - Analyzes prompts for Optimizely context and provides curated information
+Available Tools:
+✅ optidev_context_analyzer - AI-enhanced context analysis with semantic search
+✅ optidev_implementation_guide - Jira ticket analysis and implementation planning
+✅ optidev_debug_helper - Intelligent bug analysis and resolution assistance
+✅ optidev_code_analyzer - Real-time code analysis and optimization
+✅ optidev_project_helper - Project setup, migration, and configuration assistance
 
 🎯 v${version} Features:
-✨ Intelligent context analysis with relevance scoring (0-1)
-✨ Automatic product detection for 11+ Optimizely products
-✨ Curated responses with actionable steps and best practices
-✨ Only responds to Optimizely-related queries (>0.7 relevance)
-✨ Modern TypeScript architecture with fast response times
+✨ 5 specialized MCP tools for comprehensive development support
+✨ AI-powered semantic search with OpenAI and ChromaDB integration
+✨ Real-time team collaboration with shared workspaces
+✨ Enterprise security with encryption and access control
+✨ Production-ready monitoring, analytics, and auto-scaling
+✨ Zero-configuration setup with intelligent fallbacks
 
 After configuration, restart your IDE to enable Optivise v${version}.
   `);

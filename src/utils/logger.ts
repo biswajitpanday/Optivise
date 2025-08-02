@@ -46,7 +46,10 @@ class SimpleLogger implements Logger {
   }
 
   private log(level: LogLevel, message: string, meta?: Record<string, unknown>): void {
-    if (this.levelValues[level] < this.levelValues[this.level]) {
+    // Always log debug messages when OPTIDEV_DEBUG is set
+    if (process.env.OPTIDEV_DEBUG === 'true') {
+      // Continue with logging regardless of level
+    } else if (this.levelValues[level] < this.levelValues[this.level]) {
       return;
     }
 
@@ -70,10 +73,10 @@ class SimpleLogger implements Logger {
         console.warn(output);
         break;
       case 'debug':
-        console.debug(output);
+        console.error(output); // Use stderr for debug messages too
         break;
       default:
-        console.log(output);
+        console.error(output); // Use stderr for info messages to avoid interfering with MCP protocol
     }
   }
 
