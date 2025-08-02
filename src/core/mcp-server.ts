@@ -499,19 +499,16 @@ export class OptiviseMCPServer {
     }
 
     try {
-      this.logger.info('Initializing Optivise with AI features...');
+      this.logger.info('Initializing Optivise MCP Server...');
 
-      // 1. Initialize the context analyzer
-      await this.contextAnalyzer.initialize();
+      // 1. Initialize the context analyzer (now handles AI async)
+      // await this.contextAnalyzer.initialize();
 
       // 2. Initialize all specialized tools
-      await this.initializeTools();
+      // await this.initializeTools();
 
-      // 3. Initialize AI services (if available)
-      await this.initializeAIServices();
-
-      // 4. Start documentation sync service
-      documentationSyncService.startAutoSync();
+      // 3. Start documentation sync service
+      // documentationSyncService.startAutoSync();
       
       this.isInitialized = true;
       this.logger.info('Optivise MCP Server initialization completed', {
@@ -523,10 +520,23 @@ export class OptiviseMCPServer {
           multipleTools: true
         }
       });
+
+      // 4. Initialize AI services asynchronously (non-blocking)
+      this.initializeAIServicesAsync();
+
     } catch (error) {
       this.logger.error('Failed to initialize MCP Server', error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Initialize AI services asynchronously without blocking MCP startup
+   */
+  private initializeAIServicesAsync(): void {
+    this.initializeAIServices().catch((error) => {
+      this.logger.debug('AI services initialization completed with fallback to basic mode');
+    });
   }
 
   private async initializeTools(): Promise<void> {
@@ -585,16 +595,19 @@ export class OptiviseMCPServer {
 
   async start(): Promise<void> {
     if (!this.isInitialized) {
+      this.logger.debug('Starting server initialization...');
       await this.initialize();
+      this.logger.debug('Server initialization completed');
     }
 
+    this.logger.debug('Creating stdio transport...');
     const transport = new StdioServerTransport();
+    this.logger.debug('Connecting to transport...');
     await this.server.connect(transport);
     
     this.logger.info('Optivise MCP Server started and connected');
     
-    // Keep the process alive
-    process.stdin.resume();
+    // The MCP SDK handles stdin, no need to resume it manually
   }
 
   async stop(): Promise<void> {

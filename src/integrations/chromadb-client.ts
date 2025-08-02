@@ -73,18 +73,18 @@ export class ChromaDBService {
       // Test connection
       const heartbeat = await this.client.heartbeat();
       if (!heartbeat) {
-        console.error('ChromaDB connection failed - no heartbeat response');
+        // Silently return false during initialization
         return false;
       }
 
       // Initialize collections for each Optimizely product
       await this.initializeCollections();
 
-      console.log('ChromaDB initialized successfully');
+      // ChromaDB initialized successfully
       return true;
 
     } catch (error) {
-      console.error('Failed to initialize ChromaDB:', error);
+      // Silently return false during initialization
       return false;
     }
   }

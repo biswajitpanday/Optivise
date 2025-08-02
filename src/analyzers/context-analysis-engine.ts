@@ -53,17 +53,30 @@ export class ContextAnalysisEngine {
         this.documentationService.initialize()
       ]);
 
-      // Initialize AI services if available
-      await this.initializeAIServices();
-
       this.isInitialized = true;
       this.logger.info('Context Analysis Engine initialized successfully', {
         aiEnabled: this.aiEnabled
       });
+
+      // Initialize AI services asynchronously (non-blocking)
+      this.initializeAIServicesAsync();
+
     } catch (error) {
       this.logger.error('Failed to initialize Context Analysis Engine', error as Error);
       throw error;
     }
+  }
+
+  /**
+   * Initialize AI services asynchronously without blocking the main initialization
+   */
+  private initializeAIServicesAsync(): void {
+    this.initializeAIServices().catch((error) => {
+      this.logger.warn('AI services not available - running in basic mode', {
+        openAI: false,
+        chromaDB: false
+      });
+    });
   }
 
   /**

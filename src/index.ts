@@ -11,7 +11,7 @@ import { createLogger } from './utils/logger.js';
 import { getVersionInfo } from './config/version.js';
 
 async function main() {
-  console.log('Starting Optivise main function...');
+  // Don't log to stdout in MCP mode as it interferes with the protocol
   const logger = createLogger(process.env.LOG_LEVEL as any || 'info');
   
   try {

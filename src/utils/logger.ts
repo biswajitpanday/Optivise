@@ -73,10 +73,10 @@ class SimpleLogger implements Logger {
         console.warn(output);
         break;
       case 'debug':
-        console.debug(output);
+        console.error(output); // Use stderr for debug messages too
         break;
       default:
-        console.log(output);
+        console.error(output); // Use stderr for info messages to avoid interfering with MCP protocol
     }
   }
 

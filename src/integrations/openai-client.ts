@@ -53,7 +53,7 @@ export class OpenAIClientService {
       const detection = await this.keyDetector.detectAPIKeys();
       
       if (!detection.hasOpenAI) {
-        console.warn('No OpenAI API keys found. AI features will be disabled.');
+        // Silently return false during initialization
         return false;
       }
 
@@ -63,14 +63,14 @@ export class OpenAIClientService {
         : detection.found.find(key => key.type === 'openai' && key.isValid);
 
       if (!openAIKey) {
-        console.warn('No valid OpenAI API keys found.');
+        // Silently return false during initialization
         return false;
       }
 
       // Get the actual key value
       const apiKey = await this.getKeyValue(openAIKey);
       if (!apiKey) {
-        console.error('Failed to retrieve API key value.');
+        // Silently return false during initialization
         return false;
       }
 
