@@ -10,7 +10,8 @@
     "optivise-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "npm run clean && tsc && npm run copy-assets && chmod +x dist/index.js",
+    "build": "npm run clean && tsc && npm run copy-assets && npm run make-executable",
+    "make-executable": "node -e \"try { require('fs').chmodSync('dist/index.js', '755'); } catch(e) { console.log('chmod not needed on this platform'); }\"",
     "clean": "rimraf dist",
     "copy-assets": "copyfiles -u 1 'src/**/*.json' 'src/**/*.md' dist/",
     "start": "node dist/index.js",
