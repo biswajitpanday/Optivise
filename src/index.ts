@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * Optix v3.0.0 Entry Point
- * Main entry point for the Optix MCP server with HTTP server support
+ * Optivise v5.0.4 Entry Point
+ * Main entry point for the Optivise MCP server with HTTP server support
  */
 
 import { OptiviseMCPServer } from './core/mcp-server.js';

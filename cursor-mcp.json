@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "optivise": {
+      "command": "optivise-mcp",
+      "args": [],
+      "env": {
+        "OPTIDEV_DEBUG": "false"
+      }
+    }
+  }
+}

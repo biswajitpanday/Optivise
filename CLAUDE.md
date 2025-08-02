@@ -112,9 +112,16 @@ interface ProductDetectionResult {
 - **Automatic Setup**: Zero-config using existing IDE AI keys with user permission
 - **Privacy-First**: Local processing, no source code transmission
 
+### MCP Integration (Fixed in v5.0.4)
+- **MCP SDK**: Updated to v1.12.0 for compatibility with modern IDEs
+- **Direct Binary**: `optivise-mcp` binary for direct MCP server execution
+- **Cursor IDE**: Proper configuration with executable permissions
+- **Multiple Entry Points**: Both wrapper script and direct MCP server access
+
 ### New Dependencies
 ```json
 {
+  "@modelcontextprotocol/sdk": "^1.12.0", // Updated MCP SDK
   "openai": "^4.20.0",                    // AI embeddings service
   "chromadb": "^1.8.0",                  // Vector database
   "cheerio": "^1.0.0-rc.12",             // HTML parsing for web scraping
