@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * MCP Wrapper for Optivise v5.0.5
+ * MCP Wrapper for Optivise v5.0.6
  * Simplified wrapper that directly executes the server
  */
 

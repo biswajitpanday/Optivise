@@ -13,7 +13,7 @@ class OptiviseMCPServer {
   constructor() {
     // Create MCP Server
     this.server = new Server(
-      { name: 'optivise-ultimate-assistant', version: '5.0.5' },
+      { name: 'optivise-ultimate-assistant', version: '5.0.6' },
       { capabilities: { tools: {} } }
     );
     

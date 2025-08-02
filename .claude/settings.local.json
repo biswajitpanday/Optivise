@@ -32,7 +32,8 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(npm pack:*)"
     ],
     "deny": []
   }

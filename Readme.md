@@ -57,28 +57,55 @@ optivise --version
 ### IDE Configuration
 
 #### For Cursor IDE (Recommended):
+Create or update `.cursor/mcp.json` in your project:
 ```json
 {
   "mcpServers": {
     "optivise": {
-      "command": "optivise",
-      "args": ["mcp"],
-      "env": {}
+      "command": "node",
+      "args": ["./node_modules/optivise/mcp-wrapper.cjs"],
+      "env": {
+        "OPTIDEV_DEBUG": "false",
+        "LOG_LEVEL": "error",
+        "NODE_OPTIONS": "--no-warnings"
+      }
     }
   }
 }
 ```
 
 #### For VS Code:
+Add to your VS Code settings:
 ```json
 {
   "mcp.servers": [
     {
       "name": "optivise",
-      "command": "optivise",
-      "args": ["mcp"]
+      "command": "node",
+      "args": ["./node_modules/optivise/mcp-wrapper.cjs"],
+      "env": {
+        "OPTIDEV_DEBUG": "false",
+        "LOG_LEVEL": "error"
+      }
     }
   ]
+}
+```
+
+#### Global Installation Configuration:
+If installed globally, reference the global path:
+```json
+{
+  "mcpServers": {
+    "optivise": {
+      "command": "node",
+      "args": ["/usr/local/lib/node_modules/optivise/mcp-wrapper.cjs"],
+      "env": {
+        "OPTIDEV_DEBUG": "false",
+        "LOG_LEVEL": "error"
+      }
+    }
+  }
 }
 ```
 
@@ -365,6 +392,41 @@ optivise deploy --strategy=blue-green --monitoring=enabled
 - **💬 [Community Forum](https://community.optivise.dev)**: User discussions and help
 - **📧 [Enterprise Support](mailto:enterprise@optivise.dev)**: Professional support services
 - **🎓 [Training](mailto:training@optivise.dev)**: Team training and onboarding
+
+## 🔧 **Troubleshooting**
+
+### Common Issues and Solutions
+
+#### MCP Server Not Connecting
+- **Verify Node.js version**: Ensure Node.js >= 18.0.0
+- **Check file paths**: Use absolute paths for global installations
+- **Restart IDE**: After configuration changes, restart your IDE
+- **Check logs**: Look for error messages in IDE MCP logs
+
+#### Tools Not Available
+- **Verify configuration**: Ensure `mcp-wrapper.cjs` path is correct
+- **Test connection**: Use MCP inspector: `npx @modelcontextprotocol/inspector node ./node_modules/optivise/mcp-wrapper.cjs`
+- **Environment variables**: Set `LOG_LEVEL=debug` for detailed logs
+
+#### Windows Path Issues
+Use forward slashes or double backslashes in JSON:
+```json
+"args": ["./node_modules/optivise/mcp-wrapper.cjs"]
+// OR
+"args": ["C:\\path\\to\\node_modules\\optivise\\mcp-wrapper.cjs"]
+```
+
+#### Global Installation Path
+Find your global modules path:
+```bash
+npm root -g
+# Then use: {global_path}/optivise/mcp-wrapper.cjs
+```
+
+### Getting Help
+- **Issues**: [GitHub Issues](https://github.com/biswajitpanday/OptiDevDoc/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/biswajitpanday/OptiDevDoc/discussions)
+- **Documentation**: [Complete User Guide](./docs/USER_GUIDE.md)
 
 ## 🏆 **Success Stories**
 

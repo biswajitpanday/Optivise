@@ -1,8 +1,16 @@
-# Source files (compiled versions are in dist/)
+# Source files (we use CommonJS version)
 src/
 tsconfig.json
 .eslintrc.json
 .prettierrc
+eslint.config.js
+
+# Temporary test files
+*test*.cjs
+*test*.js
+debug-*.cjs
+simple-*.cjs
+minimal-*.cjs
 
 # Development files
 logs/

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Optivise v5.0.5 Entry Point
+ * Optivise v5.0.6 Entry Point
  * Main entry point for the Optivise MCP server with HTTP server support
  */
 

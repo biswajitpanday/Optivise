@@ -112,7 +112,7 @@ interface ProductDetectionResult {
 - **Automatic Setup**: Zero-config using existing IDE AI keys with user permission
 - **Privacy-First**: Local processing, no source code transmission
 
-### MCP Integration (Fixed in v5.0.5)
+### MCP Integration (Fixed in v5.0.6)
 - **MCP SDK**: Updated to v1.12.0 for compatibility with modern IDEs
 - **Direct Binary**: `optivise-mcp` binary for direct MCP server execution
 - **Cursor IDE**: Proper configuration with executable permissions
