@@ -4,8 +4,14 @@
  */
 
 import { createServer } from 'http';
+import { z } from 'zod';
+import { openAIClient } from '../integrations/openai-client.js';
+import { chromaDBService } from '../integrations/chromadb-client.js';
+import { documentationSyncService } from '../services/documentation-service.js';
+import { auditTrail } from '../services/audit-trail.js';
 import { ContextAnalysisEngine } from '../analyzers/context-analysis-engine.js';
 import { createLogger } from '../utils/logger.js';
+import { generateCorrelationId, runWithCorrelationId } from '../utils/correlation.js';
 import { getVersion } from '../config/version.js';
 import type { ContextAnalysisRequest, Logger } from '../types/index.js';
 
@@ -14,25 +20,52 @@ export class OptiviseHTTPServer {
   private readonly contextAnalyzer: ContextAnalysisEngine;
   private readonly logger: Logger;
   private readonly port: number;
+  private shuttingDown = false;
+  private readonly allowedOrigins: string[];
+  private readonly requestTimeoutMs: number;
+  private readonly auditEnabled: boolean;
+  private readonly auditKey?: string;
+  private readonly analyzeSchema = z.object({
+    prompt: z.string().min(1),
+    projectPath: z.string().optional(),
+    ideRules: z.array(z.string()).optional()
+  });
 
   constructor(port = 3000) {
     this.port = port;
     this.logger = createLogger('info');
     this.contextAnalyzer = new ContextAnalysisEngine(this.logger);
+    this.allowedOrigins = (process.env.CORS_ALLOW_ORIGINS || '*')
+      .split(',')
+      .map((o) => o.trim())
+      .filter(Boolean);
+    this.requestTimeoutMs = parseInt(process.env.REQUEST_TIMEOUT_MS || '15000', 10);
+    this.auditEnabled = process.env.OPTIVISE_AUDIT === 'true';
+    this.auditKey = process.env.AUDIT_API_KEY;
   }
 
   async initialize(): Promise<void> {
     await this.contextAnalyzer.initialize();
     
     this.server = createServer(async (req, res) => {
-      // Set CORS headers
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      // Strict CORS
+      const origin = req.headers['origin'] as string | undefined;
+      const allowAny = this.allowedOrigins.includes('*');
+      const originAllowed = allowAny || (origin ? this.allowedOrigins.includes(origin) : false);
+      if (origin && originAllowed) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+      }
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
       if (req.method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
+        return;
+      }
+      if (!originAllowed && !allowAny) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'CORS origin not allowed' }));
         return;
       }
 
@@ -48,8 +81,61 @@ export class OptiviseHTTPServer {
           status: 'healthy',
           service: 'optivise',
           version: getVersion(),
+          uptime: process.uptime(),
+          ai: {
+            openAI: openAIClient.isAvailable?.() ?? false,
+            vectorSearch: chromaDBService.isAvailable?.() ?? false
+          },
+          index: await chromaDBService.getCollectionStats().catch(() => ({})),
+          docSync: documentationSyncService.getSyncStatus(),
           timestamp: new Date().toISOString()
         }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url === '/ready') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        const featureMatrix = {
+          contextAnalysis: true,
+          productDetection: true,
+          aiIntegration: this.contextAnalyzer.isAIEnabled?.() ?? false
+        };
+        res.end(JSON.stringify({
+          status: 'ready',
+          service: 'optivise',
+          version: getVersion(),
+          features: featureMatrix,
+          services: {
+            openAI: { available: openAIClient.isAvailable?.() ?? false },
+            chromaDB: { available: chromaDBService.isAvailable?.() ?? false },
+            documentationSync: { autoSyncEnabled: documentationSyncService.getSyncStatus().autoSyncEnabled }
+          },
+          stats: {
+            uptime: process.uptime(),
+            index: await chromaDBService.getCollectionStats().catch(() => ({}))
+          },
+          timestamp: new Date().toISOString()
+        }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url === '/audit') {
+        if (!this.auditEnabled) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Not found' }));
+          return;
+        }
+        const auth = (req.headers['authorization'] || '').toString();
+        const headerKey = (req.headers['x-optivise-audit-key'] || '').toString();
+        const bearer = auth.startsWith('Bearer ') ? auth.substring(7) : '';
+        const provided = bearer || headerKey;
+        if (!this.auditKey || provided !== this.auditKey) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Forbidden' }));
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ events: auditTrail.getRecent() }));
         return;
       }
 
@@ -63,6 +149,28 @@ export class OptiviseHTTPServer {
           context_analyzer: 'initialized',
           timestamp: new Date().toISOString()
         }));
+        return;
+      }
+
+      if (req.method === 'GET' && req.url?.startsWith('/evidence')) {
+        // Evidence API (opt-in via debug): returns limited evidence summary
+        const qp = new URL(req.url, 'http://localhost').searchParams;
+        const prompt = qp.get('prompt') || '';
+        const projectPath = qp.get('projectPath') || '';
+        try {
+          const detection = projectPath
+            ? await this.contextAnalyzer['productDetectionService']?.detectFromProject(projectPath)
+            : await this.contextAnalyzer['productDetectionService']?.detectFromPrompt(prompt, []);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            products: detection?.products || [],
+            evidence: detection?.evidence?.slice(0, 20) || [],
+            confidence: detection?.confidence || 0
+          }));
+        } catch (error) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Evidence inspection failed' }));
+        }
         return;
       }
 
@@ -102,7 +210,24 @@ export class OptiviseHTTPServer {
 
         req.on('end', async () => {
           try {
-            const request: ContextAnalysisRequest = JSON.parse(body);
+            const incomingCorr = (req.headers['x-correlation-id'] as string) || undefined;
+            const corrId = incomingCorr || generateCorrelationId('http');
+            res.setHeader('X-Correlation-Id', corrId);
+            await runWithCorrelationId(corrId, async () => {
+            // Basic size guard
+            if (body.length > 512 * 1024) {
+              res.writeHead(413, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Payload too large' }));
+              return;
+            }
+            const json = JSON.parse(body);
+            const parsed = this.analyzeSchema.safeParse(json);
+            if (!parsed.success) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Invalid request', details: parsed.error.issues }));
+              return;
+            }
+            const request: ContextAnalysisRequest = parsed.data;
             
             if (!request.prompt) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
@@ -110,15 +235,20 @@ export class OptiviseHTTPServer {
               return;
             }
 
-            const result = await this.contextAnalyzer.analyze(request);
+            const result = await Promise.race([
+              this.contextAnalyzer.analyze(request),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), this.requestTimeoutMs))
+            ] as const) as any;
             
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify(result));
+            });
           } catch (error) {
             this.logger.error('Analysis failed', error as Error);
-            res.writeHead(500, { 'Content-Type': 'application/json' });
+            const isTimeout = error instanceof Error && error.message.includes('timeout');
+            res.writeHead(isTimeout ? 504 : 500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ 
-              error: 'Analysis failed', 
+              error: isTimeout ? 'Gateway Timeout' : 'Analysis failed', 
               message: error instanceof Error ? error.message : 'Unknown error' 
             }));
           }
@@ -146,10 +276,33 @@ export class OptiviseHTTPServer {
       this.logger.info(`Open http://localhost:${this.port} in your browser to test`);
       this.logger.info(`Server is listening on all interfaces (0.0.0.0:${this.port})`);
     });
+
+    // Simple rate limiting (per-process, naive)
+    const requests: number[] = [];
+    const windowMs = 60 * 1000;
+    const maxReqPerWindow = 120;
+    const originalListener = this.server.listeners('request')[0];
+    this.server.removeAllListeners('request');
+    this.server.on('request', (req: any, res: any) => {
+      const now = Date.now();
+      while (requests.length && now - requests[0] > windowMs) requests.shift();
+      requests.push(now);
+      if (requests.length > maxReqPerWindow) {
+        res.writeHead(429, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Too many requests' }));
+        return;
+      }
+      originalListener.call(this.server, req, res);
+    });
   }
 
   async stop(): Promise<void> {
-    return new Promise((resolve) => {
+    if (this.shuttingDown) return;
+    this.shuttingDown = true;
+    return new Promise(async (resolve) => {
+      try {
+        await this.contextAnalyzer.shutdown?.();
+      } catch {}
       this.server.close(() => {
         this.logger.info('Optivise HTTP Server stopped');
         resolve();

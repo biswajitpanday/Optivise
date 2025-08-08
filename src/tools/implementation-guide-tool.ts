@@ -6,11 +6,26 @@
 import { chromaDBService } from '../integrations/chromadb-client.js';
 import { openAIClient } from '../integrations/openai-client.js';
 import { ProductDetectionService } from '../services/product-detection-service.js';
-import type { Logger } from '../types/index.js';
+import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
+import type { Logger, LLMRequest, PromptContext, ContextBlock } from '../types/index.js';
+import { RequestFormatter } from '../formatters/request-formatter.js';
+import { FormatterTemplates } from '../formatters/templates.js';
+import { z } from 'zod';
+
+export const ImplementationGuideRequestSchema = z.object({
+  ticketContent: z.string().min(1, 'ticketContent is required'),
+  projectContext: z.string().optional(),
+  userPrompt: z.string().optional(),
+  promptContext: z.any().optional(),
+  projectPath: z.string().optional()
+});
 
 export interface ImplementationGuideRequest {
   ticketContent: string;
   projectContext?: string;
+  userPrompt?: string;
+  promptContext?: PromptContext;
+  projectPath?: string;
 }
 
 export interface ImplementationPlan {
@@ -57,19 +72,23 @@ export interface ImplementationGuideResponse {
     deliverables: string[];
     duration: string;
   }>;
+  llm_request?: LLMRequest;
 }
 
 export class ImplementationGuideTool {
   private productDetection: ProductDetectionService;
   private logger: Logger;
+  private ruleService: RuleIntelligenceService;
 
   constructor(logger: Logger) {
     this.logger = logger;
     this.productDetection = new ProductDetectionService(logger);
+    this.ruleService = new RuleIntelligenceService(logger);
   }
 
   async initialize(): Promise<void> {
     await this.productDetection.initialize();
+    await this.ruleService.initialize();
     this.logger.info('Implementation Guide Tool initialized');
   }
 
@@ -78,6 +97,7 @@ export class ImplementationGuideTool {
    */
   async analyzeTicket(request: ImplementationGuideRequest): Promise<ImplementationGuideResponse> {
     try {
+      ImplementationGuideRequestSchema.parse(request);
       this.logger.info('Analyzing Jira ticket for implementation guidance');
 
       // 1. Parse and analyze ticket content
@@ -115,7 +135,7 @@ export class ImplementationGuideTool {
       // 8. Suggest project milestones
       const suggestedMilestones = this.generateMilestones(implementationPlan, ticketAnalysis.complexity);
 
-      return {
+      const base: ImplementationGuideResponse = {
         ticketAnalysis,
         detectedProducts,
         implementationPlan,
@@ -125,6 +145,38 @@ export class ImplementationGuideTool {
         documentation,
         suggestedMilestones
       };
+
+      const blocks: ContextBlock[] = [
+        { type: 'analysis', title: 'Ticket Analysis', content: JSON.stringify(ticketAnalysis).slice(0, 4000), relevance: 0.9 },
+        { type: 'analysis', title: 'Implementation Plan', content: JSON.stringify(implementationPlan).slice(0, 4000), relevance: 0.95 }
+      ];
+      if (request.projectPath) {
+        try {
+          const rules = await this.ruleService.analyzeIDERules(request.projectPath);
+          blocks.push({
+            type: 'rules',
+            title: 'IDE Rules Summary',
+            content: JSON.stringify({ files: rules.foundFiles, lintWarnings: rules.lintWarnings, conflicts: rules.conflicts, proposed: rules.proposedCursorRules?.slice(0, 2000), diff: rules.proposedCursorRulesDiff?.slice(0, 2000) }).slice(0, 4000),
+            source: request.projectPath,
+            relevance: 0.65
+          });
+        } catch {}
+      }
+      if (codeTemplates?.length) {
+        blocks.push({ type: 'code', title: 'Code Templates', content: JSON.stringify(codeTemplates).slice(0, 4000), relevance: 0.7 });
+      }
+
+      base.llm_request = RequestFormatter.format({
+        toolName: 'optidev_implementation_guide',
+        userPrompt: request.userPrompt || ticketAnalysis.summary,
+        promptContext: request.promptContext,
+        summary: 'Produce an actionable, product-aware implementation guide with risks and milestones.',
+        products: detectedProducts,
+        blocks,
+        template: FormatterTemplates.optidev_implementation_guide
+      });
+
+      return base;
 
     } catch (error) {
       this.logger.error('Failed to analyze ticket for implementation guidance', error as Error);

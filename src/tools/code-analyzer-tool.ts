@@ -4,12 +4,28 @@
  */
 
 import { ProductDetectionService } from '../services/product-detection-service.js';
-import type { Logger } from '../types/index.js';
+import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
+import type { Logger, LLMRequest, PromptContext, ContextBlock } from '../types/index.js';
+import { RequestFormatter } from '../formatters/request-formatter.js';
+import { FormatterTemplates } from '../formatters/templates.js';
+import { z } from 'zod';
+
+export const CodeAnalyzerRequestSchema = z.object({
+  codeSnippet: z.string().min(1, 'codeSnippet is required'),
+  language: z.enum(['typescript', 'javascript', 'csharp']).default('typescript'),
+  analysisType: z.enum(['performance', 'security', 'best-practices', 'all']).default('all'),
+  userPrompt: z.string().optional(),
+  promptContext: z.any().optional(),
+  projectPath: z.string().optional()
+});
 
 export interface CodeAnalyzerRequest {
   codeSnippet: string;
   language: string;
   analysisType: 'performance' | 'security' | 'best-practices' | 'all';
+  userPrompt?: string;
+  promptContext?: PromptContext;
+  projectPath?: string;
 }
 
 export interface CodeIssue {
@@ -68,11 +84,13 @@ export interface CodeAnalyzerResponse {
     benefits: string[];
     estimatedEffort: string;
   }>;
+  llm_request?: LLMRequest;
 }
 
 export class CodeAnalyzerTool {
   private productDetection: ProductDetectionService;
   private logger: Logger;
+  private ruleService: RuleIntelligenceService;
 
   // Language-specific analysis patterns
   private static readonly LANGUAGE_PATTERNS = {
@@ -162,10 +180,12 @@ export class CodeAnalyzerTool {
   constructor(logger: Logger) {
     this.logger = logger;
     this.productDetection = new ProductDetectionService(logger);
+    this.ruleService = new RuleIntelligenceService(logger);
   }
 
   async initialize(): Promise<void> {
     await this.productDetection.initialize();
+    await this.ruleService.initialize();
     this.logger.info('Code Analyzer Tool initialized');
   }
 
@@ -174,14 +194,16 @@ export class CodeAnalyzerTool {
    */
   async analyzeCode(request: CodeAnalyzerRequest): Promise<CodeAnalyzerResponse> {
     try {
+      CodeAnalyzerRequestSchema.parse(request);
       this.logger.info('Analyzing code snippet', { 
         language: request.language, 
         analysisType: request.analysisType,
         codeLength: request.codeSnippet.length 
       });
 
-      // 1. Detect Optimizely products in code
-      const detectedProducts = await this.detectProductsInCode(request.codeSnippet);
+      // 1. Detect Optimizely products in code (and capture evidence)
+      const detection = await this.productDetection.detectFromPrompt(request.codeSnippet);
+      const detectedProducts = detection.products;
 
       // 2. Perform requested analysis
       const analysisResults: Partial<CodeAnalyzerResponse> = {};
@@ -208,7 +230,7 @@ export class CodeAnalyzerTool {
         analysisResults
       );
 
-      return {
+      const base: CodeAnalyzerResponse = {
         detectedProducts,
         language: request.language,
         analysisType: request.analysisType,
@@ -216,6 +238,62 @@ export class CodeAnalyzerTool {
         overallQuality,
         refactoringOpportunities
       } as CodeAnalyzerResponse;
+
+      // Build formatter blocks
+      const blocks: ContextBlock[] = [];
+      blocks.push({ type: 'analysis', title: 'Code Quality Summary', content: base.overallQuality.summary, relevance: 0.95 });
+      if (detection?.evidence?.length) {
+        blocks.push({
+          type: 'detection-evidence',
+          title: 'Product Detection Evidence',
+          content: JSON.stringify(detection.evidence.slice(0, 20)),
+          source: 'product-detection'
+        , relevance: 0.6 });
+      }
+
+      // Optional: include rule intelligence if projectPath provided
+      if (request.projectPath) {
+        try {
+          const ruleAnalysis = await this.ruleService.analyzeIDERules(request.projectPath);
+          blocks.push({
+            type: 'rules',
+            title: 'IDE Rules Summary',
+            content: JSON.stringify({
+              files: ruleAnalysis.foundFiles,
+              lintWarnings: ruleAnalysis.lintWarnings,
+              conflicts: ruleAnalysis.conflicts,
+              normalized: ruleAnalysis.normalizedDirectives?.slice(0, 20),
+              proposed: ruleAnalysis.proposedCursorRules?.slice(0, 2000),
+              diff: ruleAnalysis.proposedCursorRulesDiff?.slice(0, 2000)
+            }),
+            source: request.projectPath
+          });
+        } catch {}
+      }
+      if (analysisResults.performance) {
+        blocks.push({ type: 'analysis', title: 'Performance Issues', content: JSON.stringify(analysisResults.performance.issues).slice(0, 4000), relevance: 0.85 });
+      }
+      if (analysisResults.security) {
+        blocks.push({ type: 'analysis', title: 'Security Findings', content: JSON.stringify(analysisResults.security.vulnerabilities).slice(0, 4000), relevance: 0.9 });
+      }
+      if (analysisResults.bestPractices) {
+        blocks.push({ type: 'analysis', title: 'Best Practices Violations', content: JSON.stringify(analysisResults.bestPractices.violations).slice(0, 4000), relevance: 0.7 });
+      }
+
+      // Attach formatted LLM request (handoff to IDE agent)
+      const llm_request = RequestFormatter.format({
+        toolName: 'optidev_code_analyzer',
+        userPrompt: request.userPrompt,
+        promptContext: request.promptContext,
+        summary: 'Analyze the provided code issues and propose improvements with examples.',
+        products: detectedProducts,
+        blocks,
+        template: FormatterTemplates.optidev_code_analyzer
+      });
+
+      base.llm_request = llm_request;
+
+      return base;
 
     } catch (error) {
       this.logger.error('Failed to analyze code', error as Error);

@@ -12,6 +12,12 @@ export interface PromptAnalysisResult {
   intent: PromptIntent;
   productHints: OptimizelyProduct[];
   confidence: number;
+  entities?: {
+    files: string[];
+    urls: string[];
+    classes: string[];
+    versions: string[];
+  };
 }
 
 export type PromptIntent = 
@@ -74,6 +80,12 @@ export interface ContextAnalysisResponse {
   curatedContext: CuratedResponse;
   processingTime: number;
   timestamp: Date;
+  promptContext?: PromptContext;
+  diagnostics?: {
+    timings?: Record<string, number>;
+    cacheHit?: boolean;
+    relevanceBreakdown?: { prompt: number; evidence: number; rules: number; final: number };
+  };
 }
 
 export interface QueryContext {
@@ -82,4 +94,56 @@ export interface QueryContext {
   intent: PromptIntent;
   projectContext?: ProjectContext;
   userHistory?: UserInteraction[];
+}
+
+/**
+ * Extended prompt context detected from the user's prompt and session
+ */
+export interface PromptContext {
+  userIntent: PromptIntent | 'feature' | 'migration' | 'performance' | 'security' | 'content';
+  taskType?: string;
+  targetProducts?: OptimizelyProduct[];
+  artifacts?: Array<{ kind: 'file' | 'class' | 'symbol' | 'url'; value: string }>;
+  constraints?: string[];
+  acceptanceCriteria?: string[];
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+  versions?: Array<{ product: OptimizelyProduct | 'platform'; version: string }>;
+  sessionHints?: Record<string, unknown>;
+}
+
+/**
+ * Structured context block to be provided to an IDE agent/LLM
+ */
+export interface ContextBlock {
+  type: 'rules' | 'detection-evidence' | 'code' | 'documentation' | 'analysis' | 'summary';
+  title?: string;
+  content: string;
+  source?: string; // file path, URL, or generator name
+  tokensEstimate?: number;
+  relevance?: number; // 0-1 relevance for ordering/budgeting
+}
+
+/**
+ * Structured request object suitable for IDE agent LLM handoff
+ */
+export interface LLMRequest {
+  systemPrompt: string;
+  userPrompt: string;
+  contextBlocks: ContextBlock[];
+  citations?: Array<{ title: string; url: string }>;
+  tags?: string[];
+  safetyDirectives?: string[];
+  constraints?: string[];
+  modelHints?: { maxTokens?: number; temperature?: number };
+  tokenEstimate?: number;
+  telemetry?: {
+    sizeInBytes: number;
+    tokenEstimate: number;
+    truncationApplied: boolean;
+    droppedBlocks: number;
+    correlationId?: string;
+  };
+  previewMarkdown?: string;
+  contentTypes?: Array<'text/markdown' | 'application/json'>;
+  correlationId?: string;
 }

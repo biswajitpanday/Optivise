@@ -25,6 +25,13 @@ export type {
   QueryContext
 } from './context.js';
 
+// Formatter and handoff types
+export type {
+  PromptContext,
+  ContextBlock,
+  LLMRequest
+} from './context.js';
+
 // Knowledge base and learning types
 export type {
   UserInteraction,

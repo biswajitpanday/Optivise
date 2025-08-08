@@ -5,6 +5,7 @@
 
 import OpenAI from 'openai';
 import { APIKeyDetector } from './api-key-detector.js';
+import { secretStore } from '../services/secret-store.js';
 
 export interface EmbeddingRequest {
   text: string;
@@ -47,6 +48,12 @@ export class OpenAIClientService {
       // Try provided API key first
       if (this.config.apiKey) {
         return this.initializeWithKey(this.config.apiKey);
+      }
+
+      // Try SecretStore (env/other providers)
+      const envKey = await secretStore.get('OPENAI_API_KEY');
+      if (envKey) {
+        return this.initializeWithKey(envKey);
       }
 
       // Auto-detect API keys from IDE configurations

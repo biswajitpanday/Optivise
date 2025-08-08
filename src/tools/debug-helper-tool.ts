@@ -5,12 +5,28 @@
 
 import { chromaDBService } from '../integrations/chromadb-client.js';
 import { ProductDetectionService } from '../services/product-detection-service.js';
-import type { Logger } from '../types/index.js';
+import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
+import type { Logger, LLMRequest, PromptContext, ContextBlock } from '../types/index.js';
+import { RequestFormatter } from '../formatters/request-formatter.js';
+import { FormatterTemplates } from '../formatters/templates.js';
+import { z } from 'zod';
+
+export const DebugHelperRequestSchema = z.object({
+  bugDescription: z.string().min(1, 'bugDescription is required'),
+  errorMessages: z.array(z.string()).optional(),
+  codeContext: z.string().optional(),
+  userPrompt: z.string().optional(),
+  promptContext: z.any().optional(),
+  projectPath: z.string().optional()
+});
 
 export interface DebugHelperRequest {
   bugDescription: string;
   errorMessages?: string[];
   codeContext?: string;
+  userPrompt?: string;
+  promptContext?: PromptContext;
+  projectPath?: string;
 }
 
 export interface BugAnalysis {
@@ -49,11 +65,13 @@ export interface DebugHelperResponse {
     relevance: number;
   }>;
   monitoringRecommendations: string[];
+  llm_request?: LLMRequest;
 }
 
 export class DebugHelperTool {
   private productDetection: ProductDetectionService;
   private logger: Logger;
+  private ruleService: RuleIntelligenceService;
 
   // Common error patterns and their categories
   private static readonly ERROR_PATTERNS = {
@@ -89,10 +107,12 @@ export class DebugHelperTool {
   constructor(logger: Logger) {
     this.logger = logger;
     this.productDetection = new ProductDetectionService(logger);
+    this.ruleService = new RuleIntelligenceService(logger);
   }
 
   async initialize(): Promise<void> {
     await this.productDetection.initialize();
+    await this.ruleService.initialize();
     this.logger.info('Debug Helper Tool initialized');
   }
 
@@ -101,6 +121,7 @@ export class DebugHelperTool {
    */
   async analyzeBug(request: DebugHelperRequest): Promise<DebugHelperResponse> {
     try {
+      DebugHelperRequestSchema.parse(request);
       this.logger.info('Analyzing bug for debugging assistance');
 
       // 1. Detect relevant products
@@ -130,7 +151,7 @@ export class DebugHelperTool {
         detectedProducts
       );
 
-      return {
+      const base: DebugHelperResponse = {
         detectedProducts,
         bugAnalysis,
         debuggingSteps,
@@ -139,6 +160,39 @@ export class DebugHelperTool {
         relatedDocumentation,
         monitoringRecommendations
       };
+
+      const blocks: ContextBlock[] = [
+        { type: 'analysis', title: 'Bug Analysis', content: JSON.stringify(bugAnalysis).slice(0, 4000), relevance: 0.95 },
+        { type: 'analysis', title: 'Debugging Steps', content: JSON.stringify(debuggingSteps).slice(0, 4000), relevance: 0.9 }
+      ];
+      if (request.projectPath) {
+        try {
+          const rules = await this.ruleService.analyzeIDERules(request.projectPath);
+          blocks.push({
+            type: 'rules',
+            title: 'IDE Rules Summary',
+            content: JSON.stringify({ files: rules.foundFiles, lintWarnings: rules.lintWarnings, conflicts: rules.conflicts, proposed: rules.proposedCursorRules?.slice(0, 2000), diff: rules.proposedCursorRulesDiff?.slice(0, 2000) }).slice(0, 4000),
+            source: request.projectPath,
+            relevance: 0.6
+          });
+        } catch {}
+      }
+      if (relatedDocumentation?.length) {
+        blocks.push({ type: 'documentation', title: 'Related Documentation', content: JSON.stringify(relatedDocumentation).slice(0, 4000), relevance: 0.7 });
+      }
+
+      base.llm_request = RequestFormatter.format({
+        toolName: 'optidev_debug_helper',
+        userPrompt: request.userPrompt || request.bugDescription,
+        promptContext: request.promptContext,
+        summary: 'Diagnose and resolve the bug with steps and code-level guidance.',
+        products: detectedProducts,
+        blocks,
+        citations: relatedDocumentation?.filter(d => d.url && d.title).map(d => ({ title: d.title, url: d.url })),
+        template: FormatterTemplates.optidev_debug_helper
+      });
+
+      return base;
 
     } catch (error) {
       this.logger.error('Failed to analyze bug for debugging assistance', error as Error);

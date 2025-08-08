@@ -19,12 +19,18 @@ export interface RuleAnalysisResult {
   existingRules: IDERule[];
   optimizelyRelevance: number;
   suggestedEnhancements: RuleEnhancement[];
+  lintWarnings?: string[];
+  conflicts?: RuleConflict[];
+  normalizedDirectives?: string[];
+  mergeNotes?: string[];
+  proposedCursorRules?: string;
+  proposedCursorRulesDiff?: string;
   analysisTime: number;
   timestamp: Date;
 }
 
 export interface RuleEnhancement {
-  type: 'add' | 'modify' | 'remove';
+  type: 'add' | 'modify' | 'remove' | 'cleanup';
   priority: 'high' | 'medium' | 'low';
   suggestion: string;
   rationale: string;
