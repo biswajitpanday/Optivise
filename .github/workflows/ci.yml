@@ -19,5 +19,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test -- --run
+        env:
+          MAX_BLOCK_CHARS: '4000'
+          MAX_TOTAL_TOKENS: '3500'
       - run: npm run test:e2e:inspector
 

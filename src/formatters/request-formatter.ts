@@ -5,6 +5,7 @@
 
 import type { ContextBlock, LLMRequest, PromptContext } from '../types/index.js';
 import { getCorrelationId } from '../utils/correlation.js';
+import { redactSensitive } from '../utils/sensitive.js';
 
 export interface RequestFormatterInput {
   toolName: string;
@@ -22,6 +23,8 @@ export interface RequestFormatterInput {
 
 export class RequestFormatter {
   static format(input: RequestFormatterInput): LLMRequest {
+    const maxBlockChars = parseInt(process.env.MAX_BLOCK_CHARS || '5000', 10);
+    const maxTotalTokens = parseInt(process.env.MAX_TOTAL_TOKENS || '4000', 10);
     const tags = new Set<string>();
 
     // Base tags
@@ -42,10 +45,20 @@ export class RequestFormatter {
     const baseUser = input.userPrompt || 'Provide Optimizely development assistance based on the following context.';
     const userPrompt = input.template?.userPrefix ? `${input.template.userPrefix}\n\n${baseUser}` : baseUser;
 
-    let contextBlocks = (input.blocks || []).map(block => ({
-      ...block,
-      tokensEstimate: block.tokensEstimate ?? this.estimateTokens(block.content)
-    }));
+    const redactionTally: Record<string, number> = {};
+    let contextBlocks = (input.blocks || []).map(block => {
+      const safeContent = this.sanitize(block.content);
+      const redacted = redactSensitive(safeContent);
+      for (const r of redacted.redactions) {
+        redactionTally[r.type] = (redactionTally[r.type] || 0) + r.count;
+      }
+      const trimmedContent = redacted.text.length > maxBlockChars ? `${redacted.text.slice(0, maxBlockChars)}\n[TRUNCATED]` : redacted.text;
+      return {
+        ...block,
+        content: trimmedContent,
+        tokensEstimate: block.tokensEstimate ?? this.estimateTokens(trimmedContent)
+      };
+    });
 
     const citations = input.citations || [];
 
@@ -60,9 +73,8 @@ export class RequestFormatter {
 
     // Optional token budgeting: drop low relevance blocks to fit budget
     let droppedBlocks = 0;
-    if (input.tokenBudget?.maxContextTokens) {
-      const budget = input.tokenBudget.maxContextTokens;
-      const sortBy = input.tokenBudget.dropLowRelevanceFirst !== false;
+    const applyBudgetDrop = (budget: number, dropLowFirst: boolean) => {
+      const sortBy = dropLowFirst;
       if (sortBy) {
         // Order by relevance desc, then by presence of title/content
         contextBlocks = contextBlocks.sort((a, b) => {
@@ -80,6 +92,12 @@ export class RequestFormatter {
         droppedBlocks++;
         total = contextBlocks.reduce((sum, b) => sum + (b.tokensEstimate || 0), 0);
       }
+    };
+    if (input.tokenBudget?.maxContextTokens) {
+      applyBudgetDrop(input.tokenBudget.maxContextTokens, input.tokenBudget.dropLowRelevanceFirst !== false);
+    } else {
+      // Apply a hard safety ceiling to avoid huge contexts even when budget is not provided
+      applyBudgetDrop(maxTotalTokens, true);
     }
 
     const corr = getCorrelationId();
@@ -103,7 +121,8 @@ export class RequestFormatter {
       const sizeInBytes = Buffer.byteLength(textConcat, 'utf8');
       const truncationApplied = !!input.tokenBudget?.maxContextTokens && droppedBlocks > 0;
       base.tokenEstimate = tokenEstimate;
-      base.telemetry = { sizeInBytes, tokenEstimate, truncationApplied, droppedBlocks, ...(corr ? { correlationId: corr } : {}) } as any;
+      const redactions = Object.entries(redactionTally).map(([type, count]) => ({ type, count }));
+      base.telemetry = { sizeInBytes, tokenEstimate, truncationApplied, droppedBlocks, redactions, ...(corr ? { correlationId: corr } : {}) } as any;
       // Build a compact markdown preview
       const preview = [
         '### Optivise Context Preview',
@@ -148,11 +167,22 @@ export class RequestFormatter {
   // Basic output sanitization: remove dangerous HTML tags; this is conservative for markdown contexts
   private static sanitize(text: string): string {
     if (!text) return text;
-    return text
+    // Remove dangerous tags and attributes, block data URIs, and mask suspicious tokens
+    let safe = text
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+      .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
+      .replace(/<object[\s\S]*?>[\s\S]*?<\/object>/gi, '')
+      .replace(/<embed[\s\S]*?>[\s\S]*?<\/embed>/gi, '')
       .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
-      .replace(/javascript:/gi, '');
+      .replace(/on\w+\s*=\s*'[^']*'/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/data:\w+\/[\w+\-\.]+;base64,[A-Za-z0-9+/=]+/gi, '[DATA_URI_REDACTED]')
+      .replace(/([A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}(?:\.[A-Za-z0-9_\-]{20,})?)/g, '[TOKEN_REDACTED]')
+      .replace(/(sk\-[A-Za-z0-9]{20,})/gi, '[API_KEY_REDACTED]');
+    // Collapse excessive whitespace
+    safe = safe.replace(/\n{3,}/g, '\n\n');
+    return safe;
   }
 }
 

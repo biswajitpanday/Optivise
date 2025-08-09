@@ -6,6 +6,7 @@
 import OpenAI from 'openai';
 import { APIKeyDetector } from './api-key-detector.js';
 import { secretStore } from '../services/secret-store.js';
+import { CircuitBreaker } from '../utils/circuit-breaker.js';
 
 export interface EmbeddingRequest {
   text: string;
@@ -30,6 +31,7 @@ export class OpenAIClientService {
   private client: OpenAI | null = null;
   private keyDetector: APIKeyDetector;
   private config: OpenAIConfig = {};
+  private breaker = new CircuitBreaker({ failureThreshold: 3, cooldownMs: 30000 });
 
   constructor(config?: OpenAIConfig) {
     this.keyDetector = new APIKeyDetector();
@@ -147,28 +149,47 @@ export class OpenAIClientService {
       console.warn('OpenAI client not initialized. Call initialize() first.');
       return null;
     }
+    if (!this.breaker.canAttempt()) {
+      console.warn('OpenAI circuit is open. Skipping request temporarily.');
+      return null;
+    }
 
     try {
       const model = request.model || 'text-embedding-ada-002';
+      const controller = new AbortController();
+      const timeoutMs = this.config.timeout || 30000;
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
       
       const response = await this.client.embeddings.create({
         model,
         input: request.text,
         encoding_format: 'float'
-      });
+      }, { signal: controller.signal as any });
+
+      clearTimeout(timer);
 
       if (response.data.length === 0) {
         throw new Error('No embedding returned from OpenAI');
       }
 
-      return {
+      const result = {
         embedding: response.data[0]?.embedding || [],
         tokens: response.usage?.total_tokens || 0,
         model: response.model
       };
+      this.breaker.onSuccess();
+      return result;
 
     } catch (error) {
       console.error('Failed to generate embedding:', error);
+      this.breaker.onFailure();
+      // Simple retry with jitter
+      if ((this.config.maxRetries || 0) > 0) {
+        const delay = 200 + Math.floor(Math.random() * 300);
+        await new Promise(r => setTimeout(r, delay));
+        this.config.maxRetries = (this.config.maxRetries || 0) - 1;
+        return this.generateEmbedding(request);
+      }
       return null;
     }
   }
@@ -260,6 +281,10 @@ export class OpenAIClientService {
    */
   cleanup(): void {
     this.client = null;
+  }
+
+  getCircuitState(): 'closed' | 'open' | 'half-open' {
+    return this.breaker.state();
   }
 }
 

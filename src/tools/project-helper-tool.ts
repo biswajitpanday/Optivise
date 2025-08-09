@@ -169,7 +169,10 @@ export class ProjectHelperTool {
    */
   async provideAssistance(request: ProjectHelperRequest): Promise<ProjectHelperResponse> {
     try {
-      ProjectHelperRequestSchema.parse(request);
+      const parsed = ProjectHelperRequestSchema.safeParse(request);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
       this.logger.info('Providing project assistance', { 
         requestType: request.requestType,
         targetVersion: request.targetVersion 

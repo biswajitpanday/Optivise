@@ -47,10 +47,11 @@
 - [x] Content Types: include `text/markdown` for IDE preview and `application/json` payload for agents that support structured handoff
   - [x] Formatter emits `contentTypes` and a `previewMarkdown` field
   - [x] Correlation ID threaded into `LLMRequest.correlationId` and telemetry
-- [ ] IDE Agent Integration Docs: add `docs/ide_agent_integration.md` describing how Cursor/VS Code agents can inject `llm_request` content into model prompts
-  - [x] Added `docs/ide_agent_integration.md`
-- [ ] Safety Filters: remove secrets/PII; hash or mask when needed; annotate redactions
-  - [x] Strengthened safety directives; basic output sanitization helper
+ - [ ] IDE Agent Integration Docs: add `docs/ide_agent_integration.md` describing how Cursor/VS Code agents can inject `llm_request` content into model prompts
+   - [x] Added `docs/ide_agent_integration.md` and expanded with Cursor config, preview usage, truncation & safety guidance
+ - [ ] Safety Filters: remove secrets/PII; hash or mask when needed; annotate redactions
+   - [x] Strengthened safety directives; improved sanitization (strip scripts/iframes/JS/data URIs; mask tokens)
+   - [x] Enforced block-size and overall token ceilings with truncation markers
 - [ ] Telemetry: capture formatted size, token estimates, truncation events (debug only; never stdout)
   - [x] Basic telemetry fields (sizeInBytes, tokenEstimate, droppedBlocks, truncationApplied)
 - [ ] E2E: verify agent‑ready outputs for common flows (bugfix, migration, performance)
@@ -97,6 +98,7 @@
 ## 🤖 AI Integration & Fallbacks
 
 - [ ] Timeouts, retries with jitter, circuit breaker
+  - [x] OpenAI: request timeout, basic retry with jitter, circuit breaker (cooldown)
 - [ ] Token accounting and max context safeguards
 - [ ] Versioned prompt templates with tests
 - [ ] Offline parity tests for no‑AI mode
@@ -155,6 +157,9 @@
 - [ ] README/docs aligned to actual features; beta features labeled
 - [ ] Example configs for Cursor/VS Code; sample `render.yaml`
 - [ ] `optivise` CLI: index ops, diagnostics, health
+  - [x] Added `optivise-rules` CLI to propose/write `.cursorrules`
+  - [x] Added `optivise-diag` CLI for version/features/services diagnostics
+  - [x] Added `optivise-health` CLI to query local HTTP health endpoint
 
 ## 🔄 CI/CD & Release Gates
 

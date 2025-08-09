@@ -34,6 +34,7 @@ import { CodeAnalyzerTool } from '../tools/code-analyzer-tool.js';
 import { ProjectHelperTool } from '../tools/project-helper-tool.js';
 import { auditTrail } from '../services/audit-trail.js';
 import { monitoringService as createMonitoring } from '../services/monitoring-service.js';
+import { formatZodError } from '../utils/validation.js';
 import { generateCorrelationId, runWithCorrelationId } from '../utils/correlation.js';
 
 export class OptiviseMCPServer {
@@ -384,19 +385,24 @@ export class OptiviseMCPServer {
 
       } catch (error) {
         this.logger.error(`Tool execution failed for ${name}`, error as Error);
-        
+        // Structured invalid input handling
+        const maybeZod = (error as any);
+        const isZod = !!maybeZod?.issues && Array.isArray(maybeZod.issues);
+        const payload = isZod
+          ? { status: 'error', error: formatZodError(maybeZod) }
+          : {
+              status: 'error',
+              error: {
+                code: 'TOOL_EXECUTION_FAILED',
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+                details: { tool: name, timestamp: new Date() }
+              }
+            };
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({
-                status: 'error',
-                error: {
-                  code: 'TOOL_EXECUTION_FAILED',
-                  message: error instanceof Error ? error.message : 'Unknown error occurred',
-                  details: { tool: name, timestamp: new Date() }
-                }
-              }, null, 2)
+              text: JSON.stringify(payload, null, 2)
             }
           ]
         };

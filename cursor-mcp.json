@@ -5,10 +5,12 @@
           "args": [
               "optivise-mcp"
           ],
-          "env": {
-              "OPTIDEV_DEBUG": "true",
-              "LOG_LEVEL": "error"
-          }
+      "env": {
+          "OPTIDEV_DEBUG": "true",
+          "LOG_LEVEL": "error",
+          "MAX_BLOCK_CHARS": "5000",
+          "MAX_TOTAL_TOKENS": "4000"
+      }
       }
   }
 }

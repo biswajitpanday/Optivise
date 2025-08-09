@@ -97,7 +97,10 @@ export class ImplementationGuideTool {
    */
   async analyzeTicket(request: ImplementationGuideRequest): Promise<ImplementationGuideResponse> {
     try {
-      ImplementationGuideRequestSchema.parse(request);
+      const parsed = ImplementationGuideRequestSchema.safeParse(request);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
       this.logger.info('Analyzing Jira ticket for implementation guidance');
 
       // 1. Parse and analyze ticket content

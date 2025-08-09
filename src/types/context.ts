@@ -141,6 +141,7 @@ export interface LLMRequest {
     tokenEstimate: number;
     truncationApplied: boolean;
     droppedBlocks: number;
+    redactions?: Array<{ type: string; count: number }>;
     correlationId?: string;
   };
   previewMarkdown?: string;

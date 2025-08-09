@@ -194,7 +194,10 @@ export class CodeAnalyzerTool {
    */
   async analyzeCode(request: CodeAnalyzerRequest): Promise<CodeAnalyzerResponse> {
     try {
-      CodeAnalyzerRequestSchema.parse(request);
+      const parsed = CodeAnalyzerRequestSchema.safeParse(request);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
       this.logger.info('Analyzing code snippet', { 
         language: request.language, 
         analysisType: request.analysisType,

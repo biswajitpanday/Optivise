@@ -121,7 +121,10 @@ export class DebugHelperTool {
    */
   async analyzeBug(request: DebugHelperRequest): Promise<DebugHelperResponse> {
     try {
-      DebugHelperRequestSchema.parse(request);
+      const parsed = DebugHelperRequestSchema.safeParse(request);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
       this.logger.info('Analyzing bug for debugging assistance');
 
       // 1. Detect relevant products

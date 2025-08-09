@@ -14,6 +14,7 @@ import { createLogger } from '../utils/logger.js';
 import { generateCorrelationId, runWithCorrelationId } from '../utils/correlation.js';
 import { getVersion } from '../config/version.js';
 import type { ContextAnalysisRequest, Logger } from '../types/index.js';
+import { formatZodError } from '../utils/validation.js';
 
 export class OptiviseHTTPServer {
   private server: any;
@@ -106,8 +107,8 @@ export class OptiviseHTTPServer {
           version: getVersion(),
           features: featureMatrix,
           services: {
-            openAI: { available: openAIClient.isAvailable?.() ?? false },
-            chromaDB: { available: chromaDBService.isAvailable?.() ?? false },
+            openAI: { available: openAIClient.isAvailable?.() ?? false, circuit: (openAIClient as any).getCircuitState?.() },
+            chromaDB: { available: chromaDBService.isAvailable?.() ?? false, circuit: chromaDBService.getCircuitState?.() },
             documentationSync: { autoSyncEnabled: documentationSyncService.getSyncStatus().autoSyncEnabled }
           },
           stats: {
@@ -224,7 +225,7 @@ export class OptiviseHTTPServer {
             const parsed = this.analyzeSchema.safeParse(json);
             if (!parsed.success) {
               res.writeHead(400, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Invalid request', details: parsed.error.issues }));
+              res.end(JSON.stringify(formatZodError(parsed.error)));
               return;
             }
             const request: ContextAnalysisRequest = parsed.data;

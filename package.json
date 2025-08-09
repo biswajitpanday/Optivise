@@ -8,7 +8,10 @@
   "bin": {
     "optivise": "bin/optivise",
     "optivise-mcp": "dist/index.js",
-    "optivise-index": "dist/cli/indexing-cli.js"
+    "optivise-index": "dist/cli/indexing-cli.js",
+    "optivise-rules": "dist/cli/rules-cli.js",
+    "optivise-diag": "dist/cli/diagnostics-cli.js",
+    "optivise-health": "dist/cli/health-cli.js"
   },
   "scripts": {
     "build": "npm run clean && tsc && npm run copy-assets && npm run make-executable",
