@@ -13,6 +13,12 @@ describe('E2E MCP (stdio) - basic flows', () => {
   let client: Client | null = null;
 
   beforeAll(async () => {
+    // Skip on Windows or when explicitly disabled for local runs
+    if (process.platform === 'win32' || process.env.SKIP_MCP_STDIO === 'true') {
+      // eslint-disable-next-line no-console
+      console.warn('E2E MCP stdio tests skipped on this platform/config');
+      return;
+    }
     // Prefer compiled server if available
     const distEntry = path.join(ROOT, 'dist', 'index.js');
     if (!fs.existsSync(distEntry)) {

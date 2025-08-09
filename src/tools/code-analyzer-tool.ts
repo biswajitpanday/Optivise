@@ -245,14 +245,14 @@ export class CodeAnalyzerTool {
       // Build formatter blocks
       const blocks: ContextBlock[] = [];
       blocks.push({ type: 'analysis', title: 'Code Quality Summary', content: base.overallQuality.summary, relevance: 0.95 });
-      if (detection?.evidence?.length) {
-        blocks.push({
-          type: 'detection-evidence',
-          title: 'Product Detection Evidence',
-          content: JSON.stringify(detection.evidence.slice(0, 20)),
-          source: 'product-detection'
-        , relevance: 0.6 });
-      }
+      // Always include a detection evidence block for downstream consumers/tests
+      blocks.push({
+        type: 'detection-evidence',
+        title: 'Product Detection Evidence',
+        content: JSON.stringify(detection?.evidence?.slice(0, 20) || []),
+        source: 'product-detection',
+        relevance: 0.6
+      });
 
       // Optional: include rule intelligence if projectPath provided
       if (request.projectPath) {

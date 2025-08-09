@@ -2,7 +2,7 @@
 import { getVersionInfo } from '../config/version.js';
 import { openAIClient } from '../integrations/openai-client.js';
 import { chromaDBService } from '../integrations/chromadb-client.js';
-import { documentationSyncService } from '../services/documentation-service.js';
+import { documentationSyncService } from '../services/documentation-sync-service.js';
 
 async function main() {
   const info = getVersionInfo();

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { chromaDBService } from '../integrations/chromadb-client.js';
-import { documentationSyncService } from '../services/documentation-service.js';
+import { documentationSyncService } from '../services/documentation-sync-service.js';
 
 async function main() {
   const cmd = process.argv[2];
@@ -35,6 +35,10 @@ async function main() {
   }
 }
 
-main();
+main().catch((err: unknown) => {
+  // eslint-disable-next-line no-console
+  console.error('Indexing CLI failed:', err);
+  process.exit(1);
+});
 
 

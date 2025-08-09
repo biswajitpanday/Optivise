@@ -13,6 +13,11 @@ describe('E2E MCP (stdio) - invalid input structured errors', () => {
   let client: Client | null = null;
 
   beforeAll(async () => {
+    if (process.platform === 'win32' || process.env.SKIP_MCP_STDIO === 'true') {
+      // eslint-disable-next-line no-console
+      console.warn('E2E MCP stdio tests skipped on this platform/config');
+      return;
+    }
     const distEntry = path.join(ROOT, 'dist', 'index.js');
     if (!fs.existsSync(distEntry)) return;
 

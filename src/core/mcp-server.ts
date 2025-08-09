@@ -64,7 +64,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.1.2',
+      version: '5.2.0',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -436,7 +436,7 @@ export class OptiviseMCPServer {
       };
 
     } catch (error) {
-      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_context_analyzer', duration: 0, success: false }); } catch {}
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_context_analyzer', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Context analysis failed', error as Error, {
         promptLength: request.prompt.length
       });
@@ -465,7 +465,7 @@ export class OptiviseMCPServer {
         data: response
       };
     } catch (error) {
-      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_implementation_guide', duration: 0, success: false }); } catch {}
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_implementation_guide', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Implementation guide analysis failed', error as Error);
       try { auditTrail.record({ tool: 'optidev_implementation_guide', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
@@ -485,7 +485,7 @@ export class OptiviseMCPServer {
         data: response
       };
     } catch (error) {
-      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_debug_helper', duration: 0, success: false }); } catch {}
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_debug_helper', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Debug helper analysis failed', error as Error);
       try { auditTrail.record({ tool: 'optidev_debug_helper', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
@@ -505,7 +505,7 @@ export class OptiviseMCPServer {
         data: response
       };
     } catch (error) {
-      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_code_analyzer', duration: 0, success: false }); } catch {}
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_code_analyzer', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Code analyzer analysis failed', error as Error);
       try { auditTrail.record({ tool: 'optidev_code_analyzer', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
@@ -525,7 +525,7 @@ export class OptiviseMCPServer {
         data: response
       };
     } catch (error) {
-      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_project_helper', duration: 0, success: false }); } catch {}
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_project_helper', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Project helper analysis failed', error as Error);
       try { auditTrail.record({ tool: 'optidev_project_helper', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
@@ -684,7 +684,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.1.2',
+      version: '5.2.0',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

@@ -101,7 +101,7 @@ class SimpleLogger implements Logger {
       .replace(/(authorization"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2')
       .replace(/(password"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2')
       // redact bearer tokens
-      .replace(/Bearer\s+[A-Za-z0-9-_\.]+/g, 'Bearer [REDACTED]')
+      .replace(/Bearer\s+[A-Za-z0-9-_.]+/g, 'Bearer [REDACTED]')
       // redact email-like
       .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[REDACTED_EMAIL]');
     try {

@@ -327,19 +327,19 @@ export class ProductDetectionService {
           for (const [depName, depVersion] of Object.entries(dependencies)) {
             if (this.matchesPattern(depName, pattern)) {
               const versionInfo = typeof depVersion === 'string' ? depVersion : '';
+              const versionBoost = /\b(12|13)\b/.test(versionInfo) && product.includes('cms') ? 1 : 0;
                evidence.push({
                 type: 'dependency',
                 path: packageJsonPath,
                 pattern,
-                 confidence: 0.9,
-                 weight: 5 + (versionBoost ?? 0),
+                  confidence: 0.9,
+                  weight: 5 + versionBoost,
                 description: `Dependency matches ${product} pattern: ${pattern} ${versionInfo ? `(version ${versionInfo})` : ''}`
               });
               
               const currentScore = productScores.get(product as OptimizelyProduct) ?? 0;
-              // Slightly boost if version present suggests major train (e.g., cms 12)
-              const versionBoost = /\b(12|13)\b/.test(versionInfo) && product.includes('cms') ? 1 : 0;
-              productScores.set(product as OptimizelyProduct, currentScore + 5 + versionBoost);
+               // Slightly boost if version present suggests major train (e.g., cms 12)
+               productScores.set(product as OptimizelyProduct, currentScore + 5 + versionBoost);
             }
           }
         }
@@ -369,7 +369,7 @@ export class ProductDetectionService {
             filesToCheck.push(full);
           }
         }
-      } catch {}
+    } catch (err) { /* noop */ }
     };
     await walk(projectPath, 0);
 
@@ -378,8 +378,8 @@ export class ProductDetectionService {
         const raw = await fs.readFile(file, 'utf-8');
         const content = raw.toLowerCase();
         const dotnetSignals: Array<{ product: OptimizelyProduct; pattern: RegExp; weight: number; desc: string; versionRegex?: RegExp }> = [
-          { product: 'cms-paas', pattern: /(episerver|optimizely)[\w\.-]*cms/i, weight: 5, desc: 'Found CMS dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
-          { product: 'configured-commerce', pattern: /(insite|optimizely)[\w\.-]*commerce/i, weight: 5, desc: 'Found Commerce dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
+          { product: 'cms-paas', pattern: /(episerver|optimizely)[\w.-]*cms/i, weight: 5, desc: 'Found CMS dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
+          { product: 'configured-commerce', pattern: /(insite|optimizely)[\w.-]*commerce/i, weight: 5, desc: 'Found Commerce dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
           { product: 'dxp', pattern: /(optimizely|episerver).*dxp/i, weight: 3, desc: 'Found DXP hint', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i }
         ];
         for (const signal of dotnetSignals) {
@@ -387,6 +387,7 @@ export class ProductDetectionService {
             let versionTag = '';
             const m = raw.match(signal.versionRegex || /Version\s*=\s*"([0-9][^"]+)"/i);
             if (m && m[1]) versionTag = m[1];
+            const versionBoost = versionTag ? 1 : 0;
              evidence.push({
               type: 'dependency',
               path: file,
@@ -396,11 +397,10 @@ export class ProductDetectionService {
               description: `${signal.desc} in ${path.basename(file)}${versionTag ? ` (version ${versionTag})` : ''}`
             });
             const currentScore = productScores.get(signal.product) ?? 0;
-            const versionBoost = versionTag ? 1 : 0;
             productScores.set(signal.product, currentScore + signal.weight + versionBoost);
           }
         }
-      } catch {}
+      } catch (err) { /* noop */ }
     }
   }
 

@@ -7,7 +7,7 @@ import { createServer } from 'http';
 import { z } from 'zod';
 import { openAIClient } from '../integrations/openai-client.js';
 import { chromaDBService } from '../integrations/chromadb-client.js';
-import { documentationSyncService } from '../services/documentation-service.js';
+import { documentationSyncService } from '../services/documentation-sync-service.js';
 import { auditTrail } from '../services/audit-trail.js';
 import { ContextAnalysisEngine } from '../analyzers/context-analysis-engine.js';
 import { createLogger } from '../utils/logger.js';
@@ -279,14 +279,16 @@ export class OptiviseHTTPServer {
     });
 
     // Simple rate limiting (per-process, naive)
-    const requests: number[] = [];
+      const requests: number[] = [];
     const windowMs = 60 * 1000;
     const maxReqPerWindow = 120;
     const originalListener = this.server.listeners('request')[0];
     this.server.removeAllListeners('request');
     this.server.on('request', (req: any, res: any) => {
       const now = Date.now();
-      while (requests.length && now - requests[0] > windowMs) requests.shift();
+      while (requests.length > 0 && (now - (requests[0] as number)) > windowMs) {
+        requests.shift();
+      }
       requests.push(now);
       if (requests.length > maxReqPerWindow) {
         res.writeHead(429, { 'Content-Type': 'application/json' });
@@ -300,10 +302,12 @@ export class OptiviseHTTPServer {
   async stop(): Promise<void> {
     if (this.shuttingDown) return;
     this.shuttingDown = true;
-    return new Promise(async (resolve) => {
-      try {
-        await this.contextAnalyzer.shutdown?.();
-      } catch {}
+    return new Promise((resolve) => {
+      void (async () => {
+        try {
+          await this.contextAnalyzer.shutdown?.();
+        } catch (err) { /* noop */ }
+      })();
       this.server.close(() => {
         this.logger.info('Optivise HTTP Server stopped');
         resolve();

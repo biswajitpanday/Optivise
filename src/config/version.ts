@@ -25,12 +25,12 @@ export function getVersion(): string {
   try {
     const packagePath = join(PACKAGE_ROOT, 'package.json');
     const packageData = JSON.parse(readFileSync(packagePath, 'utf8'));
-    const version = packageData.version || '5.1.2';
+    const version = packageData.version || '5.2.0';
     cachedVersion = version;
     return version;
   } catch (error) {
     console.warn('Warning: Could not read package.json version, using fallback');
-    const fallbackVersion = '5.1.2';
+    const fallbackVersion = '5.2.0';
     cachedVersion = fallbackVersion;
     return fallbackVersion;
   }

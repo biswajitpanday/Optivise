@@ -122,7 +122,13 @@ export class RuleIntelligenceService {
         optimizelyRelevance,
         suggestedEnhancements: enhancements,
         lintWarnings: warnings,
-        conflicts,
+        conflicts: conflicts.map(c => ({
+          type: c.type as any,
+          severity: c.severity,
+          description: c.description,
+          affectedRules: [],
+          resolution: ''
+        })),
         normalizedDirectives: normalized,
         mergeNotes: notes,
         proposedCursorRules,

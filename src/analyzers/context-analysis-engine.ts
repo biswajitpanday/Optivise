@@ -206,7 +206,8 @@ export class ContextAnalysisEngine {
         artifacts: [
           ...((normalized.entities?.files || []).map(v => ({ kind: 'file' as const, value: v }))),
           ...((normalized.entities?.urls || []).map(v => ({ kind: 'url' as const, value: v }))),
-          ...((normalized.entities?.classes || []).map(v => ({ kind: 'class' as const, value: v })))
+          ...((normalized.entities?.classes || []).map(v => ({ kind: 'class' as const, value: v }))),
+          ...((promptSearchResults || []).map((p: any) => ({ kind: 'file' as const, value: p?.path || p })))
         ],
         constraints: [],
         acceptanceCriteria: [],
@@ -266,6 +267,12 @@ export class ContextAnalysisEngine {
       threshold: DEFAULT_RELEVANCE_THRESHOLD
     });
 
+    const artifacts = [
+      ...((promptAnalysis.entities?.files || []).map(v => ({ kind: 'file' as const, value: v }))),
+      ...((promptAnalysis.entities?.urls || []).map(v => ({ kind: 'url' as const, value: v }))),
+      ...((promptAnalysis.entities?.classes || []).map(v => ({ kind: 'class' as const, value: v })))
+    ];
+
     return {
       relevance: promptAnalysis.relevance,
       detectedProducts: [],
@@ -279,7 +286,15 @@ export class ContextAnalysisEngine {
         bestPractices: []
       },
       processingTime: Date.now() - startTime,
-      timestamp: new Date()
+      timestamp: new Date(),
+      promptContext: {
+        userIntent: promptAnalysis.intent || 'unknown',
+        targetProducts: [],
+        artifacts,
+        constraints: [],
+        acceptanceCriteria: [],
+        sessionHints: {}
+      }
     };
   }
 

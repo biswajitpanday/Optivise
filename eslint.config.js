@@ -52,7 +52,26 @@ export default [
       'prefer-const': 'error',
       'no-var': 'error',
       'no-console': 'warn',
-      'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }]
+      'no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
+      'no-empty': ['error', { allowEmptyCatch: true }]
+    }
+  },
+  {
+    // Test files: do not require project tsconfig for parser (avoids parsing error)
+    files: ['src/test/**/*.ts'],
+    languageOptions: {
+      parser: typescriptParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        // Disable project for test files to avoid requiring tsconfig project references
+        project: null
+      }
+    },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/await-thenable': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off'
     }
   }
 ];

@@ -87,8 +87,17 @@ export class RequestFormatter {
         });
       }
       let total = contextBlocks.reduce((sum, b) => sum + (b.tokensEstimate || 0), 0);
-      while (total > budget && contextBlocks.length > 0) {
-        contextBlocks.pop();
+      while (total > budget && contextBlocks.length > 1) {
+        // Drop lowest-relevance block first if sorted
+        const indexToDrop = sortBy
+          ? contextBlocks.reduce((minIdx, block, idx, arr) => {
+              const r = typeof block.relevance === 'number' ? block.relevance : 0.5;
+              const currentMin = arr[minIdx];
+              const minR = currentMin && typeof currentMin.relevance === 'number' ? (currentMin.relevance as number) : 0.5;
+              return r < minR ? idx : minIdx;
+            }, 0 as number)
+          : contextBlocks.length - 1;
+        contextBlocks.splice(indexToDrop, 1);
         droppedBlocks++;
         total = contextBlocks.reduce((sum, b) => sum + (b.tokensEstimate || 0), 0);
       }
@@ -133,7 +142,9 @@ export class RequestFormatter {
         ...contextBlocks.slice(0, 4).map(b => `#### ${b.title || b.type}\n\n${this.sanitize(b.content).slice(0, 1000)}`)
       ].join('\n');
       base.previewMarkdown = preview;
-    } catch {}
+    } catch (err) {
+      // ignore telemetry build failures
+    }
 
     return base;
   }
@@ -168,7 +179,7 @@ export class RequestFormatter {
   private static sanitize(text: string): string {
     if (!text) return text;
     // Remove dangerous tags and attributes, block data URIs, and mask suspicious tokens
-    let safe = text
+      let safe = text
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
       .replace(/<iframe[\s\S]*?>[\s\S]*?<\/iframe>/gi, '')
@@ -177,9 +188,9 @@ export class RequestFormatter {
       .replace(/on\w+\s*=\s*"[^"]*"/gi, '')
       .replace(/on\w+\s*=\s*'[^']*'/gi, '')
       .replace(/javascript:/gi, '')
-      .replace(/data:\w+\/[\w+\-\.]+;base64,[A-Za-z0-9+/=]+/gi, '[DATA_URI_REDACTED]')
-      .replace(/([A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}(?:\.[A-Za-z0-9_\-]{20,})?)/g, '[TOKEN_REDACTED]')
-      .replace(/(sk\-[A-Za-z0-9]{20,})/gi, '[API_KEY_REDACTED]');
+        .replace(/data:\w+\/[\-\w+.]+;base64,[A-Za-z0-9+/=]+/gi, '[DATA_URI_REDACTED]')
+        .replace(/([A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}(?:\.[A-Za-z0-9_-]{20,})?)/g, '[TOKEN_REDACTED]')
+      .replace(/(sk-[A-Za-z0-9]{20,})/gi, '[API_KEY_REDACTED]');
     // Collapse excessive whitespace
     safe = safe.replace(/\n{3,}/g, '\n\n');
     return safe;
