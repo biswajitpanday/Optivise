@@ -27,7 +27,10 @@
     "format": "prettier --write src/**/*.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run typecheck",
-    "postinstall": "echo 'Optivise installed successfully! Run: optivise setup'"
+    "postinstall": "echo 'Optivise installed successfully! Run: optivise setup'",
+    "audit:ci": "npm audit --audit-level=moderate",
+    "sbom": "cyclonedx-npm --output-format xml --output-file sbom.xml",
+    "release": "standard-version"
   },
   "keywords": [
     "optimizely",
@@ -94,7 +97,9 @@
     "eslint": "^9.15.0",
     "prettier": "^3.3.3",
     "rimraf": "^5.0.10",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@cyclonedx/cyclonedx-npm": "^3.12.4",
+    "standard-version": "^9.5.0"
   },
   "bundledDependencies": [],
   "bundleDependencies": []

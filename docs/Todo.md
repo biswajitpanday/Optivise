@@ -11,7 +11,7 @@
 - [x] Analyzer initialization executed in MCP path (`ContextAnalysisEngine.initialize()`)
 - [x] Graceful shutdown for AI, caches, sync, HTTP
 - [x] Health/ready endpoints expose feature matrix (AI/Chroma/index)
-- [ ] Input schemas and validation for every tool (zod) with structured errors
+ - [x] Input schemas and validation for every tool (zod) with structured errors
 - [x] Evidence‑rich responses (files, patterns, rules, docs sources) across tools
 - [ ] Integration tests for all tools via MCP inspector
   - [x] Basic E2E MCP tests (stdio) for key tools returning `llm_request`
@@ -40,7 +40,7 @@
 
 - [x] Formatter Schema: define `{ systemPrompt, userPrompt, contextBlocks[], citations[], tags[], safetyDirectives, constraints }`
 - [x] Tag Vocabulary: standard tags like `[optimizely:product=commerce]`, `[intent:bugfix]`, `[severity:high]`, `[version:cms12]`
-- [ ] Context Blocks: structured chunks for rules, detection evidence, code snippets, and docs; include source metadata
+- [x] Context Blocks: structured chunks for rules, detection evidence, code snippets, and docs; include source metadata
 - [x] Token Budgeting: measure, truncate, and chunk context to fit model limits; configurable targets per model
 - [x] Tool Templates: per‑tool, product‑aware formatter templates (system + user); unit tests (golden prompts)
 - [x] MCP‑Compliant Output: return a structured `llm_request` object in tool results plus a human‑readable summary
@@ -49,12 +49,12 @@
   - [x] Correlation ID threaded into `LLMRequest.correlationId` and telemetry
  - [ ] IDE Agent Integration Docs: add `docs/ide_agent_integration.md` describing how Cursor/VS Code agents can inject `llm_request` content into model prompts
    - [x] Added `docs/ide_agent_integration.md` and expanded with Cursor config, preview usage, truncation & safety guidance
- - [ ] Safety Filters: remove secrets/PII; hash or mask when needed; annotate redactions
+- [x] Safety Filters: remove secrets/PII; hash or mask when needed; annotate redactions
    - [x] Strengthened safety directives; improved sanitization (strip scripts/iframes/JS/data URIs; mask tokens)
    - [x] Enforced block-size and overall token ceilings with truncation markers
-- [ ] Telemetry: capture formatted size, token estimates, truncation events (debug only; never stdout)
+- [x] Telemetry: capture formatted size, token estimates, truncation events (debug only; never stdout)
   - [x] Basic telemetry fields (sizeInBytes, tokenEstimate, droppedBlocks, truncationApplied)
-- [ ] E2E: verify agent‑ready outputs for common flows (bugfix, migration, performance)
+- [x] E2E: verify agent‑ready outputs for common flows (bugfix, migration, performance)
   - [x] Tools now inject rules and detection evidence into context blocks when `projectPath` provided
   - [x] Relevance-aware ordering of blocks in formatter; unit tests added
   - [x] Added unit tests ensuring rules block is present across tools when `projectPath` is provided
@@ -97,30 +97,30 @@
 
 ## 🤖 AI Integration & Fallbacks
 
-- [ ] Timeouts, retries with jitter, circuit breaker
+- [x] Timeouts, retries with jitter, circuit breaker
   - [x] OpenAI: request timeout, basic retry with jitter, circuit breaker (cooldown)
-- [ ] Token accounting and max context safeguards
+- [x] Token accounting and max context safeguards
 - [ ] Versioned prompt templates with tests
 - [ ] Offline parity tests for no‑AI mode
-- [ ] MCP Mode: server does not call LLM directly; provides formatted handoff payload for the IDE agent
+- [x] MCP Mode: server does not call LLM directly; provides formatted handoff payload for the IDE agent
 
 ## 🔒 Security & Privacy
 
 - [x] Redact logs; no PII/secret leakage; secure defaults
 - [x] Secret management via env/secret store (pluggable providers scaffold)
-- [ ] Sanitize HTML/docs; bound content sizes
-- [ ] Optional audit trail for tool invocations (opt‑in)
+- [x] Sanitize HTML/docs; bound content sizes
+- [x] Optional audit trail for tool invocations (opt‑in)
   - [x] In-memory audit trail scaffold; tool events recorded; secure `/audit` (opt-in)
 
 ## 🌐 HTTP API (Render) Hardening
 
 - [ ] zod/ajv schema validation for `/analyze` and friends
   - [x] Basic zod schema validation for `/analyze`
-- [ ] Rate limiting, request timeouts, strict CORS
+- [x] Rate limiting, request timeouts, strict CORS
   - [x] Naive in-process rate limiting and payload size guard
   - [x] Request timeouts via Promise.race guard
   - [x] Strict CORS allow-list (env-driven)
-- [ ] `/health` and `/ready` include AI/Chroma/index stats
+- [x] `/health` and `/ready` include AI/Chroma/index stats
   - [x] `/ready` includes feature flags, service availability, and index stats (initial)
   - [x] `/health` includes uptime, AI availability, index stats, and doc sync status (initial)
   - [x] Basic payload size guard for `/analyze`
@@ -165,7 +165,7 @@
 
 - [ ] Lint/test/typecheck on PR; block coverage regressions
   - [x] CI workflow added to build, typecheck, lint, and run tests
-- [ ] SBOM + dependency audit; supply‑chain checks
+- [x] SBOM + dependency audit; supply‑chain checks
 - [ ] Versioning + changelog; signed releases
 
 ## 🧭 Multi‑IDE Support

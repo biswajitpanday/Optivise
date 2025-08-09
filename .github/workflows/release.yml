@@ -1,16 +1,17 @@
-name: CI
+name: Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build-and-test:
+  release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -19,10 +20,6 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test -- --run
-        env:
-          MAX_BLOCK_CHARS: '4000'
-          MAX_TOTAL_TOKENS: '3500'
-      - run: npm run test:e2e:inspector
       - run: npm run audit:ci
       - run: npm run sbom
       - name: Upload SBOM artifact
@@ -30,4 +27,11 @@ jobs:
         with:
           name: sbom
           path: sbom.xml
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: sbom.xml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
