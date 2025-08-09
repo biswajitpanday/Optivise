@@ -4,6 +4,7 @@
  */
 
 import type { Logger } from '../types/index.js';
+import { getCorrelationId } from './correlation.js';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -60,16 +61,17 @@ class SimpleLogger implements Logger {
     }
 
     const timestamp = new Date().toISOString();
+    const corr = getCorrelationId();
     const logEntry = {
       timestamp,
       level: level.toUpperCase(),
       message,
-      ...(meta && Object.keys(meta).length > 0 ? { meta } : {})
+      ...(corr ? { correlationId: corr } : {}),
+      ...(meta && Object.keys(meta).length > 0 ? { meta: this.redact(meta) } : {})
     };
 
-    // Simple console output for Phase 1
-    // In future phases, this could write to files, send to monitoring systems, etc.
-    const output = this.formatLogEntry(logEntry);
+    // Emit as compact JSON on stderr to avoid MCP stdout interference
+    const output = JSON.stringify(logEntry);
     
     switch (level) {
       case 'error':
@@ -86,16 +88,27 @@ class SimpleLogger implements Logger {
     }
   }
 
-  private formatLogEntry(entry: Record<string, unknown>): string {
-    const { timestamp, level, message, meta } = entry;
-    
-    let output = `[${timestamp}] ${level}: ${message}`;
-    
-    if (meta && typeof meta === 'object' && Object.keys(meta).length > 0) {
-      output += ` ${JSON.stringify(meta)}`;
+  private formatLogEntry(_entry: Record<string, unknown>): string {
+    // Deprecated; kept for API compatibility
+    return JSON.stringify(_entry);
+  }
+
+  private redact(obj: Record<string, unknown>): Record<string, unknown> {
+    const json = JSON.stringify(obj, (_k, v) => v, 2);
+    const redacted = json
+      // redact obvious keys
+      .replace(/(api[_-]?key"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2')
+      .replace(/(authorization"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2')
+      .replace(/(password"\s*:\s*")[^"]+(")/gi, '$1[REDACTED]$2')
+      // redact bearer tokens
+      .replace(/Bearer\s+[A-Za-z0-9-_.]+/g, 'Bearer [REDACTED]')
+      // redact email-like
+      .replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, '[REDACTED_EMAIL]');
+    try {
+      return JSON.parse(redacted);
+    } catch {
+      return obj;
     }
-    
-    return output;
   }
 
   setLevel(level: LogLevel): void {

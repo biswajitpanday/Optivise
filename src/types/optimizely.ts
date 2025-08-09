@@ -31,6 +31,7 @@ export interface DetectionEvidence {
   pattern: string;
   confidence: number;
   description: string;
+  weight?: number;
 }
 
 export interface ProductDetectionResult {

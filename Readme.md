@@ -2,7 +2,7 @@
 
 **Optivise** is an intelligent MCP (Model Context Protocol) tool that enhances AI-assisted Optimizely development. It analyzes developer prompts for Optimizely relevance and provides curated, contextual information to LLMs.
 
-## Features
+## Features (Current)
 
 - **5 Specialized MCP Tools**:
   - `optidev_context_analyzer`: Enhanced context analysis with product detection
@@ -12,10 +12,15 @@
   - `optidev_project_helper`: Project setup, migration, and configuration assistance
 
 - **AI-Powered Capabilities** (Optional):
-  - OpenAI integration for embeddings and semantic search
-  - ChromaDB vector database for documentation search
-  - Intelligent documentation processing and curation
+  - OpenAI integration for embeddings and semantic search (optional)
+  - ChromaDB vector database for documentation search (optional)
+  - Deterministic relevance scoring with evidence and rules
   - Graceful fallbacks when AI features unavailable
+
+- **Observability & Safety**:
+  - Structured JSON logs on stderr with correlation IDs; MCP stdout clean
+  - Log redaction, block sanitization (scripts/iframes/JS/data URIs), content size ceilings
+  - Diagnostics with per-stage timings and relevance breakdown
 
 ## Installation
 
@@ -84,6 +89,36 @@ To enable AI-powered features:
 }
 ```
 
+## CLI Utilities
+
+```bash
+# Propose a consolidated .cursorrules from discovered rules (prints JSON with diff)
+optivise-rules propose /path/to/project
+
+# Write the proposed .cursorrules to the project root
+optivise-rules propose /path/to/project --write
+
+# Print version and service diagnostics (AI/Chroma/doc-sync availability)
+optivise-diag
+
+# Query local HTTP server health or readiness
+optivise-health                   # defaults to http://localhost:3000/health
+optivise-health --ready           # queries http://localhost:3000/ready
+optivise-health --url=http://host:port/ready
+```
+
+## Environment Variables
+
+- LOG_LEVEL: error|warn|info|debug (default: info)
+- OPTIVISE_MODE: mcp|server (default: mcp)
+- MAX_BLOCK_CHARS: max characters per context block (default: 5000)
+- MAX_TOTAL_TOKENS: hard safety ceiling for context tokens (default: 4000)
+- OPENAI_API_KEY: optional, enables AI-powered features
+- CORS_ALLOW_ORIGINS: comma-separated allowed origins for HTTP server (default: *)
+- REQUEST_TIMEOUT_MS: per-request timeout for /analyze (default: 15000)
+- AUDIT_API_KEY: enables protected GET /audit endpoint when OPTIVISE_AUDIT=true
+- OPTIVISE_AUDIT: set to 'true' to enable in-memory audit trail (requires AUDIT_API_KEY for access)
+
 ## Troubleshooting
 
 ### MCP Server Not Connecting
@@ -101,12 +136,52 @@ Use forward slashes or double backslashes in JSON:
 "args": ["optivise-mcp"]
 ```
 
-## Enterprise Security & Privacy
+## Render Deployment (Example)
 
-- **End-to-End Encryption**: All data encrypted with AES-256-GCM
-- **Role-Based Access Control**: Granular permissions system
-- **Privacy-First Design**: Local-first processing and storage
-- **GDPR Compliance**: Privacy controls and data anonymization
+See `render.yaml` for a minimal configuration:
+
+```yaml
+services:
+  - type: web
+    name: optivise
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: OPTIVISE_MODE
+        value: server
+      - key: OPTIDEV_DEBUG
+        value: false
+      - key: CORS_ALLOW_ORIGINS
+        value: https://yourdomain.com
+    healthCheckPath: /health
+```
+
+After deployment:
+- `GET /health` for liveness
+- `GET /ready` for feature matrix + circuit states (OpenAI/Chroma)
+- Use `optivise-health` locally to check `http://localhost:3000/health`
+
+## Audit Trail (Opt-in)
+
+- Enable: set `OPTIVISE_AUDIT=true` and set a strong `AUDIT_API_KEY`.
+- Fetch recent events:
+
+```bash
+curl -H "Authorization: Bearer $AUDIT_API_KEY" http://localhost:3000/audit | jq
+```
+
+## Security & Privacy (Current)
+
+- Log redaction (API keys/tokens/passwords), correlation IDs, MCP stdout kept clean
+- Output sanitization and size bounds in formatter; relevance-aware truncation
+- Opt-in in-memory audit trail for tool invocations (protected endpoint)
+- Circuit breakers and backoff for AI/Chroma integrations; CI `npm audit` + CycloneDX SBOM
+
+Planned (not yet implemented): stronger PII detection, allow-listed HTML sanitization, signed releases, and comprehensive policy scans (e.g., OSV).
 
 ## Use Cases & Examples
 
@@ -179,6 +254,7 @@ flowchart TD
 
 ## Documentation & Support
 
+- [IDE Agent Integration](docs/ide_agent_integration.md): How to assemble prompts and previews in Cursor/VS Code
 - [Architecture Diagrams](docs/Architecture_Diagrams.md): System architecture and data flows
 - [Product Requirements](docs/PRD.md): Complete product requirements and features
 - [Software Requirements](docs/SRS.md): Technical specifications and interfaces

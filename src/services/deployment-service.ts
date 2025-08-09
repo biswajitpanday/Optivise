@@ -868,7 +868,7 @@ export class DeploymentService extends EventEmitter {
    */
   private startAutoscaling(): void {
     this.autoscalingInterval = setInterval(() => {
-      this.performAutoscaling();
+      void this.performAutoscaling();
     }, 60 * 1000); // Check every minute
   }
 
@@ -882,7 +882,7 @@ export class DeploymentService extends EventEmitter {
       this.logger.info('Autoscaling decision', decision as unknown as Record<string, unknown>);
       
       try {
-        await this.scale(decision.targetInstances, `Autoscaling: ${decision.reason}`);
+      await this.scale(decision.targetInstances, `Autoscaling: ${decision.reason}`);
       } catch (error) {
         this.logger.error('Autoscaling failed', error as Error, decision as unknown as Record<string, unknown>);
       }

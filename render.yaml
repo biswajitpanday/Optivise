@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: optix
+    name: optivise
     env: node
     plan: free
     buildCommand: npm install && npm run build
@@ -11,9 +11,9 @@ services:
       - key: PORT
         fromService:
           type: web
-          name: optix
+          name: optivise
           property: port
-      - key: OPTIX_MODE
+      - key: OPTIVISE_MODE
         value: server
       - key: OPTIDEV_DEBUG
         value: false

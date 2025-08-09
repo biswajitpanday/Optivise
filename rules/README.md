@@ -1,4 +1,4 @@
-# OptiDevDoc Development Rules
+# Optivise Development Rules
 
 Your rules have been successfully migrated to the new product-aware structure.
 
@@ -44,11 +44,11 @@ Each rule file (`.mdc`) includes frontmatter with:
 Set the rules path in your environment:
 
 ```bash
-export OPTIDEVDOC_RULES_PATH="C:\D\RND\MCPs\OptiDevDoc\rules"
+export OPTIVISE_RULES_PATH="C:\D\RND\MCPs\Optivise\rules"
 ```
 
 Test with:
 
 ```bash
-optidevdoc detect
+optivise detect
 ```

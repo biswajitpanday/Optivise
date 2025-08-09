@@ -9,7 +9,9 @@ import type {
   CuratedResponse,
   PromptAnalysisResult,
   OptimizelyProduct,
-  Logger
+  Logger,
+  PromptContext,
+  ContextBlock
 } from '../types/index.js';
 
 import { DEFAULT_RELEVANCE_THRESHOLD } from '../types/index.js';
@@ -18,6 +20,9 @@ import { PromptAnalyzer } from './prompt-analyzer.js';
 import { ProductDetectionService } from '../services/product-detection-service.js';
 import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
 import { DocumentationService } from '../services/documentation-service.js';
+import { PromptAwareSearchService } from '../services/prompt-aware-search.js';
+import { SessionMemoryService } from '../services/session-memory.js';
+import { PromptCache } from '../services/prompt-cache.js';
 import { chromaDBService } from '../integrations/chromadb-client.js';
 import { openAIClient } from '../integrations/openai-client.js';
 
@@ -26,6 +31,9 @@ export class ContextAnalysisEngine {
   private readonly productDetectionService: ProductDetectionService;
   private readonly ruleIntelligenceService: RuleIntelligenceService;
   private readonly documentationService: DocumentationService;
+  private readonly promptSearch: PromptAwareSearchService;
+  private readonly sessionMemory: SessionMemoryService;
+  private readonly promptCache = new PromptCache<ContextAnalysisResponse>(60 * 1000);
   private readonly logger: Logger;
   private isInitialized = false;
   private aiEnabled = false;
@@ -36,6 +44,8 @@ export class ContextAnalysisEngine {
     this.productDetectionService = new ProductDetectionService(logger);
     this.ruleIntelligenceService = new RuleIntelligenceService(logger);
     this.documentationService = new DocumentationService(logger);
+    this.promptSearch = new PromptAwareSearchService(logger);
+    this.sessionMemory = new SessionMemoryService(logger);
   }
 
   async initialize(): Promise<void> {
@@ -64,6 +74,19 @@ export class ContextAnalysisEngine {
     } catch (error) {
       this.logger.error('Failed to initialize Context Analysis Engine', error as Error);
       throw error;
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    try {
+      // Clean up AI clients and caches
+      openAIClient.cleanup?.();
+      await chromaDBService.cleanup?.();
+      // Clear documentation cache
+      this.documentationService.destroy?.();
+      this.logger.info('Context Analysis Engine shutdown completed');
+    } catch (error) {
+      this.logger.warn('Context Analysis Engine shutdown encountered errors', { error: error as Error });
     }
   }
 
@@ -118,37 +141,108 @@ export class ContextAnalysisEngine {
 
   async analyze(request: ContextAnalysisRequest): Promise<ContextAnalysisResponse> {
     const startTime = Date.now();
+    const timings: Record<string, number> = {};
 
     try {
+      // Cache: prompt hash dedupe
+      const cacheKey = request.prompt?.length > 0 ? PromptCache.hashPrompt(request.prompt) : '';
+      if (cacheKey) {
+        const cached = this.promptCache.get(cacheKey);
+        if (cached) {
+          return { ...cached, processingTime: Date.now() - startTime, diagnostics: { ...(cached.diagnostics || {}), cacheHit: true } };
+        }
+      }
       // Step 1: Analyze prompt for Optimizely relevance
+      const t1 = Date.now();
       const promptAnalysis = await this.promptAnalyzer.analyze(request.prompt);
+      const normalized = this.normalizePromptAnalysis(promptAnalysis);
+      timings['promptAnalyzer'] = Date.now() - t1;
       
       // Step 2: Check relevance threshold - only proceed if relevant
       if (promptAnalysis.relevance < DEFAULT_RELEVANCE_THRESHOLD) {
-        return this.createLowRelevanceResponse(promptAnalysis, startTime);
+        const low = this.createLowRelevanceResponse(promptAnalysis, startTime);
+        low.diagnostics = { timings, cacheHit: false };
+        return low;
       }
 
       // Step 3: Detect Optimizely product context
-      const productDetection = await this.detectProductContext(request, promptAnalysis);
+      const t2 = Date.now();
+      const productDetection = await this.detectProductContext(request, normalized);
+      timings['productDetection'] = Date.now() - t2;
 
       // Step 4: Analyze IDE rules (if project path available)
-      const ruleAnalysis = request.projectPath ? 
-        await this.analyzeProjectRules(request.projectPath) : null;
+      const t3 = Date.now();
+      const ruleAnalysis = request.projectPath ? await this.analyzeProjectRules(request.projectPath) : null;
+      if (request.projectPath) timings['ruleIntelligence'] = Date.now() - t3;
+
+      // Step 4.1: Prompt-aware workspace search for mentioned artifacts
+      const t4 = Date.now();
+      const promptSearchResults = request.projectPath && normalized.entities
+        ? await this.promptSearch.findMentionedArtifacts(request.projectPath, { files: normalized.entities.files, classes: normalized.entities.classes })
+        : [];
+      if (request.projectPath && normalized.entities) timings['promptAwareSearch'] = Date.now() - t4;
 
       // Step 5: Fetch relevant documentation
+      const t5 = Date.now();
       const documentation = await this.fetchRelevantDocumentation(productDetection, promptAnalysis.intent);
+      timings['documentation'] = Date.now() - t5;
 
       // Step 6: Curate context based on analysis and detection
-      const curatedContext = await this.curateContext(promptAnalysis, productDetection, ruleAnalysis, documentation);
+      const t6 = Date.now();
+      const curatedContext = await this.curateContext(normalized, productDetection, ruleAnalysis, documentation);
+      timings['curation'] = Date.now() - t6;
+      // Deterministic relevance: prompt + evidence + rules (bounded)
+      const promptComponent = Math.max(0, Math.min(1, promptAnalysis.relevance));
+      const evidenceSignals = (promptAnalysis.entities?.files?.length || 0) + (promptAnalysis.entities?.classes?.length || 0);
+      const rulesSignals = ruleAnalysis?.foundFiles?.length || 0;
+      const evidenceComponent = Math.min(0.6, evidenceSignals * 0.05);
+      const rulesComponent = Math.min(0.4, rulesSignals * 0.05);
+      const finalRelevance = Math.min(1, (promptComponent * 0.6) + evidenceComponent + rulesComponent);
+
+      // Step 6.1: Build promptContext for formatter stage
+      const promptContext: PromptContext = {
+        userIntent: normalized.intent,
+        targetProducts: productDetection,
+        artifacts: [
+          ...((normalized.entities?.files || []).map(v => ({ kind: 'file' as const, value: v }))),
+          ...((normalized.entities?.urls || []).map(v => ({ kind: 'url' as const, value: v }))),
+          ...((normalized.entities?.classes || []).map(v => ({ kind: 'class' as const, value: v }))),
+          ...((promptSearchResults || []).map((p: any) => ({ kind: 'file' as const, value: p?.path || p })))
+        ],
+        constraints: [],
+        acceptanceCriteria: [],
+        sessionHints: {}
+      };
 
       // Step 7: Build final response
       const response: ContextAnalysisResponse = {
-        relevance: promptAnalysis.relevance,
+        relevance: finalRelevance,
         detectedProducts: productDetection,
         curatedContext,
         processingTime: Date.now() - startTime,
-        timestamp: new Date()
+        timestamp: new Date(),
+        promptContext,
+        diagnostics: { timings, cacheHit: false, relevanceBreakdown: { prompt: promptComponent, evidence: evidenceComponent, rules: rulesComponent, final: finalRelevance } }
       };
+
+      // Record in session memory
+      this.sessionMemory.recordInteraction({
+        products: productDetection,
+        files: (promptAnalysis.entities?.files || []),
+        toolName: 'optidev_context_analyzer'
+      });
+
+      // Store in cache
+      if (cacheKey) {
+        this.promptCache.set(cacheKey, response);
+      }
+
+      if (process.env.OPTIDEV_DEBUG === 'true') {
+        console.error('[observability] entities', normalized.entities);
+        console.error('[observability] ruleFiles', ruleAnalysis?.foundFiles);
+        console.error('[observability] products', productDetection);
+        console.error('[observability] relevance', { promptComponent, evidenceComponent, rulesComponent, finalRelevance });
+      }
 
       this.logger.debug('Context analysis completed', {
         relevance: response.relevance,
@@ -173,6 +267,12 @@ export class ContextAnalysisEngine {
       threshold: DEFAULT_RELEVANCE_THRESHOLD
     });
 
+    const artifacts = [
+      ...((promptAnalysis.entities?.files || []).map(v => ({ kind: 'file' as const, value: v }))),
+      ...((promptAnalysis.entities?.urls || []).map(v => ({ kind: 'url' as const, value: v }))),
+      ...((promptAnalysis.entities?.classes || []).map(v => ({ kind: 'class' as const, value: v })))
+    ];
+
     return {
       relevance: promptAnalysis.relevance,
       detectedProducts: [],
@@ -186,7 +286,15 @@ export class ContextAnalysisEngine {
         bestPractices: []
       },
       processingTime: Date.now() - startTime,
-      timestamp: new Date()
+      timestamp: new Date(),
+      promptContext: {
+        userIntent: promptAnalysis.intent || 'unknown',
+        targetProducts: [],
+        artifacts,
+        constraints: [],
+        acceptanceCriteria: [],
+        sessionHints: {}
+      }
     };
   }
 
@@ -195,17 +303,28 @@ export class ContextAnalysisEngine {
     promptAnalysis: PromptAnalysisResult
   ): Promise<OptimizelyProduct[]> {
     try {
-      // Use project path if available (IDE mode)
+      // If project path available (IDE mode), prefer project detection
       if (request.projectPath) {
-        const detection = await this.productDetectionService.detectFromProject(request.projectPath);
-        return detection.products;
+        const project = await this.productDetectionService.detectFromProject(request.projectPath);
+        // Hybrid scoring: blend with prompt-based detection
+        const prompt = await this.productDetectionService.detectFromPrompt(
+          request.prompt,
+          promptAnalysis.productHints
+        );
+        // Expose evidence in debug
+        if (process.env.OPTIDEV_DEBUG === 'true') {
+          console.error('[evidence] project', project.evidence?.slice(0, 5));
+          console.error('[evidence] prompt', prompt.evidence?.slice(0, 5));
+        }
+        const merged = new Map<OptimizelyProduct, number>();
+        project.products.forEach(p => merged.set(p, (merged.get(p) || 0) + project.confidence));
+        prompt.products.forEach(p => merged.set(p, (merged.get(p) || 0) + prompt.confidence * 0.8));
+        // Sort by score desc
+        return Array.from(merged.entries()).sort((a,b)=>b[1]-a[1]).map(([p])=>p).slice(0,3);
       }
 
-      // Fall back to prompt-based detection
-      const detection = await this.productDetectionService.detectFromPrompt(
-        request.prompt,
-        promptAnalysis.productHints
-      );
+      // Prompt-only
+      const detection = await this.productDetectionService.detectFromPrompt(request.prompt, promptAnalysis.productHints);
       return detection.products;
 
     } catch (error) {
@@ -309,6 +428,22 @@ export class ContextAnalysisEngine {
       // Fallback to basic documentation service
       return await this.documentationService.fetchDocumentation(products);
     }
+  }
+
+  private normalizePromptAnalysis(promptAnalysis: PromptAnalysisResult): PromptAnalysisResult {
+    // Ensure entities and intent are present; clamp relevance
+    return {
+      ...promptAnalysis,
+      relevance: Math.max(0, Math.min(1, promptAnalysis.relevance ?? 0)),
+      intent: promptAnalysis.intent || 'unknown',
+      entities: {
+        files: promptAnalysis.entities?.files || [],
+        urls: promptAnalysis.entities?.urls || [],
+        classes: promptAnalysis.entities?.classes || [],
+        versions: promptAnalysis.entities?.versions || []
+      },
+      productHints: promptAnalysis.productHints || []
+    };
   }
 
   private async curateContext(
@@ -607,12 +742,12 @@ export class ContextAnalysisEngine {
 
   private formatDocumentationLinks(documentation: any[]): any[] {
     return documentation
-      .filter(doc => doc?.source && doc?.title)
+      .filter(doc => (doc?.source || doc?.url) && doc?.title)
       .map(doc => ({
         title: doc.title,
-        url: doc.source,
+        url: doc.source || doc.url,
         description: this.extractDocDescription(doc),
-        relevance: doc.relevanceScore || 0.8,
+        relevance: doc.relevanceScore || doc.relevance || 0.8,
         lastUpdated: doc.lastUpdated
       }))
       .sort((a, b) => b.relevance - a.relevance)
@@ -645,8 +780,8 @@ export class ContextAnalysisEngine {
         }
       }
     }
-    
-    return `Documentation for ${doc.products?.join(', ') || 'Optimizely'} development`;
+    const productLabel = doc.product || (Array.isArray(doc.products) ? doc.products.join(', ') : 'Optimizely');
+    return `Documentation for ${productLabel} development`;
   }
 
   private getProductDisplayName(product: OptimizelyProduct): string {

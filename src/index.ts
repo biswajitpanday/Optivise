@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Optivise v5.1.2 Entry Point
+ * Optivise v5.2.0 Entry Point
  * Main entry point for the Optivise MCP server with HTTP server support
  */
 
@@ -103,36 +103,9 @@ async function main() {
   }
 }
 
-// Debug: Always output something to verify the module is loading
-console.error('🔧 Optivise module loaded - about to start main');
-
-async function simplifiedMain() {
-  console.error('🔧 In simplified main function');
-  
-  try {
-    console.error('🔧 Creating MCP server...');
-    const server = new OptiviseMCPServer({
-      logging: { level: 'error' },
-      features: {
-        productDetection: true,
-        ruleIntelligence: false,
-        documentationFetch: false,
-        knowledgeLearning: false
-      }
-    });
-    
-    console.error('🔧 Starting MCP server...');
-    await server.start();
-    console.error('✅ MCP server started successfully');
-    
-  } catch (error) {
-    console.error('❌ Error in simplified main:', error);
-    process.exit(1);
-  }
-}
-
-// Run simplified version
-simplifiedMain().catch((error) => {
-  console.error('❌ Unhandled error:', error);
+// Start the main entry path exactly once, honoring OPTIVISE_MODE
+main().catch((error) => {
+  // Use stderr to avoid interfering with MCP protocol stdout
+  console.error('❌ Optivise failed to start:', error);
   process.exit(1);
 });

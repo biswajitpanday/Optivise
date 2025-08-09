@@ -1,13 +1,17 @@
 {
   "name": "optivise",
-  "version": "5.1.2",
+  "version": "5.2.0",
   "description": "Optivise - The Ultimate Optimizely Development Assistant with AI-powered features, zero-config setup, and comprehensive development support",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "optivise": "bin/optivise",
-    "optivise-mcp": "dist/index.js"
+    "optivise-mcp": "dist/index.js",
+    "optivise-index": "dist/cli/indexing-cli.js",
+    "optivise-rules": "dist/cli/rules-cli.js",
+    "optivise-diag": "dist/cli/diagnostics-cli.js",
+    "optivise-health": "dist/cli/health-cli.js"
   },
   "scripts": {
     "build": "npm run clean && tsc && npm run copy-assets && npm run make-executable",
@@ -16,13 +20,17 @@
     "copy-assets": "copyfiles -u 1 'src/**/*.json' 'src/**/*.md' dist/",
     "start": "node dist/index.js",
     "test": "vitest",
+    "test:e2e:inspector": "npx @modelcontextprotocol/inspector npx optivise-mcp --stdio --timeout 5000 || true",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
     "prepare": "npm run build",
     "prepublishOnly": "npm run typecheck",
-    "postinstall": "echo 'Optivise installed successfully! Run: optivise setup'"
+    "postinstall": "echo 'Optivise installed successfully! Run: optivise setup'",
+    "audit:ci": "npm audit --audit-level=moderate",
+    "sbom": "cyclonedx-npm --output-format xml --output-file sbom.xml",
+    "release": "standard-version"
   },
   "keywords": [
     "optimizely",
@@ -38,16 +46,16 @@
     "experimentation",
     "dxp"
   ],
-  "author": "OptiDevDoc Team",
+  "author": "Optivise Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/biswajitpanday/OptiDevDoc.git"
+    "url": "git+https://github.com/biswajitpanday/Optivise.git"
   },
   "bugs": {
-    "url": "https://github.com/biswajitpanday/OptiDevDoc/issues"
+    "url": "https://github.com/biswajitpanday/Optivise/issues"
   },
-  "homepage": "https://github.com/biswajitpanday/OptiDevDoc#readme",
+  "homepage": "https://github.com/biswajitpanday/Optivise#readme",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -73,6 +81,7 @@
     "node-cron": "^3.0.0",
     "node-fetch": "^3.3.0",
     "openai": "^4.20.0",
+    "zod": "^3.23.8",
     "sqlite3": "^5.1.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
@@ -88,7 +97,9 @@
     "eslint": "^9.15.0",
     "prettier": "^3.3.3",
     "rimraf": "^5.0.10",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@cyclonedx/cyclonedx-npm": "^4.0.0",
+    "standard-version": "^9.5.0"
   },
   "bundledDependencies": [],
   "bundleDependencies": []

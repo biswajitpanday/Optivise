@@ -32,6 +32,10 @@ import { ImplementationGuideTool } from '../tools/implementation-guide-tool.js';
 import { DebugHelperTool } from '../tools/debug-helper-tool.js';
 import { CodeAnalyzerTool } from '../tools/code-analyzer-tool.js';
 import { ProjectHelperTool } from '../tools/project-helper-tool.js';
+import { auditTrail } from '../services/audit-trail.js';
+import { monitoringService as createMonitoring } from '../services/monitoring-service.js';
+import { formatZodError } from '../utils/validation.js';
+import { generateCorrelationId, runWithCorrelationId } from '../utils/correlation.js';
 
 export class OptiviseMCPServer {
   private readonly server: Server;
@@ -44,6 +48,7 @@ export class OptiviseMCPServer {
   private readonly projectHelperTool: ProjectHelperTool;
   private isInitialized = false;
   private aiEnabled = false;
+  private readonly monitoring = createMonitoring(createLogger('error'));
 
   constructor(options: MCPServerOptions = {}) {
     this.logger = createLogger(options.logging?.level || 'info');
@@ -59,7 +64,7 @@ export class OptiviseMCPServer {
     // Create MCP server configuration with enhanced tools
     const config: MCPServerConfig = {
       name: 'optivise-ultimate-assistant',
-      version: '5.1.2',
+      version: '5.2.0',
       description: 'Ultimate Optimizely Development Assistant with AI-powered features',
       capabilities: {
         tools: true,
@@ -335,6 +340,8 @@ export class OptiviseMCPServer {
       const { name, arguments: args } = request.params;
 
       try {
+        const corrId = generateCorrelationId('mcp');
+        const resultWrapped = await runWithCorrelationId(corrId, async () => {
         let result: any;
 
         switch (name) {
@@ -373,22 +380,29 @@ export class OptiviseMCPServer {
             }
           ]
         };
+        });
+        return resultWrapped;
 
       } catch (error) {
         this.logger.error(`Tool execution failed for ${name}`, error as Error);
-        
+        // Structured invalid input handling
+        const maybeZod = (error as any);
+        const isZod = !!maybeZod?.issues && Array.isArray(maybeZod.issues);
+        const payload = isZod
+          ? { status: 'error', error: formatZodError(maybeZod) }
+          : {
+              status: 'error',
+              error: {
+                code: 'TOOL_EXECUTION_FAILED',
+                message: error instanceof Error ? error.message : 'Unknown error occurred',
+                details: { tool: name, timestamp: new Date() }
+              }
+            };
         return {
           content: [
             {
               type: 'text',
-              text: JSON.stringify({
-                status: 'error',
-                error: {
-                  code: 'TOOL_EXECUTION_FAILED',
-                  message: error instanceof Error ? error.message : 'Unknown error occurred',
-                  details: { tool: name, timestamp: new Date() }
-                }
-              }, null, 2)
+              text: JSON.stringify(payload, null, 2)
             }
           ]
         };
@@ -398,6 +412,7 @@ export class OptiviseMCPServer {
 
   private async handleContextAnalysis(request: ContextAnalysisRequest): Promise<MCPToolResponse> {
     try {
+      const stop = this.monitoring.startTimer('tool:optidev_context_analyzer');
       this.logger.debug('Processing context analysis request', { 
         promptLength: request.prompt.length,
         hasProjectPath: !!request.projectPath,
@@ -413,6 +428,7 @@ export class OptiviseMCPServer {
         detectedProducts: response.detectedProducts,
         processingTime
       });
+      stop();
 
       return {
         status: 'success',
@@ -420,6 +436,7 @@ export class OptiviseMCPServer {
       };
 
     } catch (error) {
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_context_analyzer', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Context analysis failed', error as Error, {
         promptLength: request.prompt.length
       });
@@ -437,60 +454,80 @@ export class OptiviseMCPServer {
 
   private async handleImplementationGuide(request: any): Promise<any> {
     try {
+      const stop = this.monitoring.startTimer('tool:optidev_implementation_guide');
       this.logger.debug('Processing implementation guide request');
       const response = await this.implementationGuideTool.analyzeTicket(request);
+      try { auditTrail.record({ tool: 'optidev_implementation_guide', timestamp: new Date().toISOString(), promptLength: request?.userPrompt?.length, success: true }); } catch {}
+      stop();
       
       return {
         status: 'success',
         data: response
       };
     } catch (error) {
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_implementation_guide', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Implementation guide analysis failed', error as Error);
+      try { auditTrail.record({ tool: 'optidev_implementation_guide', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
     }
   }
 
   private async handleDebugHelper(request: any): Promise<any> {
     try {
+      const stop = this.monitoring.startTimer('tool:optidev_debug_helper');
       this.logger.debug('Processing debug helper request');
       const response = await this.debugHelperTool.analyzeBug(request);
+      try { auditTrail.record({ tool: 'optidev_debug_helper', timestamp: new Date().toISOString(), promptLength: request?.userPrompt?.length, success: true }); } catch {}
+      stop();
       
       return {
         status: 'success',
         data: response
       };
     } catch (error) {
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_debug_helper', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Debug helper analysis failed', error as Error);
+      try { auditTrail.record({ tool: 'optidev_debug_helper', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
     }
   }
 
   private async handleCodeAnalyzer(request: any): Promise<any> {
     try {
+      const stop = this.monitoring.startTimer('tool:optidev_code_analyzer');
       this.logger.debug('Processing code analyzer request');
       const response = await this.codeAnalyzerTool.analyzeCode(request);
+      try { auditTrail.record({ tool: 'optidev_code_analyzer', timestamp: new Date().toISOString(), promptLength: request?.userPrompt?.length, products: response.detectedProducts, success: true }); } catch {}
+      stop();
       
       return {
         status: 'success',
         data: response
       };
     } catch (error) {
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_code_analyzer', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Code analyzer analysis failed', error as Error);
+      try { auditTrail.record({ tool: 'optidev_code_analyzer', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
     }
   }
 
   private async handleProjectHelper(request: any): Promise<any> {
     try {
+      const stop = this.monitoring.startTimer('tool:optidev_project_helper');
       this.logger.debug('Processing project helper request');
       const response = await this.projectHelperTool.provideAssistance(request);
+      try { auditTrail.record({ tool: 'optidev_project_helper', timestamp: new Date().toISOString(), promptLength: request?.userPrompt?.length, success: true }); } catch {}
+      stop();
       
       return {
         status: 'success',
         data: response
       };
     } catch (error) {
+      try { this.monitoring.recordPerformance({ operation: 'tool:optidev_project_helper', duration: 0, success: false }); } catch (err) { /* noop */ }
       this.logger.error('Project helper analysis failed', error as Error);
+      try { auditTrail.record({ tool: 'optidev_project_helper', timestamp: new Date().toISOString(), success: false }); } catch {}
       throw error;
     }
   }
@@ -628,7 +665,15 @@ export class OptiviseMCPServer {
 
   async stop(): Promise<void> {
     try {
+      // Stop MCP server transport
       await this.server.close();
+      // Stop background services and analyzers
+      await this.contextAnalyzer.shutdown?.();
+      // Stop documentation sync if running
+      documentationSyncService.stopAutoSync?.();
+      // Cleanup AI clients
+      openAIClient.cleanup?.();
+      await chromaDBService.cleanup?.();
       this.logger.info('Optivise MCP Server stopped');
     } catch (error) {
       this.logger.error('Error stopping MCP Server', error as Error);
@@ -639,7 +684,7 @@ export class OptiviseMCPServer {
   getHealthStatus() {
     return {
       status: this.isInitialized ? 'healthy' : 'initializing',
-      version: '5.1.2',
+      version: '5.2.0',
       uptime: process.uptime(),
       features: {
         contextAnalysis: true,

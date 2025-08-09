@@ -164,15 +164,19 @@ export class PromptAnalyzer {
       // Identify potential product hints
       const productHints = this.identifyProductHints(normalizedPrompt, keywords);
       
+      // Entity extraction (files, classes, urls, versions)
+      const entities = this.extractEntities(normalizedPrompt);
+      
       // Calculate overall confidence
-      const confidence = this.calculateConfidence(relevance, keywords.length, productHints.length);
+      const confidence = this.calculateConfidence(relevance, keywords.length + entities.count, productHints.length);
 
       const result: PromptAnalysisResult = {
         relevance,
         keywords,
         intent,
         productHints,
-        confidence
+        confidence,
+        entities: entities.detail
       };
 
       this.logger.debug('Prompt analysis completed', {
@@ -286,5 +290,17 @@ export class PromptAnalyzer {
     confidence += Math.min(productHintCount * 0.1, 0.15);
     
     return Math.min(confidence, 1.0);
+  }
+
+  /**
+   * Extract entities: file names, class/symbols, URLs, versions. Used downstream for prompt-aware search.
+   */
+  private extractEntities(prompt: string): { count: number; detail: { files: string[]; urls: string[]; classes: string[]; versions: string[] } } {
+    const files = prompt.match(/\b[\w-]+\.(ts|tsx|cs|js|json|csproj|config|xml)\b/g) || [];
+    const urls = prompt.match(/https?:\/\/[^\s)]+/g) || [];
+    const classes = prompt.match(/\b[A-Z][A-Za-z0-9_]+(?:Controller|Handler|Service|Factory)?\b/g) || [];
+    const versions = prompt.match(/\b(?:cms|commerce|dxp)(?:\s*|[-_]?)(v?\d{1,2}(?:\.\d{1,2})*)\b/gi) || [];
+    const count = files.length + urls.length + classes.length + versions.length;
+    return { count, detail: { files, urls, classes, versions } };
   }
 }

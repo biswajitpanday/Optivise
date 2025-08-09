@@ -134,8 +134,11 @@ export class ProductDetectionService {
       // Analyze project structure
       await this.analyzeProjectStructure(projectPath, evidence, productScores);
       
-      // Analyze package dependencies
+      // Analyze JS/TS package dependencies
       await this.analyzePackageDependencies(projectPath, evidence, productScores);
+
+      // Analyze .NET project files for Optimizely/EPiServer/Commerce signals
+      await this.analyzeDotnetDependencies(projectPath, evidence, productScores);
       
       // Calculate results
       const sortedProducts = Array.from(productScores.entries())
@@ -143,7 +146,7 @@ export class ProductDetectionService {
         .sort(([, a], [, b]) => b - a);
 
       const detectedProducts = sortedProducts.slice(0, 3).map(([product]) => product);
-      const confidence = sortedProducts.length > 0 ? (sortedProducts[0]?.[1] ?? 0) / 10 : 0; // Normalize to 0-1
+      const confidence = sortedProducts.length > 0 ? Math.min((sortedProducts[0]?.[1] ?? 0) / 10, 1.0) : 0; // Normalize to 0-1
 
       const result: ProductDetectionResult = {
         products: detectedProducts,
@@ -263,11 +266,12 @@ export class ProductDetectionService {
     for (const [product, patterns] of Object.entries(this.detectionPatterns)) {
       for (const pattern of patterns.directories) {
         if (this.matchesPattern(dirName, pattern)) {
-          evidence.push({
+           evidence.push({
             type: 'directory',
             path: dirPath,
             pattern,
-            confidence: 0.7,
+             confidence: 0.7,
+             weight: 3,
             description: `Directory matches ${product} pattern: ${pattern}`
           });
           
@@ -287,11 +291,12 @@ export class ProductDetectionService {
     for (const [product, patterns] of Object.entries(this.detectionPatterns)) {
       for (const pattern of patterns.files) {
         if (this.matchesPattern(fileName, pattern)) {
-          evidence.push({
+           evidence.push({
             type: 'file',
             path: filePath,
             pattern,
-            confidence: 0.8,
+             confidence: 0.8,
+             weight: 4,
             description: `File matches ${product} pattern: ${pattern}`
           });
           
@@ -319,18 +324,22 @@ export class ProductDetectionService {
 
       for (const [product, patterns] of Object.entries(this.detectionPatterns)) {
         for (const pattern of patterns.dependencies) {
-          for (const depName of Object.keys(dependencies)) {
+          for (const [depName, depVersion] of Object.entries(dependencies)) {
             if (this.matchesPattern(depName, pattern)) {
-              evidence.push({
+              const versionInfo = typeof depVersion === 'string' ? depVersion : '';
+              const versionBoost = /\b(12|13)\b/.test(versionInfo) && product.includes('cms') ? 1 : 0;
+               evidence.push({
                 type: 'dependency',
                 path: packageJsonPath,
                 pattern,
-                confidence: 0.9,
-                description: `Dependency matches ${product} pattern: ${pattern}`
+                  confidence: 0.9,
+                  weight: 5 + versionBoost,
+                description: `Dependency matches ${product} pattern: ${pattern} ${versionInfo ? `(version ${versionInfo})` : ''}`
               });
               
               const currentScore = productScores.get(product as OptimizelyProduct) ?? 0;
-              productScores.set(product as OptimizelyProduct, currentScore + 5);
+               // Slightly boost if version present suggests major train (e.g., cms 12)
+               productScores.set(product as OptimizelyProduct, currentScore + 5 + versionBoost);
             }
           }
         }
@@ -338,6 +347,60 @@ export class ProductDetectionService {
     } catch {
       // No package.json or parsing error - not necessarily an issue
       this.logger.debug('No package.json found or parsing failed', { projectPath });
+    }
+  }
+
+  private async analyzeDotnetDependencies(
+    projectPath: string,
+    evidence: DetectionEvidence[],
+    productScores: Map<OptimizelyProduct, number>
+  ): Promise<void> {
+    const filesToCheck: string[] = [];
+    // Shallow recursive walk limited to improve perf
+    const walk = async (dir: string, depth = 0) => {
+      if (depth > 3) return;
+      try {
+        const items = await fs.readdir(dir, { withFileTypes: true });
+        for (const item of items) {
+          const full = path.join(dir, item.name);
+          if (item.isDirectory()) {
+            await walk(full, depth + 1);
+          } else if (/\.csproj$/i.test(item.name) || /Directory\.Packages\.props$/i.test(item.name) || /packages\.config$/i.test(item.name)) {
+            filesToCheck.push(full);
+          }
+        }
+    } catch (err) { /* noop */ }
+    };
+    await walk(projectPath, 0);
+
+    for (const file of filesToCheck) {
+      try {
+        const raw = await fs.readFile(file, 'utf-8');
+        const content = raw.toLowerCase();
+        const dotnetSignals: Array<{ product: OptimizelyProduct; pattern: RegExp; weight: number; desc: string; versionRegex?: RegExp }> = [
+          { product: 'cms-paas', pattern: /(episerver|optimizely)[\w.-]*cms/i, weight: 5, desc: 'Found CMS dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
+          { product: 'configured-commerce', pattern: /(insite|optimizely)[\w.-]*commerce/i, weight: 5, desc: 'Found Commerce dependency', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i },
+          { product: 'dxp', pattern: /(optimizely|episerver).*dxp/i, weight: 3, desc: 'Found DXP hint', versionRegex: /Version\s*=\s*"([0-9][^"]+)"/i }
+        ];
+        for (const signal of dotnetSignals) {
+          if (signal.pattern.test(content)) {
+            let versionTag = '';
+            const m = raw.match(signal.versionRegex || /Version\s*=\s*"([0-9][^"]+)"/i);
+            if (m && m[1]) versionTag = m[1];
+            const versionBoost = versionTag ? 1 : 0;
+             evidence.push({
+              type: 'dependency',
+              path: file,
+              pattern: signal.pattern.source,
+               confidence: 0.9,
+               weight: signal.weight + versionBoost,
+              description: `${signal.desc} in ${path.basename(file)}${versionTag ? ` (version ${versionTag})` : ''}`
+            });
+            const currentScore = productScores.get(signal.product) ?? 0;
+            productScores.set(signal.product, currentScore + signal.weight + versionBoost);
+          }
+        }
+      } catch (err) { /* noop */ }
     }
   }
 
@@ -351,11 +414,12 @@ export class ProductDetectionService {
     for (const [product, patterns] of Object.entries(this.detectionPatterns)) {
       for (const term of patterns.content) {
         if (lowerPrompt.includes(term.toLowerCase())) {
-          evidence.push({
+           evidence.push({
             type: 'content',
             path: 'prompt',
             pattern: term,
-            confidence: 0.6,
+             confidence: 0.6,
+             weight: 2,
             description: `Prompt contains ${product} term: ${term}`
           });
           

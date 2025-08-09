@@ -453,4 +453,13 @@ Leverage Optimizely Graph for flexible content queries.
       cacheTTL: this.cacheTTL
     };
   }
+
+  /**
+   * Cleanup cached data and mark service uninitialized
+   */
+  destroy(): void {
+    this.cache.clear();
+    this.isInitialized = false;
+    this.logger.info('Documentation Service destroyed and cache cleared');
+  }
 }

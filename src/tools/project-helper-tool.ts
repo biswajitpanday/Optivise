@@ -5,12 +5,28 @@
 
 import { chromaDBService } from '../integrations/chromadb-client.js';
 import { ProductDetectionService } from '../services/product-detection-service.js';
-import type { Logger } from '../types/index.js';
+import { RuleIntelligenceService } from '../services/rule-intelligence-service.js';
+import type { Logger, LLMRequest, PromptContext, ContextBlock } from '../types/index.js';
+import { RequestFormatter } from '../formatters/request-formatter.js';
+import { FormatterTemplates } from '../formatters/templates.js';
+import { z } from 'zod';
+
+export const ProjectHelperRequestSchema = z.object({
+  requestType: z.enum(['setup', 'migration', 'configuration', 'best-practices']),
+  projectDetails: z.string().min(1, 'projectDetails is required'),
+  targetVersion: z.string().optional(),
+  userPrompt: z.string().optional(),
+  promptContext: z.any().optional(),
+  projectPath: z.string().optional()
+});
 
 export interface ProjectHelperRequest {
   requestType: 'setup' | 'migration' | 'configuration' | 'best-practices';
   projectDetails: string;
   targetVersion?: string;
+  userPrompt?: string;
+  promptContext?: PromptContext;
+  projectPath?: string;
 }
 
 export interface ProjectSetupGuide {
@@ -111,11 +127,13 @@ export interface ProjectHelperResponse {
     url?: string;
     description: string;
   }>;
+  llm_request?: LLMRequest;
 }
 
 export class ProjectHelperTool {
   private productDetection: ProductDetectionService;
   private logger: Logger;
+  private ruleService: RuleIntelligenceService;
 
   // Version compatibility matrix
   private static readonly VERSION_COMPATIBILITY = {
@@ -137,10 +155,12 @@ export class ProjectHelperTool {
   constructor(logger: Logger) {
     this.logger = logger;
     this.productDetection = new ProductDetectionService(logger);
+    this.ruleService = new RuleIntelligenceService(logger);
   }
 
   async initialize(): Promise<void> {
     await this.productDetection.initialize();
+    await this.ruleService.initialize();
     this.logger.info('Project Helper Tool initialized');
   }
 
@@ -149,6 +169,10 @@ export class ProjectHelperTool {
    */
   async provideAssistance(request: ProjectHelperRequest): Promise<ProjectHelperResponse> {
     try {
+      const parsed = ProjectHelperRequestSchema.safeParse(request);
+      if (!parsed.success) {
+        throw parsed.error;
+      }
       this.logger.info('Providing project assistance', { 
         requestType: request.requestType,
         targetVersion: request.targetVersion 
@@ -181,13 +205,63 @@ export class ProjectHelperTool {
       // 4. Compile resources
       const resources = await this.compileResources(detectedProducts, request);
 
-      return {
+      const base: ProjectHelperResponse = {
         requestType: request.requestType,
         detectedProducts,
         ...response,
         recommendations,
         resources
       } as ProjectHelperResponse;
+
+      const blocks: ContextBlock[] = [];
+      if (response.projectSetup) {
+        blocks.push({ type: 'analysis', title: 'Project Setup Guide', content: JSON.stringify(response.projectSetup).slice(0, 4000), relevance: 0.9 });
+      }
+      if (response.migrationPlan) {
+        blocks.push({ type: 'analysis', title: 'Migration Plan', content: JSON.stringify(response.migrationPlan).slice(0, 4000), relevance: 0.95 });
+      }
+      if (response.configurationGuide) {
+        blocks.push({ type: 'analysis', title: 'Configuration Guide', content: JSON.stringify(response.configurationGuide).slice(0, 4000), relevance: 0.85 });
+      }
+      if (response.bestPracticesGuide) {
+        blocks.push({ type: 'analysis', title: 'Best Practices Guide', content: JSON.stringify(response.bestPracticesGuide).slice(0, 4000), relevance: 0.8 });
+      }
+      if (request.projectPath) {
+        try {
+          const rules = await this.ruleService.analyzeIDERules(request.projectPath);
+          blocks.push({
+            type: 'rules',
+            title: 'IDE Rules Summary',
+            content: JSON.stringify({ files: rules.foundFiles, lintWarnings: rules.lintWarnings, conflicts: rules.conflicts, proposed: rules.proposedCursorRules?.slice(0, 2000), diff: rules.proposedCursorRulesDiff?.slice(0, 2000) }).slice(0, 4000),
+            source: request.projectPath,
+            relevance: 0.6
+          });
+        } catch {}
+      }
+
+      if (request.projectPath) {
+        try {
+          const rules = await this.ruleService.analyzeIDERules(request.projectPath);
+          blocks.push({
+            type: 'rules',
+            title: 'IDE Rules Summary',
+            content: JSON.stringify({ files: rules.foundFiles, lintWarnings: rules.lintWarnings, conflicts: rules.conflicts }).slice(0, 4000),
+            source: request.projectPath
+          });
+        } catch {}
+      }
+
+      base.llm_request = RequestFormatter.format({
+        toolName: 'optidev_project_helper',
+        userPrompt: request.userPrompt,
+        promptContext: request.promptContext,
+        summary: 'Provide next-step guidance and, if needed, generate concise messages to share with the team.',
+        products: detectedProducts,
+        blocks,
+        template: FormatterTemplates.optidev_project_helper
+      });
+
+      return base;
 
     } catch (error) {
       this.logger.error('Failed to provide project assistance', error as Error);

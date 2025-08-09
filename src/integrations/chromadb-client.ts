@@ -5,6 +5,7 @@
 
 import { ChromaClient, Collection, OpenAIEmbeddingFunction } from 'chromadb';
 import { openAIClient, EmbeddingResponse } from './openai-client.js';
+import { CircuitBreaker } from '../utils/circuit-breaker.js';
 
 export interface DocumentChunk {
   id: string;
@@ -38,6 +39,7 @@ export class ChromaDBService {
   private client: ChromaClient | null = null;
   private collections: Map<string, Collection> = new Map();
   private config: ChromaConfig;
+  private breaker = new CircuitBreaker({ failureThreshold: 3, cooldownMs: 20000 });
 
   // Optimizely product collections
   private static readonly COLLECTIONS = {
@@ -63,6 +65,9 @@ export class ChromaDBService {
    */
   async initialize(): Promise<boolean> {
     try {
+      if (!this.breaker.canAttempt()) {
+        return false;
+      }
       // Initialize ChromaDB client
       this.client = new ChromaClient({
         path: this.config.ssl 
@@ -81,9 +86,11 @@ export class ChromaDBService {
       await this.initializeCollections();
 
       // ChromaDB initialized successfully
+      this.breaker.onSuccess();
       return true;
 
     } catch (error) {
+      this.breaker.onFailure();
       // Silently return false during initialization
       return false;
     }
@@ -141,6 +148,7 @@ export class ChromaDBService {
     if (!this.client || documents.length === 0) {
       return false;
     }
+    if (!this.breaker.canAttempt()) return false;
 
     try {
       // Group documents by product for batch insertion
@@ -190,10 +198,12 @@ export class ChromaDBService {
         console.log(`Added ${docs.length} documents to ${collectionName}`);
       }
 
+      this.breaker.onSuccess();
       return true;
 
     } catch (error) {
       console.error('Failed to add documents to ChromaDB:', error);
+      this.breaker.onFailure();
       return false;
     }
   }
@@ -213,6 +223,7 @@ export class ChromaDBService {
     if (!this.client) {
       return [];
     }
+    if (!this.breaker.canAttempt()) return [];
 
     try {
       const { product, limit = 10, threshold = 0.7, contentTypes } = options;
@@ -270,12 +281,14 @@ export class ChromaDBService {
       }
 
       // Sort by similarity and limit results
+      this.breaker.onSuccess();
       return results
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, limit);
 
     } catch (error) {
       console.error('Search operation failed:', error);
+      this.breaker.onFailure();
       return [];
     }
   }
@@ -384,6 +397,10 @@ export class ChromaDBService {
    */
   isAvailable(): boolean {
     return this.client !== null && this.collections.size > 0;
+  }
+
+  getCircuitState(): 'closed' | 'open' | 'half-open' {
+    return this.breaker.state();
   }
 
   /**
