@@ -443,9 +443,12 @@ async function testMCPConnection(options = {}) {
   // Test 2: Quick server connectivity test
   console.log('\n📋 Test 2: MCP Server Quick Start Test');
   try {
+    // Force debug logs during the test so we can detect successful startup
+    const testEnv = { ...process.env, OPTIDEV_DEBUG: 'true', LOG_LEVEL: 'debug' };
     const testChild = spawn('node', [serverPath], {
       stdio: 'pipe',
-      timeout: 5000 // 5 second timeout
+      env: testEnv,
+      windowsHide: true
     });
 
     let output = '';
@@ -458,7 +461,8 @@ async function testMCPConnection(options = {}) {
     });
 
     setTimeout(() => {
-      testChild.kill('SIGTERM');
+      // Best-effort terminate the child after we captured enough output
+      try { testChild.kill('SIGTERM'); } catch {}
       
       if (output.includes('Optivise MCP server started successfully')) {
         console.log('✅ MCP server starts successfully');
