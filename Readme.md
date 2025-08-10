@@ -255,6 +255,7 @@ flowchart TD
 ## Documentation & Support
 
 - [IDE Agent Integration](docs/ide_agent_integration.md): How to assemble prompts and previews in Cursor/VS Code
+- [Developer Guide](docs/Developer_Guide.md): How to develop, run, test, and integrate Optivise locally
 - [Architecture Diagrams](docs/Architecture_Diagrams.md): System architecture and data flows
 - [Product Requirements](docs/PRD.md): Complete product requirements and features
 - [Software Requirements](docs/SRS.md): Technical specifications and interfaces
@@ -266,5 +267,4 @@ flowchart TD
 ## Contact
 
 - **Issues**: [GitHub Issues](https://github.com/optimizely/optivise/issues)
-- **Community**: [Community Forum](https://community.optivise.dev)
-- **Support**: [Enterprise Support](mailto:enterprise@optivise.dev)
+- **Support**: [Enterprise Support](mailto:biswajitmailid@gmail.com)
