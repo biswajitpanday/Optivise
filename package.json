@@ -1,6 +1,6 @@
 {
   "name": "optivise",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Optivise - The Ultimate Optimizely Development Assistant with AI-powered features, zero-config setup, and comprehensive development support",
   "type": "module",
   "main": "dist/index.js",
