@@ -45,7 +45,7 @@ COMMANDS:
 
 OPTIONS:
   --debug       Enable debug mode with verbose logging
-  --port PORT   Specify port for server mode (default: 3000)
+  --port PORT   Specify port for server mode (default: 3007)
   --help        Show this help message
 
 EXAMPLES:
@@ -593,7 +593,7 @@ function fallbackToRemote(options = {}) {
 }
 
 function startServer(isEnhanced = false, options = {}) {
-  const port = options.port || 3000;
+  const port = options.port || 3007;
   
   // Get the actual version from package.json
   const packagePath = path.join(PACKAGE_ROOT, 'package.json');

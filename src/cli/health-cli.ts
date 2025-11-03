@@ -18,7 +18,7 @@ function parseArgs(argv: string[]) {
 
 async function main() {
   const args = parseArgs(process.argv);
-  const defaultUrl = args.ready ? 'http://localhost:3000/ready' : 'http://localhost:3000/health';
+  const defaultUrl = args.ready ? 'http://localhost:3007/ready' : 'http://localhost:3007/health';
   const url = args.url || process.env.OPTIVISE_HEALTH_URL || defaultUrl;
   try {
     const res = await fetch(url, { method: 'GET', headers: { 'accept': 'application/json' } });

@@ -27,7 +27,7 @@ USAGE:
 COMMANDS:
   mcp           Start MCP server for IDE integration
   start         Start MCP server (alias for mcp)
-  server        Start HTTP server for browser testing (port 3000)
+  server        Start HTTP server for browser testing (port 3007)
   dev           Start in development mode with hot reload
   test          Test MCP connectivity and configuration
   detect        Detect Optimizely products in current directory
@@ -392,10 +392,10 @@ async function startHTTPServer(options = {}) {
 }
 
 function startHTTPServerProcess(serverPath, options = {}) {
-  const env = { 
+  const env = {
     ...process.env,
     OPTIVISE_MODE: 'server',
-    PORT: '3000'
+    PORT: '3007'
   };
   
   if (options.debug) {

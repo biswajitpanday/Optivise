@@ -597,7 +597,7 @@ export class DeploymentService extends EventEmitter {
       status: 'starting',
       cpu: 0,
       memory: 0,
-      endpoint: `http://service-${Math.random().toString(36).substr(2, 9)}:3000`,
+      endpoint: `http://service-${Math.random().toString(36).substr(2, 9)}:3007`,
       metadata: { startedBy: 'deployment-service' }
     });
 

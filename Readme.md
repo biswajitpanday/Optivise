@@ -1,5 +1,7 @@
 # Optivise
 
+### This Package is Under Development. Please allow me some more days. Will bring something awesome soon.
+
 **Optivise** is an intelligent MCP (Model Context Protocol) tool that enhances AI-assisted Optimizely development. It analyzes developer prompts for Optimizely relevance and provides curated, contextual information to LLMs.
 
 ## Features (Current)
@@ -102,8 +104,8 @@ optivise-rules propose /path/to/project --write
 optivise-diag
 
 # Query local HTTP server health or readiness
-optivise-health                   # defaults to http://localhost:3000/health
-optivise-health --ready           # queries http://localhost:3000/ready
+optivise-health                   # defaults to http://localhost:3007/health
+optivise-health --ready           # queries http://localhost:3007/ready
 optivise-health --url=http://host:port/ready
 ```
 
@@ -163,7 +165,7 @@ services:
 After deployment:
 - `GET /health` for liveness
 - `GET /ready` for feature matrix + circuit states (OpenAI/Chroma)
-- Use `optivise-health` locally to check `http://localhost:3000/health`
+- Use `optivise-health` locally to check `http://localhost:3007/health`
 
 ## Audit Trail (Opt-in)
 
@@ -171,7 +173,7 @@ After deployment:
 - Fetch recent events:
 
 ```bash
-curl -H "Authorization: Bearer $AUDIT_API_KEY" http://localhost:3000/audit | jq
+curl -H "Authorization: Bearer $AUDIT_API_KEY" http://localhost:3007/audit | jq
 ```
 
 ## Security & Privacy (Current)

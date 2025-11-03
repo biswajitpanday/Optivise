@@ -32,7 +32,7 @@ export class OptiviseHTTPServer {
     ideRules: z.array(z.string()).optional()
   });
 
-  constructor(port = 3000) {
+  constructor(port = 3007) {
     this.port = port;
     this.logger = createLogger('info');
     this.contextAnalyzer = new ContextAnalysisEngine(this.logger);

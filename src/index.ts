@@ -30,7 +30,7 @@ async function main() {
     
     if (isHTTPMode) {
       // Start HTTP server for Render deployment
-      const httpServer = new OptiviseHTTPServer(parseInt(process.env.PORT || '3000'));
+      const httpServer = new OptiviseHTTPServer(parseInt(process.env.PORT || '3007'));
       await httpServer.start();
       
       // Graceful shutdown for HTTP server
